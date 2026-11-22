@@ -75,6 +75,11 @@ func _capture(name: String) -> void:
 	var preview := image.duplicate() as Image
 	preview.resize(320, 180, Image.INTERPOLATE_LANCZOS)
 	preview.save_jpg(output.path_join(name + "_thumb.jpg"), 0.58)
+	# Compact 160x90 review frames are embedded in the CI check annotations so
+	# they remain inspectable when the separate Actions artifact host is blocked.
+	var annotation_preview := preview.duplicate() as Image
+	annotation_preview.resize(160, 90, Image.INTERPOLATE_LANCZOS)
+	annotation_preview.save_jpg(output.path_join(name + "_preview.jpg"), 0.25)
 	print(
 		"A006_CAPTURE: ",
 		name,

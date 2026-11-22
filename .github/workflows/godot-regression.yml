@@ -180,159 +180,19 @@ jobs:
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print(f"::notice title={name} summary::{text}")
           PYCODE
-      - name: Preview Assignment 004 districts
+      - name: Preview Assignment 006 campaign views in check annotations
         if: always()
         shell: bash
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for name in ("hk_district_market", "hk_district_commercial"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-      - name: Preview Assignment 004 tower
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("hk_skyscraper_lobby", "hk_skyscraper_interior"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-      - name: Preview Assignment 004 targets and Instinct
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("hk_instinct_target_loan_shark", "hk_instinct_target_corporate_fixer"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-      - name: Preview Assignment 004 harbour target
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          name = "hk_instinct_target_harbour_businessman"
-          path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-          if path.exists():
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-      - name: Preview Assignment 004 awareness and objective HUD
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("hk_awareness_local", "hk_completed_hud"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-
-      - name: Preview new campaign captures
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("hk_play_tung_chung", "hk_tung_chung_departure_exterior", "hk_play_the_district", "hk_play_ngong_ping", "hk_neighbourhood_the_streets", "hk_neighbourhood_the_district", "hk_neighbourhood_the_harbour"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
+          root = pathlib.Path("assignment006-visual-acceptance")
+          for path in sorted(root.glob("*_preview.jpg")):
               encoded = base64.b64encode(path.read_bytes()).decode("ascii")
               for index in range(0, len(encoded), 3000):
-                  print(f"::notice title=preview_{name}_{index // 3000}::{encoded[index:index + 3000]}")
+                  title = path.stem.replace("_preview", "")
+                  print(f"::notice title=a006_{title}_{index // 3000}::{encoded[index:index + 3000]}")
           PYCODE
-      # Separate step: GitHub limits the number of notices in a single step.
-      - name: Preview wall comparison thumbnails
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for path in sorted(pathlib.Path("visual-test-output").glob("*_wall_on_thumb.jpg")):
-              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-              for index in range(0, len(encoded), 3000):
-                  print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
-          PYCODE
-      - name: Preview physical target thumbnails
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for path in sorted(pathlib.Path("visual-test-output").glob("hotel_target_open_thumb.jpg")):
-              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-              for index in range(0, len(encoded), 3000):
-                  print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
-          PYCODE
-      - name: Preview gameplay captures
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("cinema_hotel_corridor", "cinema_weapon_aim", "cinema_tung_chung"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-
-
-      - name: Preview new environments
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("cinema_player_crouch", "cinema_upper_gallery", "cinema_hotel_wing"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-
-      # Each notice step is capped at ten annotations by GitHub. Keep the
-      # city captures separate so all chunks are preserved, rather than
-      # displaying a corrupt partial JPEG with a grey lower half.
-      - name: Preview city views
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("cinema_city_gameplay", "cinema_city"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-
-      - name: Preview suite
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("cinema_hotel_upper", "cinema_ngong_ping", "cinema_mission_selection"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
-
 
   windows:
     if: contains(github.event.head_commit.message, '[windows]')
