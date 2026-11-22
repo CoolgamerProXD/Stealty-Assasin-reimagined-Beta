@@ -186,9 +186,9 @@ func run() -> void:
 	# 03–04: the hotel mission environment and its separately furnished wing.
 	world = await _open_world("res://scenes/hotel.tscn", "meridian")
 	_freeze_npcs()
-	_camera(Vector3(8.5, 1.8, 6.6), Vector3(5.0, 1.25, -3.5), 66.0)
+	_camera(Vector3(-5.0, 1.7, 6.0), Vector3(-5.0, 1.3, -6.0), 66.0)
 	await _capture("03_meridian_main_environment")
-	_camera(Vector3(-25.0, 1.75, 14.0), Vector3(-35.5, 1.35, 2.0), 66.0)
+	_camera(Vector3(-25.0, 1.65, 3.0), Vector3(-35.0, 1.3, -7.0), 66.0)
 	await _capture("04_meridian_interior_lighting")
 	await _close_world()
 
@@ -271,7 +271,7 @@ func run() -> void:
 		player.global_position = Vector3(0, 0.1, -36.0)
 		player.instinct_active = true
 		world.call("_process", 0.0)
-		_camera(Vector3(0, 2.25, -36.35), Vector3(0, 1.0, -40.5), 58.0)
+		_camera(Vector3(0, 2.6, -34.0), Vector3(0, 1.2, -39.0), 58.0)
 		await _capture("17_instinct_secret_undiscovered_hidden")
 		check(
 			not bool(world.get("facility_discovered")) and not facility.entry_open,
@@ -288,13 +288,13 @@ func run() -> void:
 			"entrance is revealed by the mission interaction"
 		)
 		player.global_position = Vector3(0, 0.1, -36.0)
-		_camera(Vector3(0, 2.25, -36.35), Vector3(0, -0.4, -44.0), 66.0)
+		_camera(Vector3(0, 2.6, -34.0), Vector3(0, -0.4, -41.0), 66.0)
 		await _capture("12_discovered_facility_entrance")
 		player.global_position = Vector3(0, -2.5, -59)
-		_camera(Vector3(0, -1.3, -53.0), Vector3(0, -1.0, -63.0), 68.0)
+		_camera(Vector3(0, -1.3, -56.0), Vector3(0, -1.2, -62.5), 68.0)
 		await _capture("13_facility_monumental_interior")
 		player.global_position = Vector3(0, -7.3, -61)
-		_camera(Vector3(0, -3.7, -55.0), Vector3(0, -7.0, -66.0), 70.0)
+		_camera(Vector3(0, -5.8, -58.0), Vector3(0, -6.8, -68.0), 70.0)
 		await _capture("14_facility_central_operations")
 		player.global_position = Vector3(0, 15.0, -29.0)
 		_camera(Vector3(0, 15.1, -25.7), Vector3(0, 15.2, -32.0), 70.0)
