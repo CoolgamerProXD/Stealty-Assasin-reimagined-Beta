@@ -60,8 +60,14 @@ func _camera(position: Vector3, target: Vector3, fov: float = 62.0) -> void:
 	shot.make_current()
 
 
-func _capture(name: String) -> void:
+func _capture(name: String, include_hud: bool = false) -> void:
 	captures += 1
+	# Keep mission overlays out of environment review frames so the scenery can
+	# be judged at thumbnail size. The final gameplay frame deliberately retains
+	# the real HUD; the Instinct grade layer remains active for Instinct views.
+	for layer: Node in world.find_children("*", "CanvasLayer", true, false):
+		if layer is CanvasLayer and (layer as CanvasLayer).layer >= 0:
+			(layer as CanvasLayer).visible = include_hud
 	for frame: int in range(5):
 		await process_frame
 	await RenderingServer.frame_post_draw
@@ -180,9 +186,9 @@ func run() -> void:
 	# 03–04: the hotel mission environment and its separately furnished wing.
 	world = await _open_world("res://scenes/hotel.tscn", "meridian")
 	_freeze_npcs()
-	_camera(Vector3(-3.0, 2.2, 6.8), Vector3(-1.0, 1.25, -2.5), 64.0)
+	_camera(Vector3(8.5, 1.8, 6.6), Vector3(5.0, 1.25, -3.5), 66.0)
 	await _capture("03_meridian_main_environment")
-	_camera(Vector3(-31.0, 2.2, 10.0), Vector3(-31.0, 1.3, -8.0), 64.0)
+	_camera(Vector3(-25.0, 1.75, 14.0), Vector3(-35.5, 1.35, 2.0), 66.0)
 	await _capture("04_meridian_interior_lighting")
 	await _close_world()
 
@@ -262,9 +268,10 @@ func run() -> void:
 	if facility and player:
 		# Capture before opening the one-way panel. Hiding a discovered secret
 		# requires restoring a fresh checkpoint, not toggling a local flag.
+		player.global_position = Vector3(0, 0.1, -36.0)
 		player.instinct_active = true
 		world.call("_process", 0.0)
-		_camera(Vector3(0, 4.0, 4.5), Vector3(0, 1.0, -37.0), 58.0)
+		_camera(Vector3(0, 2.25, -36.35), Vector3(0, 1.0, -40.5), 58.0)
 		await _capture("17_instinct_secret_undiscovered_hidden")
 		check(
 			not bool(world.get("facility_discovered")) and not facility.entry_open,
@@ -274,22 +281,23 @@ func run() -> void:
 		player.global_position = facility.entry_point + Vector3(0, 0.1, 1.0)
 		player.velocity = Vector3.ZERO
 		world.call("_interact")
-		for frame: int in range(3):
+		for frame: int in range(60):
 			await process_frame
 		check(
 			bool(world.get("facility_discovered")) and facility.entry_open,
 			"entrance is revealed by the mission interaction"
 		)
-		_camera(Vector3(0, 4.0, -34.0), Vector3(0, -1.0, -43.0), 66.0)
+		player.global_position = Vector3(0, 0.1, -36.0)
+		_camera(Vector3(0, 2.25, -36.35), Vector3(0, -0.4, -44.0), 66.0)
 		await _capture("12_discovered_facility_entrance")
 		player.global_position = Vector3(0, -2.5, -59)
-		_camera(Vector3(-8.0, 1.6, -54.0), Vector3(0, -2.5, -59.0), 72.0)
+		_camera(Vector3(0, -1.3, -53.0), Vector3(0, -1.0, -63.0), 68.0)
 		await _capture("13_facility_monumental_interior")
-		player.global_position = Vector3(0, -7.3, -66)
-		_camera(Vector3(-14.0, -4.4, -57.0), Vector3(0, -7.0, -66.0), 68.0)
+		player.global_position = Vector3(0, -7.3, -61)
+		_camera(Vector3(0, -3.7, -55.0), Vector3(0, -7.0, -66.0), 70.0)
 		await _capture("14_facility_central_operations")
-		player.global_position = Vector3(0, 6.0, -28.5)
-		_camera(Vector3(8.0, 14.0, -22.0), Vector3(0, 7.5, -29.0), 72.0)
+		player.global_position = Vector3(0, 15.0, -29.0)
+		_camera(Vector3(0, 15.1, -25.7), Vector3(0, 15.2, -32.0), 70.0)
 		await _capture("15_facility_vertical_statue_core")
 		# Active mission target (red) and discovered intel (separate yellow overlay).
 		var target := world.get("target") as HotelNpc
@@ -310,7 +318,7 @@ func run() -> void:
 		player.global_position = Vector3(0, 0.75, 4)
 		world.call("_process", 0.0)
 		_camera(Vector3(3.0, 3.0, 10.0), Vector3(0, 1.2, -5.0), 66.0)
-		await _capture("18_campaign_hud_gameplay")
+		await _capture("18_campaign_hud_gameplay", true)
 	await _close_world()
 	check(captures == 18, "all 18 distinct requested in-game views were captured")
 
