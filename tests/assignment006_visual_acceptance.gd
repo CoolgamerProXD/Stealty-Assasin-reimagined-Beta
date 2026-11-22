@@ -154,11 +154,11 @@ func run() -> void:
 		}
 	)
 
-	# 01–02: Initiation's exterior is staged at its real entrance frontage; the
-	# corresponding indoor assessment space and actors are captured separately.
+	# 01–02: use two actual playable assessment-hall views; Initiation has no
+	# exterior level, so do not mislabel a shot from outside its walls.
 	world = await _open_world("res://scenes/initiation.tscn", "initiation")
-	_camera(Vector3(0, 5.8, 18.5), Vector3(0, 1.4, 9.7), 66.0)
-	await _capture("01_initiation_exterior")
+	_camera(Vector3(-8.5, 2.3, 7.8), Vector3(-7.0, 1.1, 0.0), 66.0)
+	await _capture("01_initiation_assessment_hall")
 	var init_player := world.get("player") as HotelPlayer
 	var init_npcs: Array = world.get("npcs")
 	if init_player and init_npcs.size() > 0:
@@ -180,21 +180,21 @@ func run() -> void:
 	# 03–04: the hotel mission environment and its separately furnished wing.
 	world = await _open_world("res://scenes/hotel.tscn", "meridian")
 	_freeze_npcs()
-	_camera(Vector3(-3.0, 7.0, 15.5), Vector3(-1.0, 1.0, -1.0), 64.0)
+	_camera(Vector3(-3.0, 2.2, 6.8), Vector3(-1.0, 1.25, -2.5), 64.0)
 	await _capture("03_meridian_main_environment")
-	_camera(Vector3(-31.0, 9.0, 10.0), Vector3(-27.0, 4.8, -1.0), 64.0)
+	_camera(Vector3(-31.0, 2.2, 10.0), Vector3(-31.0, 1.3, -8.0), 64.0)
 	await _capture("04_meridian_interior_lighting")
 	await _close_world()
 
 	# 05–06: actual campaign station and boardable connected train.
 	world = await _open_world("res://scenes/mission_tung_chung.tscn", "tung_chung")
 	_freeze_npcs()
-	_camera(Vector3(17.0, 8.4, 25.0), Vector3(8.0, 1.4, 11.0), 66.0)
+	_camera(Vector3(-16.0, 3.2, 8.5), Vector3(-6.0, 1.4, -4.0), 66.0)
 	await _capture("05_tung_chung_station")
 	world.call("_board_train")
 	for frame: int in range(3):
 		await process_frame
-	_camera(Vector3(19.0, 3.0, 29.0), Vector3(19.0, 1.1, 39.0), 68.0)
+	_camera(Vector3(19.0, 1.65, 29.0), Vector3(19.0, 1.25, 38.5), 68.0)
 	await _capture("06_tung_chung_train_platform_and_interior")
 	check(
 		world.get("train_stage") == "aboard" and world.get("train_car") != null,
@@ -205,9 +205,9 @@ func run() -> void:
 	# 07–10: all three connected city districts and an actual wardrobe interaction.
 	world = await _open_world("res://scenes/mission_hong_kong_sandbox.tscn", "hong_kong_sandbox")
 	_freeze_npcs()
-	_camera(Vector3(-58, 7, -3), Vector3(-63, 1, -17), 62.0)
+	_camera(Vector3(-58, 5.0, -3), Vector3(-63, 1.0, -17), 62.0)
 	await _capture("07_hong_kong_streets")
-	_camera(Vector3(58, 7, -3), Vector3(63, 1, -17), 62.0)
+	_camera(Vector3(58, 5.0, -3), Vector3(63, 1.0, -17), 62.0)
 	await _capture("08_hong_kong_commercial_district")
 	_camera(Vector3(0, 10, -54), Vector3(0, 5, -79), 62.0)
 	await _capture("09_hong_kong_harbour_skyline")
@@ -230,9 +230,13 @@ func run() -> void:
 		city_player.velocity = Vector3.ZERO
 		world.call("_try_acquire_outfit")
 		world.call("_equip_disguise", "market_vendor")
-		_camera(
-			vendor.global_position + Vector3(0, 2.5, 4.2), vendor.global_position + Vector3.UP, 58.0
-		)
+		# After the real acquisition/equip path has run, stage both role forms
+		# laterally so the camera proves the changed player and covered NPC.
+		vendor.global_position = Vector3(0.0, 0.05, 0.0)
+		city_player.global_position = Vector3(-1.35, 0.05, 1.0)
+		city_player.rotation.y = PI
+		vendor.rotation.y = 0.0
+		_camera(Vector3(-0.4, 2.0, 4.8), Vector3(-0.65, 1.0, 0.0), 58.0)
 		await _capture("10_hong_kong_characters_disguise")
 		check(
 			city_player.body_mesh.outfit_id == "market_vendor" and vendor.person.underwear_mode,

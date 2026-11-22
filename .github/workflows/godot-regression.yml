@@ -180,14 +180,40 @@ jobs:
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print(f"::notice title={name} summary::{text}")
           PYCODE
-      - name: Preview Assignment 006 campaign views in check annotations
+      - name: Preview Assignment 006 views 01–06
         if: always()
         shell: bash
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          root = pathlib.Path("assignment006-visual-acceptance")
-          for path in sorted(root.glob("*_preview.jpg")):
+          paths = sorted(pathlib.Path("assignment006-visual-acceptance").glob("*_preview.jpg"))
+          for path in paths[0:6]:
+              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+              for index in range(0, len(encoded), 3000):
+                  title = path.stem.replace("_preview", "")
+                  print(f"::notice title=a006_{title}_{index // 3000}::{encoded[index:index + 3000]}")
+          PYCODE
+      - name: Preview Assignment 006 views 07–12
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          paths = sorted(pathlib.Path("assignment006-visual-acceptance").glob("*_preview.jpg"))
+          for path in paths[6:12]:
+              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+              for index in range(0, len(encoded), 3000):
+                  title = path.stem.replace("_preview", "")
+                  print(f"::notice title=a006_{title}_{index // 3000}::{encoded[index:index + 3000]}")
+          PYCODE
+      - name: Preview Assignment 006 views 13–18
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          paths = sorted(pathlib.Path("assignment006-visual-acceptance").glob("*_preview.jpg"))
+          for path in paths[12:18]:
               encoded = base64.b64encode(path.read_bytes()).decode("ascii")
               for index in range(0, len(encoded), 3000):
                   title = path.stem.replace("_preview", "")
