@@ -26,8 +26,8 @@
       "name": "OPERATION 01  /  TUNG CHUNG",
       "description": "A moving courier, the first physical key, and a train-line pursuit.",
       "scene": "res://scenes/mission_tung_chung.tscn",
-      "briefing": "Ruby: A Covenant courier is moving a train manifest through Tung Chung. Confront the courier, retrieve the key from the courier and reach the platform exit.",
-      "debrief": "Ruby: The manifest points to a handoff in the streets. The train has not revealed who commissioned it.",
+      "briefing": "Ruby: The USB robber and Constance’s operative are both active in Tung Chung. Permanently complete both through the assessment tag, physically recover Key 01, then pursue the separate train courier and extract.",
+      "debrief": "Ruby: The robber never opened the sealed USB. Constance’s operative confirms a handoff toward the streets; the file’s contents and client remain unknown.",
       "unlock": "",
       "key_id": "key_01"
     },

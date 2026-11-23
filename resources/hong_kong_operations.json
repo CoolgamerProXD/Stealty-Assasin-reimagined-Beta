@@ -1,9 +1,9 @@
 {
   "tung_chung": {
     "map": "station",
-    "target": "Kai Venn, train courier",
+    "target": "Tung Chung Robber",
     "placement": "target",
-    "clue": "The courier carries Key 01. Confront them, then retrieve it before leaving by the platform.",
+    "clue": "The robber and Constance’s operative are both mandatory targets. Complete both, then physically recover Key 01 before taking the train.",
     "target_pos": [
       -12,
       0.05,
@@ -29,7 +29,7 @@
       0.05,
       9
     ],
-    "target_line": "The manifest is on the train. The market intermediary arranged the next handoff.",
+    "target_line": "I stole a sealed USB for a client. I never opened it.",
     "intel_text": "A departure note names the market office as the next handoff; the courier retains Key 01.",
     "intel_pos": [
       17,

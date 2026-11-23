@@ -40,6 +40,7 @@ var disguise_inventory_ui: DisguiseInventory
 var extraction_time: float = 0.0
 var extraction_next: String = ""
 var target_complete: bool = false
+var operative_complete: bool = false
 var key_secured: bool = false
 var train_stage: String = "station"
 var train_contact: HotelNpc
@@ -115,7 +116,7 @@ func _ready() -> void:
   target = scene.get("robber") as HotelNpc
   guard = scene.get("operative") as HotelNpc
   target.profile.identity = str(config["target"])
-  guard.profile.identity = "Courier's bodyguard"
+  guard.profile.identity = "Constance's operative"
  else:
   var t := _vec(config["target_pos"])
   var g := _vec(config["guard_pos"])
@@ -528,6 +529,7 @@ func _next_objective() -> String:
   if not key_secured: return "Physically recover Key 05 from the separate field archive outside the monument."
   return "The hidden complex is mapped. Reach the Central Operations extraction marker."
  if not target_complete: return "Confront or tag " + str(config["target"]) + "."
+ if operation_id == "tung_chung" and not operative_complete: return "Identify and permanently complete Constance's operative."
  if not key_secured:
   if operation_id == "tung_chung" and target_complete: return "Recover Key 01 from the concourse."
   return str(config["clue"])
@@ -556,7 +558,7 @@ func _process(delta: float) -> void:
  if not story_phase.is_empty(): _advance_story(delta)
  if operation_id == "tung_chung":
   _sync_train_gate()
-  if train_stage == "station" and target_complete and key_secured and escape_seen and player.global_position.z > 14.5 and absf(player.global_position.x - 19.0) < 1.8:
+  if train_stage == "station" and target_complete and operative_complete and key_secured and escape_seen and player.global_position.z > 14.5 and absf(player.global_position.x - 19.0) < 1.8:
    _enter_train()
  if extraction_active:
   extraction_time += delta
@@ -575,8 +577,9 @@ func _process(delta: float) -> void:
   for passenger: StylizedPerson in train_passengers: passenger.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
- var total := 5 if operation_id == "tung_chung" else (7 if operation_id == "hong_kong_sandbox" else 3)
+ var total := 6 if operation_id == "tung_chung" else (7 if operation_id == "hong_kong_sandbox" else 3)
  var remaining := int(not target_complete) + int(not key_secured) + 1
+ if operation_id == "tung_chung": remaining += int(not operative_complete)
  if operation_id == "hong_kong_sandbox":
   remaining = 1
   for record: Dictionary in sandbox_target_data:
@@ -700,21 +703,17 @@ func _interact() -> void:
   _interact_sandbox()
   return
  var placement := str(config["placement"])
+ if placement == "target" and target_complete and not key_secured and _reachable(key_marker.global_position):
+  _secure_key()
+  return
  if _reachable(target.global_position, target.get_rid()):
   if not target_complete:
    if target.stunned_time > 0.0:
-    message = "The target cannot respond while incapacitated."
-    return
-   target_complete = true
-   target.complete_objective(false)
-   if operation_id == "tung_chung": _begin_story("escape")
-   message = str(config["target"]) + ": " + str(config["target_line"]) + "  /  Ruby: " + str(config["clue"])
+    message = "The target is temporarily incapacitated. That does not complete the objective."
+   else:
+    message = "Ruby: Dialogue is intelligence only. Use the assessment tag to permanently complete this target."
    return
-  if placement == "target" and operation_id != "tung_chung" and not key_secured:
-   _secure_key()
-   return
- if operation_id == "tung_chung" and target_complete and not key_secured and _reachable(key_marker.global_position):
-  _secure_key()
+  message = str(config["target"]) + ": " + str(config["target_line"])
   return
  if placement == "guard" and not key_secured and _reachable(guard.global_position, guard.get_rid()):
   _secure_key()
@@ -745,7 +744,7 @@ func _interact() -> void:
   _begin_story("roof")
   return
  if _reachable(exit_marker.global_position):
-  if not target_complete or not key_secured or (operation_id == "ngong_ping" and not facility_discovered):
+  if not target_complete or (operation_id == "tung_chung" and not operative_complete) or not key_secured or (operation_id == "ngong_ping" and not facility_discovered):
    message = "Ruby: " + _next_objective()
   elif operation_id == "tung_chung" and train_stage == "station":
    message = "Ruby: The train door is open. Walk forward through the marked platform doorway."
@@ -1081,7 +1080,7 @@ func _on_train_chase_trigger(body: Node3D) -> void:
 
 func _sync_train_gate() -> void:
  if not train_gate: return
- var open: bool = target_complete and key_secured and escape_seen
+ var open: bool = target_complete and operative_complete and key_secured and escape_seen
  train_gate.visible = not open
  (train_gate.get_child(1) as CollisionShape3D).set_deferred("disabled", open)
 
@@ -1232,6 +1231,9 @@ func _train_collision(pos: Vector3, size: Vector3) -> void:
  body.add_child(collider)
 
 func _secure_key() -> void:
+ if not target_complete or (operation_id == "tung_chung" and not operative_complete):
+  message = "Ruby: Complete both Tung Chung objectives before recovering Key 01."
+  return
  var id := str(Campaign.progress.mission(operation_id).get("key_id", ""))
  if Campaign.secure_mission_key(operation_id, id):
   key_secured = true
@@ -1311,9 +1313,14 @@ func _fire() -> void:
    reticle.call("confirm_hit")
   elif npc == train_contact and not train_contact_complete:
    message = "Ruby: We need the contact's account. Speak to them instead."
+  elif operation_id == "tung_chung" and npc == guard and not operative_complete:
+   operative_complete = true
+   guard.complete_objective(false)
+   message = "Ruby: Constance's operative permanently completed. Non-graphic assessment tag confirmed."
+   reticle.call("confirm_hit")
   elif npc == target and not target_complete:
    target_complete = true
-   target.complete_objective(operation_id != "tung_chung")
+   target.complete_objective(false)
    if operation_id == "tung_chung": _begin_story("escape")
    message = "Ruby: Target tagged. " + str(config["clue"])
   elif npc.incapacitate(12.0): message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
@@ -1355,7 +1362,7 @@ func save_game() -> void:
   var data := {"mission_id": operation_id,"sandbox_targets_completed": completed_targets,"sandbox_intel_completed": completed_intel,"sandbox_key_marker_positions": marker_positions,"uniform_found": false,"intel_found": not completed_intel.is_empty(),"witness_found": witness_found,"position": [p.x,p.y,p.z],"equipment": player.equipment.snapshot(),"outfits": wardrobe,"npc_outfits_taken": npc_clothing}
   message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
   return
- var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "facility_discovered": facility_discovered, "train_chase_active": train_chase_active, "train_chase_finished": train_chase_finished, "train_contact_position": [train_contact.global_position.x, train_contact.global_position.y, train_contact.global_position.z] if train_contact else [], "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot(), "outfits": wardrobe, "npc_outfits_taken": npc_clothing}
+ var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "operative_complete": operative_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "facility_discovered": facility_discovered, "train_chase_active": train_chase_active, "train_chase_finished": train_chase_finished, "train_contact_position": [train_contact.global_position.x, train_contact.global_position.y, train_contact.global_position.z] if train_contact else [], "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot(), "outfits": wardrobe, "npc_outfits_taken": npc_clothing}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -1413,7 +1420,8 @@ func load_game() -> void:
  var saved_key_valid: bool = data.get("key_id", "") == expected and data.get("key_secured", false) == true and Campaign.progress.recovered_keys.has(expected)
  var previous_stage := train_stage
  target_complete = data.get("target_complete", false) == true
- key_secured = saved_key_valid
+ operative_complete = operation_id == "tung_chung" and data.get("operative_complete", false) == true
+ key_secured = saved_key_valid and target_complete and (operation_id != "tung_chung" or operative_complete)
  # A checkpoint is never resumed mid-presentation: target completion
  # converges on the same post-escape state as a cinematic skip (also migrates
  # older saves which did not have a cinematic flag).
@@ -1436,7 +1444,7 @@ func load_game() -> void:
    target.collision_layer = 1
    target.global_position = _vec(config["target_pos"])
    target.set_physics_process(true)
-  if data.get("train_stage", "") == "aboard" and target_complete and saved_key_valid and escape_seen:
+  if data.get("train_stage", "") == "aboard" and target_complete and operative_complete and key_secured and escape_seen:
    _board_train()
    train_contact_complete = data.get("train_contact_complete", false) == true
    train_chase_active = data.get("train_chase_active", false) == true

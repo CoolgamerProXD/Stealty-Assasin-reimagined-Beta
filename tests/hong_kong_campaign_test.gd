@@ -69,6 +69,43 @@ func run() -> void:
  check(awareness_guard.state == "warning" and is_equal_approx(awareness_guard.warning_remaining,0.5), "visible sidearm warning uses the short 0.5-second threshold")
  awareness_guard.queue_free()
 
+ # Tung Chung has two distinct, explicitly completable targets. Talking to
+ # either actor or incapacitating them must not satisfy either objective or
+ # award the physically carried key.
+ service.progress.restore({"completed":["initiation"],"recovered_keys":[]})
+ service.active_mission = "tung_chung"
+ var station := load("res://scenes/mission_tung_chung.tscn").instantiate() as Node3D
+ root.add_child(station)
+ await process_frame
+ await process_frame
+ for npc: HotelNpc in station.get("npc_list"): npc.set_physics_process(false)
+ station.call("_skip_cinematic")
+ var robber: HotelNpc = station.get("target")
+ await near_player(station, robber.global_position)
+ station.call("_interact")
+ check(not station.get("target_complete") and not service.progress.recovered_keys.has("key_01"), "Robber dialogue cannot complete the target or award Key 01")
+ robber.incapacitate(12.0)
+ station.call("_interact")
+ check(not station.get("target_complete"), "temporary Robber incapacitation is not target completion")
+ var operative: HotelNpc = station.get("guard")
+ await near_player(station, operative.global_position)
+ station.call("_interact")
+ check(not station.get("operative_complete"), "Constance's operative dialogue cannot complete that objective")
+ station.set("target_complete", true)
+ station.call("_secure_key")
+ check(not service.progress.recovered_keys.has("key_01"), "Key 01 stays unavailable until both distinct Tung Chung targets are complete")
+ # A legacy checkpoint cannot restore a finished pursuit or key while omitting
+ # the newly required operative objective.
+ service.progress.recovered_keys.append("key_01")
+ var legacy_station_save := temp + "_legacy_station.json"
+ station.set("save_path", legacy_station_save)
+ SaveStore.write(legacy_station_save,{"mission_id":"tung_chung","target_complete":true,"key_id":"key_01","key_secured":true,"train_stage":"aboard"})
+ station.call("load_game")
+ check(not station.get("operative_complete") and not station.get("key_secured") and station.get("train_stage") != "aboard", "legacy Tung Chung checkpoints cannot bypass the operative target prerequisite")
+ service.progress.recovered_keys.erase("key_01")
+ station.queue_free()
+ await process_frame
+
  service.progress.restore({"completed":["initiation","tung_chung"],"recovered_keys":["key_01"]})
  service.active_mission = "hong_kong_sandbox"
  var world := load("res://scenes/mission_hong_kong_sandbox.tscn").instantiate() as Node3D
@@ -126,7 +163,7 @@ func run() -> void:
  service.campaign_path = old_path
  service.active_mission = old_active
  service.progress.restore(old_progress)
- for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_sandbox.json",temp + "_sandbox.json.bak",temp + "_sandbox.json.tmp"]:
+ for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_sandbox.json",temp + "_sandbox.json.bak",temp + "_sandbox.json.tmp",temp + "_legacy_station.json",temp + "_legacy_station.json.bak",temp + "_legacy_station.json.tmp"]:
   if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
  print("HK RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)
