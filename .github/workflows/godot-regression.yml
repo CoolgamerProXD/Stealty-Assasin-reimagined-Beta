@@ -318,7 +318,7 @@ jobs:
           PYCODE
 
   windows:
-    if: contains(github.event.head_commit.message, '[windows]')
+    if: contains(github.event.head_commit.message, '[windows]') || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
