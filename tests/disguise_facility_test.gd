@@ -49,13 +49,16 @@ func run() -> void:
 	check(not player.acquire_outfit("not_an_outfit") and not player.equip_outfit("market_vendor"),"invalid or unowned outfits cannot be added or equipped")
 	check(player.acquire_outfit("market_vendor") and not player.acquire_outfit("market_vendor"),"acquisition succeeds once and prevents duplicates")
 	check(player.equip_outfit("market_vendor") and player.role == "vendor" and player.body_mesh.outfit_id == "market_vendor","equipping changes gameplay role and visible character outfit")
+	await process_frame
 	check(player.body_mesh.cc0_model_name == "dale" and player.body_mesh.cc0_model != null and any_visible(player.body_mesh.cc0_clothes),"vendor outfit switches to an imported workwear body and visible garment mesh")
 	check(player.body_mesh.vendor_apron.visible and not player.body_mesh.underwear_mode,"vendor outfit has its distinct procedural apron")
 	check(player.acquire_outfit("facility_security") and player.equip_outfit("facility_security"),"special facility uniform can be acquired and switched to")
+	await process_frame
 	check(player.body_mesh.cc0_model_name == "gary" and player.body_mesh.cc0_model != null and player.body_mesh.weapon.get_parent() == player.body_mesh.right_hand_attachment,"switching outfits reloads the matching skinned model without losing hand equipment")
 	var wardrobe := player.outfit_snapshot()
 	player.equip_outfit("civilian")
 	player.restore_outfits(wardrobe)
+	await process_frame
 	check(player.outfit_id == "facility_security" and player.outfit_inventory.has("market_vendor"),"checkpoint wardrobe restores owned and currently equipped outfits")
 	campaign.progress.restore({})
 	check(campaign.progress.acquire_outfit("market_vendor") and campaign.progress.equip_outfit("market_vendor"),"campaign progression stores recovered and equipped outfit IDs")

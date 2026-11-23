@@ -54,6 +54,9 @@ var cc0_clothes: Array[MeshInstance3D] = []
 var cc0_shoes: Array[MeshInstance3D] = []
 var underwear_straps: Array[MeshInstance3D] = []
 var cc0_model_name: String = ""
+var cc0_model_reload_pending: bool = false
+var cc0_model_reload_deferred: bool = false
+var pending_cc0_model_name: String = ""
 # Identical immutable primitive meshes are reused across the population. Each
 # person retains independent materials, transforms and animated joints.
 static var primitive_meshes: Dictionary = {}
@@ -173,6 +176,15 @@ func _spawn_cc0_model() -> void:
  _load_cc0_model(_model_for_outfit(outfit_id))
 
 func _load_cc0_model(model_name: String) -> void:
+ if cc0_model and is_inside_tree() and not cc0_model_reload_deferred:
+  # Outfit changes can happen while an actor's parent is populating its child
+  # list. Defer model replacement so reparenting attachments runs when the tree
+  # is idle, and coalesce rapid outfit changes to the latest requested model.
+  pending_cc0_model_name = model_name
+  if not cc0_model_reload_pending:
+   cc0_model_reload_pending = true
+   call_deferred("_apply_pending_cc0_model")
+  return
  if not CC0_MODEL_IDS.has(model_name):
   push_warning("Unknown CC0 character model: " + model_name)
   return
@@ -234,6 +246,13 @@ func _load_cc0_model(model_name: String) -> void:
  if weapon: _attach_equipment(weapon, right_hand_attachment, Vector3(0.025, -0.045, -0.015))
  if quiet_tool: _attach_equipment(quiet_tool, left_hand_attachment, Vector3(0, -0.025, 0))
  _update_cc0_outfit_visuals()
+
+func _apply_pending_cc0_model() -> void:
+ var model_name := pending_cc0_model_name
+ cc0_model_reload_pending = false
+ cc0_model_reload_deferred = true
+ _load_cc0_model(model_name)
+ cc0_model_reload_deferred = false
 
 func _find_skeleton(node: Node) -> Skeleton3D:
  if node is Skeleton3D: return node as Skeleton3D
