@@ -182,6 +182,13 @@ jobs:
           name: instinct-rendered-comparisons
           path: visual-test-output/*.png
           if-no-files-found: ignore
+      - name: Upload Godot test logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: godot-test-logs
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: warn
       # Expose short diagnostics through the GitHub checks API; some environments
       # cannot reach the separate Actions log-download host.
       - name: Report diagnostic excerpts
