@@ -78,6 +78,11 @@
     ],
     "target_line": "The vendor’s ledger disguises extortion as market taxes and points to a commercial fixer. The buyer is not named.",
     "intel_text": "A market receipt names the district records broker and says the bodyguard carries Key 02.",
+    "intel_pos": [
+      -2,
+      0.05,
+      8
+    ],
     "witness": "Market vendor",
     "witness_pos": [
       -6,
@@ -123,6 +128,11 @@
     ],
     "target_line": "The fixer routed the market payments through legitimate corporate records. The client remains unidentified.",
     "intel_text": "A routing slip identifies the records safe as the Key 03 location and names a waterfront liaison.",
+    "intel_pos": [
+      2,
+      0.05,
+      8
+    ],
     "witness": "Records clerk",
     "witness_pos": [
       6,
@@ -168,6 +178,11 @@
     ],
     "target_line": "The businessman’s Prometheus project received discreet Covenant funding and sent field-finding requests. The client and research purpose remain unknown.",
     "intel_text": "A quay ledger confirms the liaison’s bodyguard holds Key 04 and references a mountain field archive.",
+    "intel_pos": [
+      0,
+      0.05,
+      -18
+    ],
     "witness": "Quay attendant",
     "witness_pos": [
       4,

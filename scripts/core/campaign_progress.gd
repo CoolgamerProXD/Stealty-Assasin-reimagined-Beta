@@ -75,7 +75,11 @@ func _target_ids(entry: Dictionary) -> Array[String]:
 func record_target_completion(mission_id: String, target_id: String) -> bool:
  var entry := mission(mission_id)
  if not is_unlocked(mission_id) or target_id.is_empty() or not _target_ids(entry).has(target_id): return false
- var values: Array[String] = completed_targets.get(mission_id, [])
+ var values: Array[String] = []
+ var raw_values: Variant = completed_targets.get(mission_id, [])
+ if raw_values is Array:
+  for value: Variant in raw_values:
+   if value is String and not values.has(value): values.append(value)
  if not values.has(target_id): values.append(target_id)
  completed_targets[mission_id] = values
  return true

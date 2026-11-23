@@ -122,9 +122,9 @@ func run() -> void:
  await process_frame
  check(world.get("operation_id") == "the_streets", "Streets boots as its own selectable mission")
  var city: Node3D = world.get("scene")
- check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) != null and city.find_child("District_the_harbour",true,false) != null, "district extensions remain connected in a shared explorable city")
+ check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) == null and city.find_child("District_the_harbour",true,false) == null, "Streets loads its own distinct district without bundling the later operations")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "connected street navigation is instantiated")
- check(city.find_child("CorporateFloorNavigation_4",true,false) != null and not city.find_children("*","DestructibleGlass",true,false).is_empty(), "city retains an accessible upper floor and collision-backed glazing")
+ check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
  var people: Array = world.get("npc_list")
  for npc: HotelNpc in people: npc.set_physics_process(false)
  world.call("_skip_cinematic")
@@ -153,6 +153,18 @@ func run() -> void:
  world.call("_interact")
  check(not service.progress.completed.has("the_streets") and not world.get("extraction_active"), "district extraction remains locked until target completion")
  world.queue_free()
+ await process_frame
+
+ service.progress.restore({"schema_version":2,"completed":["initiation","tung_chung","the_streets","the_district"],"completed_targets":{"tung_chung":["usb_robber","constance_operative"],"the_streets":["market_vendor"],"the_district":["corporate_fixer"]},"recovered_keys":["key_01","key_02","key_03"]})
+ service.active_mission = "the_harbour"
+ var harbour_world := load("res://scenes/mission_the_harbour.tscn").instantiate() as Node3D
+ root.add_child(harbour_world)
+ await process_frame
+ await process_frame
+ var harbour_map: Node3D = harbour_world.get("scene")
+ check(harbour_map.find_child("District_the_harbour",true,false) != null and harbour_map.find_child("CorporateFloorNavigation_4",true,false) != null, "Harbour alone builds the connected tower and accessible executive floor")
+ check(not harbour_map.find_children("*","DestructibleGlass",true,false).is_empty(), "Harbour tower glazing has collision-backed breakable panes")
+ harbour_world.queue_free()
  await process_frame
 
  service.campaign_path = old_path
