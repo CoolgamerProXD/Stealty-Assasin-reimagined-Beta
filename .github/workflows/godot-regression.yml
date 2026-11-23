@@ -372,14 +372,35 @@ jobs:
             $log = "$path\smoke-$scene.log"
             $arguments = @('--headless', '--quit-after', '120', '--log-file', $log, "res://scenes/$scene.tscn")
             $process = Start-Process "$path\PROJECT_ASSASSIN.exe" -WorkingDirectory $path -ArgumentList $arguments -PassThru
-            if (!$process.WaitForExit(90000)) { $process.Kill(); throw "$scene timed out" }
-            if ($process.ExitCode -ne 0) { throw "$scene exited $($process.ExitCode)" }
-            if (!(Test-Path $log)) { throw "No smoke log for $scene" }
+            if (!$process.WaitForExit(90000)) { $process.Kill(); "SMOKE_FAIL: $scene timed out" | Out-File "$path\smoke-failure.txt" -Append; throw "$scene timed out" }
+            if ($process.ExitCode -ne 0) { "SMOKE_FAIL: $scene exited $($process.ExitCode)" | Out-File "$path\smoke-failure.txt" -Append; if (Test-Path $log) { Get-Content $log }; throw "$scene exited $($process.ExitCode)" }
+            if (!(Test-Path $log)) { "SMOKE_FAIL: no log for $scene" | Out-File "$path\smoke-failure.txt" -Append; throw "No smoke log for $scene" }
             Get-Content $log
             if (Select-String -Path $log -Pattern 'SCRIPT ERROR|ERROR:') { throw "$scene logged errors" }
           }
+      - name: Report Windows smoke diagnostics
+        if: always()
+        shell: pwsh
+        run: |
+          $path = "$env:GITHUB_WORKSPACE\build\windows"
+          if (!(Test-Path $path)) { return }
+          $failure = "$path\smoke-failure.txt"
+          if (Test-Path $failure) {
+            $message = (Get-Content $failure | Select-Object -Last 12) -join "`n"
+            $message = $message.Replace('%','%25').Replace("`r",'%0D').Replace("`n",'%0A')
+            Write-Output "::error title=Windows exported-scene smoke failure::$message"
+          }
+          foreach ($log in Get-ChildItem "$path\smoke-*.log" -ErrorAction SilentlyContinue) {
+            $matches = Select-String -Path $log.FullName -Pattern 'SCRIPT ERROR|ERROR:|SMOKE_FAIL|Godot Engine'
+            if ($matches) {
+              $message = ($matches | Select-Object -Last 12 | ForEach-Object { $_.Line }) -join "`n"
+              $message = $message.Replace('%','%25').Replace("`r",'%0D').Replace("`n",'%0A')
+              Write-Output "::notice title=Windows smoke $($log.BaseName)::$message"
+            }
+          }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
         with:
           name: project-assassin-windows-smoke-tested
           path: build/windows/*
-          if-no-files-found: error
+          if-no-files-found: warn
