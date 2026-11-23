@@ -247,24 +247,58 @@ jobs:
                   title = path.stem.replace("_preview", "")
                   print(f"::notice title=a006_{title}_{index // 3000}::{encoded[index:index + 3000]}")
           PYCODE
-      - name: Expose native-resolution visual review images
-        if: always()
+
+  visual-review:
+    name: Native-resolution visual review — ${{ matrix.capture }}
+    needs: headless
+    if: needs.headless.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        capture:
+          - 01_initiation_assessment_hall
+          - 02_initiation_player_npc
+          - 03_meridian_main_environment
+          - 04_meridian_interior_lighting
+          - 05_tung_chung_station
+          - 06_tung_chung_train_platform_and_interior
+          - 07_hong_kong_streets
+          - 08_hong_kong_commercial_district
+          - 09_hong_kong_harbour_skyline
+          - 10_hong_kong_characters_disguise
+          - 11_ngong_ping_exterior_statue
+          - 12_discovered_facility_entrance
+          - 13_facility_monumental_interior
+          - 14_facility_central_operations
+          - 15_facility_vertical_statue_core
+          - 16_instinct_target_and_discovered_intel
+          - 17_instinct_secret_undiscovered_hidden
+          - 18_campaign_hud_gameplay
+    steps:
+      - name: Download genuine native-resolution capture artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: assignment006-visual-acceptance
+          path: assignment006-visual-acceptance
+      - name: Expose one full-resolution review image in bounded check annotations
         shell: bash
+        env:
+          CAPTURE_NAME: ${{ matrix.capture }}
         run: |
           python3 - <<'PYCODE'
-          import base64, pathlib
-          paths = sorted(pathlib.Path("assignment006-visual-acceptance").glob("*_inspect.jpg"))
-          if len(paths) != 18:
-              raise SystemExit(f"expected 18 native-resolution review JPEGs, got {len(paths)}")
-          for path in paths:
-              payload = path.read_bytes()
-              if not 0 < len(payload) <= 42000:
-                  raise SystemExit(f"{path}: payload size {len(payload)} outside 1..42000 bytes")
-              encoded = base64.b64encode(payload).decode("ascii")
-              if len(encoded) > 56000:
-                  raise SystemExit(f"{path}: base64 annotation would exceed the safe command limit")
-              title = path.stem.removesuffix("_inspect")
-              print(f"::notice title=a006_native_{title}::{encoded}")
+          import base64, os, pathlib
+          name = os.environ["CAPTURE_NAME"]
+          path = pathlib.Path("assignment006-visual-acceptance") / f"{name}_inspect.jpg"
+          payload = path.read_bytes()
+          if not 0 < len(payload) <= 42000:
+              raise SystemExit(f"{path}: payload size {len(payload)} outside 1..42000 bytes")
+          encoded = base64.b64encode(payload).decode("ascii")
+          for index in range(0, len(encoded), 3000):
+              chunk = encoded[index:index + 3000]
+              title = f"a006_native_{name}_{index // 3000:02d}"
+              print(f"::notice title={title}::{chunk}")
           PYCODE
 
   windows:

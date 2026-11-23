@@ -2,7 +2,7 @@
 
 - Tuned the fictional Tung Chung campaign station's night fill and layered practical lights to retain cooler mood while lifting dark surfaces; added repeated platform-screen-door framing and restrained livery detailing to make the train/platform boundary more legible. Corrected the Meridian restaurant acceptance camera to look through its actual room opening rather than across the glazed service partition.
 - Extended the genuine-scene capture harness to reopen/size-check the lossless PNGs, create native-resolution review JPEGs within a safe CI annotation payload budget, and write a JSON manifest. CI now validates every original/review file and exposes native-resolution review images separately from 320×180/160×90 summaries.
-- Not runtime-verified in this local sandbox: Godot is unavailable and the previous direct engine download failed. Run the full regression and inspect genuine captures before treating the lighting or scene presentation as visually accepted. Human playtesting, cultural review and target-device testing remain incomplete.
+- Godot 4.4.1 run [45140609212](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/45140609212) passed the full headless and Windows export/headless-smoke jobs, including all 18 capture and manifest checks. GitHub truncated the first native JPEG check annotations at 4,096 characters; the 3.3 MB image artifact is present but not locally reviewed. The workflow now gives each review image its own check run and splits it into recoverable bounded chunks. Local Godot rendering, human visual review, playtesting, cultural review and target-device testing remain incomplete.
 
 # Tung Chung story and presentation checkpoint
 
