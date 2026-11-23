@@ -107,7 +107,7 @@ func _box(pos: Vector3, size: Vector3, color: Color) -> void:
  add_child(visual)
 
 func _process(delta: float) -> void:
- if finished or waiting_for_rescue: return
+ if finished or rescued or waiting_for_rescue: return
  elapsed += delta
  player_actor.animate_motion(delta,0.0)
  ruby_actor.animate_motion(delta,0.0)
