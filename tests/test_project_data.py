@@ -1,5 +1,6 @@
 """Dependency-free checks for authored population data; not gameplay tests."""
 import json
+import re
 from pathlib import Path
 import unittest
 
@@ -73,37 +74,49 @@ class PopulationDataTests(unittest.TestCase):
         self.assertEqual(initiation["primary_target"]["id"], "assessment_unit")
         self.assertEqual(initiation["required_action"], "disable_assessment_unit")
 
-    def test_hong_kong_campaign_rebuild_has_one_connected_city_operation(self):
+    def test_hong_kong_campaign_has_distinct_ordered_city_operations(self):
         campaign = json.loads((ROOT / "resources/campaign.json").read_text())
         ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())
         ids = [entry["id"] for entry in campaign["missions"]]
-        self.assertEqual(ids, ["initiation", "meridian", "tung_chung", "hong_kong_sandbox", "ngong_ping"])
-        self.assertFalse({"the_streets", "the_district", "the_harbour"}.intersection(ids))
-        self.assertEqual(campaign["missions"][2]["key_id"], "key_01")
-        sandbox = campaign["missions"][3]
-        self.assertEqual(sandbox["key_ids"], ["key_02", "key_03", "key_04"])
-        self.assertEqual(campaign["missions"][4]["key_id"], "key_05")
-        self.assertEqual(ops["hong_kong_sandbox"]["map"], "city")
-        self.assertEqual([target["id"] for target in ops["hong_kong_sandbox"]["targets"]], ["loan_shark", "corporate_fixer", "harbour_businessman"])
-        self.assertEqual([key["id"] for key in ops["hong_kong_sandbox"]["keys"]], ["key_02", "key_03", "key_04"])
-        for target in ops["hong_kong_sandbox"]["targets"]:
-            self.assertTrue(target["identity"] and target["dialogue"] and target["routine"])
-            self.assertGreaterEqual(len(target["routine"]), 3)
-            self.assertEqual(len(target["start"]), 3)
-        scene = ROOT / sandbox["scene"].removeprefix("res://")
-        self.assertTrue(scene.is_file())
-        self.assertIn('operation_id = "hong_kong_sandbox"', scene.read_text())
-        for key in ["key_01", "key_02", "key_03", "key_04", "key_05"]:
-            self.assertEqual(sum(mission.get("key_id") == key or key in mission.get("key_ids", []) for mission in campaign["missions"]), 1)
-
-    def test_legacy_city_data_remains_only_for_migration_and_district_builders(self):
-        campaign = json.loads((ROOT / "resources/campaign.json").read_text())
-        ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())
-        for legacy_id in ["the_streets", "the_district", "the_harbour"]:
-            self.assertNotIn(legacy_id, [mission["id"] for mission in campaign["missions"]])
-            self.assertIn(legacy_id, ops)
-        self.assertIn('if operation_id == "hong_kong_sandbox":', (ROOT / "scripts/missions/hong_kong_operation.gd").read_text())
+        self.assertEqual(ids[:6], ["initiation", "tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"])
+        self.assertEqual([campaign["missions"][i]["key_id"] for i in range(1, 6)], ["key_01", "key_02", "key_03", "key_04", "key_05"])
+        self.assertEqual(campaign["missions"][6]["id"], "house")
+        self.assertEqual(campaign["missions"][6]["target_ids"], [])
+        self.assertTrue(campaign["missions"][-1].get("optional", False))
+        self.assertEqual(campaign["missions"][-1]["id"], "meridian")
+        self.assertTrue((ROOT / "scenes/mission_house.tscn").is_file())
+        self.assertTrue((ROOT / "scenes/house_mission_map.tscn").is_file())
+        house_script = (ROOT / "scripts/missions/hong_kong_operation.gd").read_text()
+        code = re.search(r'const HOUSE_SAFE_CODE := "([0-9]+)"', house_script)
+        self.assertIsNotNone(code)
+        self.assertEqual(len(code.group(1)), 70)
+        self.assertTrue((ROOT / "scenes/post_usb_betrayal.tscn").is_file())
+        betrayal = (ROOT / "scripts/cinematics/post_usb_betrayal.gd").read_text()
+        self.assertIn("PRESS E  /  PULL RUBY TO COVER", betrayal)
+        self.assertIn("ten heads", betrayal.lower())
+        self.assertNotIn("Rose", (ROOT / "HONG_KONG_MAP_PLAN.md").read_text())
+        expected_targets = {
+            "the_streets": "Market Vendor",
+            "the_district": "Corporate Fixer",
+            "the_harbour": "Wealthy Harbour Businessman",
+        }
+        for mission_id, target_name in expected_targets.items():
+            entry = next(m for m in campaign["missions"] if m["id"] == mission_id)
+            scene = ROOT / entry["scene"].removeprefix("res://")
+            self.assertTrue(scene.is_file())
+            self.assertIn(f'operation_id = "{mission_id}"', scene.read_text())
+            self.assertEqual(ops[mission_id]["target"], target_name)
+            self.assertEqual(ops[mission_id]["key_id"], entry["key_id"])
+            self.assertEqual(ops[mission_id]["map"], "city")
         self.assertTrue((ROOT / "scripts/world/destructible_glass.gd").is_file())
+
+    def test_city_operations_have_distinct_physical_key_locations(self):
+        ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())
+        expected = {"the_streets": "key_02", "the_district": "key_03", "the_harbour": "key_04"}
+        for mission_id, key_id in expected.items():
+            self.assertEqual(ops[mission_id]["key_id"], key_id)
+            self.assertIn(ops[mission_id]["placement"], {"guard", "safe", "target"})
+            self.assertTrue(ops[mission_id]["clue"])
 
     def test_main_scene_and_script_exist(self):
         self.assertIn('run/main_scene="res://scenes/main_menu.tscn"', (ROOT / "project.godot").read_text())

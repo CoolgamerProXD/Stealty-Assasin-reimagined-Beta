@@ -4,6 +4,7 @@ var elapsed: float = 0.0
 var status: Label
 var indicator: ProgressBar
 var done: bool = false
+var authorized: bool = false
 
 func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -17,7 +18,7 @@ func _ready() -> void:
  layout.custom_minimum_size = Vector2(920,0)
  layout.add_theme_constant_override("separation", 20)
  add_child(layout)
- for line: String in ["BLACKLINE  /  SECURE CHANNEL", "USB DECRYPTION", "RUBY: Five keys accepted. The file is accessible; its contents still need analysis."]:
+ for line: String in ["BLACKLINE  /  SECURE CHANNEL", "USB DECRYPTION", "RUBY: Five physical keys and the separate 70-digit House code are accepted. The file is accessible; its contents and client remain unresolved."]:
   var label := Label.new()
   label.text = line
   label.add_theme_font_size_override("font_size", 30 if line == "USB DECRYPTION" else 22)
@@ -28,11 +29,13 @@ func _ready() -> void:
  indicator.show_percentage = false
  layout.add_child(indicator)
  status = Label.new()
- status.text = "SECURE SESSION OPENING"
+ authorized = Campaign.progress.usb_ready() and Campaign.progress.completed.has("ngong_ping") and Campaign.progress.completed.has("house") and Campaign.progress.house_code_recovered
+ status.text = "SECURE SESSION OPENING" if authorized else "ACCESS BLOCKED  /  FIVE KEYS AND HOUSE CODE REQUIRED"
  layout.add_child(status)
  var button := Button.new()
  button.text = "CONTINUE  /  SKIP"
  button.custom_minimum_size = Vector2(300,44)
+ button.disabled = not authorized
  button.pressed.connect(_finish)
  layout.add_child(button)
  button.grab_focus()
@@ -40,7 +43,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
  elapsed += delta
  indicator.value = minf(elapsed / 5.0 * 100.0, 100.0)
- if elapsed >= 5.0: status.text = "KEYS VERIFIED  /  ANALYSIS PENDING"
+ if authorized and elapsed >= 5.0: status.text = "KEYS + HOUSE CODE VERIFIED  /  FILE CONTENTS UNKNOWN"
 
 func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("release_mouse"): _finish()
@@ -51,4 +54,4 @@ func _finish() -> void:
   status.text = "Unable to save secure-channel progress. Try again."
   return
  done = true
- get_tree().change_scene_to_file("res://scenes/ending.tscn")
+ get_tree().change_scene_to_file("res://scenes/post_usb_betrayal.tscn")

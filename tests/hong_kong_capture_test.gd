@@ -37,6 +37,22 @@ func sample_quality(service: Node, location: String, quality: String) -> void:
  var mean := total/float(samples.size())
  print("HKPERF: %s %s frames=30 mean_ms=%.3f p95_ms=%.3f fps=%.2f" % [location,quality,mean,samples[28],1000.0/maxf(mean,0.001)])
 
+func _progress_for(service: Node, operation_id: String) -> void:
+ var ordered := ["tung_chung","the_streets","the_district","the_harbour","ngong_ping","house"]
+ var target_ids := {"tung_chung":["usb_robber","constance_operative"],"the_streets":["market_vendor"],"the_district":["corporate_fixer"],"the_harbour":["harbour_businessman"],"ngong_ping":["field_coordinator"],"house":[]}
+ var completed: Array[String] = ["initiation"]
+ var targets: Dictionary = {}
+ var keys: Array[String] = []
+ if operation_id == "hong_kong_sandbox":
+  operation_id = "ngong_ping"
+ var current := ordered.find(operation_id)
+ for index: int in range(maxi(0,current)):
+  var mission_id: String = ordered[index]
+  completed.append(mission_id)
+  targets[mission_id] = target_ids[mission_id]
+  keys.append("key_%02d" % (index + 1))
+ service.progress.restore({"schema_version":2,"completed":completed,"completed_targets":targets,"recovered_keys":keys})
+
 func run() -> void:
  output = OS.get_environment("TEST_SCREENSHOT_DIR")
  if output.is_empty(): output = "user://captures"
@@ -45,8 +61,13 @@ func run() -> void:
  var service := root.get_node("Campaign")
  var old_settings: Dictionary = service.settings.duplicate(true)
  var old_progress: Dictionary = service.progress.snapshot()
- var ids: Array[String] = ["tung_chung","hong_kong_sandbox","ngong_ping"]
+ var old_active: String = service.active_mission
+ var old_campaign_path: String = service.campaign_path
+ var scratch_campaign_path := "user://hk_capture_%d_campaign.json" % Time.get_ticks_usec()
+ service.campaign_path = scratch_campaign_path
+ var ids: Array[String] = ["tung_chung","the_streets","the_district","the_harbour","hong_kong_sandbox","ngong_ping","house"]
  for id: String in ids:
+  _progress_for(service,id)
   service.active_mission = id
   var world: Node3D = load("res://scenes/mission_" + id + ".tscn").instantiate()
   root.add_child(world)
@@ -79,7 +100,10 @@ func run() -> void:
   var shot := Camera3D.new()
   world.add_child(shot)
   var focus: Vector3 = (world.get("target") as HotelNpc).global_position + Vector3.UP
-  if id == "ngong_ping":
+  if id == "house":
+   shot.global_position = Vector3(0,2.4,-3)
+   shot.look_at(Vector3(0,1.0,-8),Vector3.UP)
+  elif id == "ngong_ping":
    shot.global_position = Vector3(0,8,8)
    shot.look_at(Vector3(0,11,-29),Vector3.UP)
   elif id == "tung_chung":
@@ -91,6 +115,18 @@ func run() -> void:
    shot.look_at(Vector3(0,1,-15),Vector3.UP)
   shot.make_current()
   await capture("hk_play_" + id)
+  if id == "house":
+   for npc: HotelNpc in world.get("npc_list"): npc.set_physics_process(false)
+   player.set_physics_process(false)
+   var safe: Node3D = world.get("house_safe_marker")
+   player.global_position = safe.global_position + Vector3(0,0,1.5)
+   world.call("_interact")
+   check(service.progress.house_code_recovered and service.progress.house_code.length() == 70,"physical House safe records the independent 70-digit code")
+   await capture("hk_house_safe_code")
+   var house_exit: Node3D = world.get("exit_marker")
+   player.global_position = house_exit.global_position + Vector3(0,0,1.0)
+   world.call("_interact")
+   check(service.progress.completed.has("house") and world.get("extraction_active"),"House extraction follows code recovery and unlocks only the decryption transition")
   if id == "hong_kong_sandbox":
    var targets: Array = world.get("sandbox_targets")
    var records: Array = world.get("sandbox_target_data")
@@ -155,7 +191,11 @@ func run() -> void:
   await process_frame
  service.settings = old_settings
  service.progress.restore(old_progress)
- service.active_mission = ""
+ service.active_mission = old_active
+ service.campaign_path = old_campaign_path
+ for suffix: String in ["", ".bak", ".tmp"]:
+  var path := scratch_campaign_path + suffix
+  if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
  service.apply_settings()
  print("HKVIS RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)

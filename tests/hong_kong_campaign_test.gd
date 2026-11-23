@@ -33,25 +33,33 @@ func run() -> void:
  check(configured.configure(definition), "campaign definition configures")
  var campaign_ids: Array[String] = []
  for entry: Dictionary in configured.missions: campaign_ids.append(str(entry["id"]))
- check(campaign_ids == ["initiation","meridian","tung_chung","hong_kong_sandbox","ngong_ping"], "one selectable Hong Kong city operation replaces the three legacy entries")
- check(configured.mission("the_streets").is_empty() and configured.mission("the_district").is_empty() and configured.mission("the_harbour").is_empty(), "legacy city IDs are not selectable campaign missions")
+ check(campaign_ids == ["initiation","tung_chung","the_streets","the_district","the_harbour","ngong_ping","house","meridian"], "campaign follows the five-key sequence, then House, with Meridian retained as a late optional replay")
+ check(configured.mission("the_streets").get("key_id", "") == "key_02" and configured.mission("the_district").get("key_id", "") == "key_03" and configured.mission("the_harbour").get("key_id", "") == "key_04", "each allied city operation owns exactly one sequential key")
 
  configured.restore({"completed":["initiation","tung_chung","the_streets","the_district","the_harbour"],"recovered_keys":["key_01"]})
- check(configured.completed.has("tung_chung") and not configured.completed.has("hong_kong_sandbox"), "legacy progress migrates without silently completing sandbox targets")
- check(not configured.recovered_keys.has("key_02") and not configured.recovered_keys.has("key_03") and not configured.recovered_keys.has("key_04"), "legacy mission completion alone never invents physical city keys")
+ check(configured.completed.has("initiation") and not configured.completed.has("tung_chung"), "legacy target-mission completion is not trusted without the new objective schema")
+ check(configured.recovered_keys.has("key_01") and not configured.recovered_keys.has("key_02") and not configured.recovered_keys.has("key_03") and not configured.recovered_keys.has("key_04"), "legacy saves preserve only explicitly recovered physical keys")
  check(not configured.usb_ready(), "legacy city completion alone cannot unlock decryption")
 
  service.progress.restore({})
  check(service.progress.mark_complete("initiation"), "Initiation remains the first required operation")
- check(service.progress.secure_key("tung_chung","key_01") and service.progress.mark_complete("tung_chung"), "Operation 01 preserves its physical Key 01 prerequisite")
- check(service.progress.is_unlocked("hong_kong_sandbox"), "Operation 01 unlocks the unified city sandbox")
- service.active_mission = "hong_kong_sandbox"
- check(not service.progress.secure_key("hong_kong_sandbox","key_01"), "sandbox cannot re-award Operation 01's key")
- check(service.progress.secure_key("hong_kong_sandbox","key_02") and service.progress.secure_key("hong_kong_sandbox","key_03") and service.progress.secure_key("hong_kong_sandbox","key_04"), "the sandbox accepts only its three configured physical keys")
- check(not service.progress.completed.has("hong_kong_sandbox"), "key recovery alone never marks the sandbox operation complete")
- service.progress.recovered_keys.erase("key_02")
- service.progress.recovered_keys.erase("key_03")
- service.progress.recovered_keys.erase("key_04")
+ check(service.progress.secure_key("tung_chung","key_01") and not service.progress.mark_complete("tung_chung"), "a key alone cannot complete Tung Chung without both target records")
+ check(service.progress.record_target_completion("tung_chung","usb_robber") and service.progress.record_target_completion("tung_chung","constance_operative") and service.progress.mark_complete("tung_chung"), "Operation 01 requires explicit completion records for the Robber and Constance's operative")
+ check(service.progress.is_unlocked("the_streets"), "Operation 01 unlocks Streets, not a combined city sandbox")
+ check(service.progress.secure_key("the_streets","key_02") and service.progress.record_target_completion("the_streets","market_vendor") and service.progress.mark_complete("the_streets"), "Streets requires a completed vendor objective and physical Key 02")
+ check(service.progress.is_unlocked("the_district") and service.progress.secure_key("the_district","key_03") and service.progress.record_target_completion("the_district","corporate_fixer") and service.progress.mark_complete("the_district"), "Commercial District requires the fixer and physical Key 03")
+ check(service.progress.is_unlocked("the_harbour") and service.progress.secure_key("the_harbour","key_04") and service.progress.record_target_completion("the_harbour","harbour_businessman") and service.progress.mark_complete("the_harbour"), "Harbour requires the businessman and physical Key 04")
+ check(service.progress.is_unlocked("ngong_ping") and not service.progress.recovered_keys.has("key_05") and not service.progress.is_unlocked("house"), "House stays locked until Ngong Ping and Key 05")
+ check(service.progress.secure_key("ngong_ping","key_05") and service.progress.record_target_completion("ngong_ping","field_coordinator") and service.progress.mark_complete("ngong_ping"), "Ngong Ping alone provides Key 05 and completes the field-coordinator objective")
+ check(service.progress.is_unlocked("house") and not service.progress.mark_complete("house"), "all five keys unlock House but the safe code remains mandatory")
+ var code_fixture := "8282276899555634186801128061495577508192436694724980912146277806558513"
+ check(code_fixture.length() == 70 and not service.progress.record_house_code(code_fixture.substr(0,69)), "House rejects a truncated safe code")
+ check(service.progress.record_house_code(code_fixture) and service.progress.mark_complete("house"), "the independent 70-digit safe code is persisted and required to finish House")
+ check(Campaign.acknowledge_usb_decryption() and Campaign.mark_betrayal_seen(), "decryption and the betrayal record are gated behind all five keys and House completion")
+ var objective_copy := CampaignProgress.new()
+ objective_copy.configure(definition)
+ objective_copy.restore(service.progress.snapshot())
+ check(objective_copy.completed_targets.get("tung_chung",[]).has("constance_operative") and objective_copy.completed.has("the_harbour") and objective_copy.completed.has("house") and objective_copy.house_code.length() == 70 and objective_copy.betrayal_seen, "explicit targets, House code and post-decryption betrayal state survive campaign save restoration")
  service.persist()
 
  var awareness_guard := HotelNpc.new()
@@ -106,64 +114,51 @@ func run() -> void:
  station.queue_free()
  await process_frame
 
- service.progress.restore({"completed":["initiation","tung_chung"],"recovered_keys":["key_01"]})
- service.active_mission = "hong_kong_sandbox"
- var world := load("res://scenes/mission_hong_kong_sandbox.tscn").instantiate() as Node3D
+ service.progress.restore({"schema_version":2,"completed":["initiation","tung_chung"],"completed_targets":{"tung_chung":["usb_robber","constance_operative"]},"recovered_keys":["key_01"]})
+ service.active_mission = "the_streets"
+ var world := load("res://scenes/mission_the_streets.tscn").instantiate() as Node3D
  root.add_child(world)
  await process_frame
  await process_frame
- check(world.get("operation_id") == "hong_kong_sandbox", "sandbox scene boots as one mission")
- var targets: Array = world.get("sandbox_targets")
- var keys: Array = world.get("sandbox_key_markers")
- var intel: Array = world.get("sandbox_intel_markers")
- var people: Array = world.get("npc_list")
- check(targets.size() == 3 and keys.size() == 3 and intel.size() == 3, "three physical target actors, keys and optional intelligence markers exist")
+ check(world.get("operation_id") == "the_streets", "Streets boots as its own selectable mission")
  var city: Node3D = world.get("scene")
- check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) != null and city.find_child("District_the_harbour",true,false) != null, "all three distinct neighbourhoods are present in the same world scene")
- check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "district navigation is instantiated inside the shared city scene")
- check(city.find_child("CorporateFloorNavigation_4",true,false) != null and not city.find_children("*","DestructibleGlass",true,false).is_empty(), "harbour skyscraper has an accessible upper floor and collision-backed breakable glazing")
+ check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) != null and city.find_child("District_the_harbour",true,false) != null, "district extensions remain connected in a shared explorable city")
+ check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "connected street navigation is instantiated")
+ check(city.find_child("CorporateFloorNavigation_4",true,false) != null and not city.find_children("*","DestructibleGlass",true,false).is_empty(), "city retains an accessible upper floor and collision-backed glazing")
+ var people: Array = world.get("npc_list")
  for npc: HotelNpc in people: npc.set_physics_process(false)
  world.call("_skip_cinematic")
- var target: HotelNpc = targets[0]
+ var target: HotelNpc = world.get("target")
  await near_player(world,target.global_position)
  world.call("_interact")
- check(not bool(world.get("sandbox_target_completed")["loan_shark"]), "target dialogue reveals narrative but never completes the objective")
+ check(not world.get("target_complete") and not service.progress.recovered_keys.has("key_02"), "market target dialogue cannot complete the objective or award Key 02")
  target.incapacitate(12.0)
  world.call("_interact")
- check(not bool(world.get("sandbox_target_completed")["loan_shark"]), "temporary incapacitation never satisfies a target objective")
- check(not world.call("_complete_sandbox_target",target), "assessment tag rejects an incapacitated target")
+ check(not world.get("target_complete"), "temporary target incapacitation is not objective completion")
+ world.call("_secure_key")
+ check(not service.progress.recovered_keys.has("key_02"), "physical key remains locked until the target is permanently completed")
+ var key_marker: Node3D = world.get("key_marker")
+ check(key_marker.get_parent() == world.get("guard"), "Key 02 is represented by a separate physical marker on the escort")
+ # Model the successful tag state to verify the distinct pickup interaction.
  target.stunned_time = 0.0
  target.set_state("returning")
- check(bool(world.call("_complete_sandbox_target",target)), "non-graphic assessment tag permanently completes an active target")
- check(not world.call("_complete_sandbox_target",target), "completed target state cannot be awarded twice")
-
- # A physical pickup is an in-world interaction and persists the exact key ID.
- var first_key: Node3D = keys[0]
- await near_player(world,first_key.global_position)
+ world.set("target_complete",true)
+ var guard: HotelNpc = world.get("guard")
+ await near_player(world,key_marker.global_position)
  world.call("_interact")
- check(service.progress.recovered_keys.has("key_02") and not first_key.visible, "Key 02 is physically collected from its placed marker")
+ check(service.progress.recovered_keys.has("key_02") and not key_marker.visible, "Key 02 is collected only by interacting with its physical marker")
  var exit: Node3D = world.get("exit_marker")
  await near_player(world,exit.global_position)
+ world.set("target_complete",false)
  world.call("_interact")
- check(not service.progress.completed.has("hong_kong_sandbox") and not world.get("extraction_active"), "extraction stays locked with mandatory targets and keys missing")
-
- # Checkpoint schema stores explicit target IDs; legacy booleans are ignored.
- world.set("save_path",temp + "_sandbox.json")
- world.call("save_game")
- var saved: Dictionary = SaveStore.read(temp + "_sandbox.json")
- check(saved.get("sandbox_targets_completed",[]) == ["loan_shark"] and saved.get("sandbox_intel_completed",[]) is Array, "checkpoint records only explicit sandbox target and intelligence IDs")
- SaveStore.write(temp + "_sandbox.json",{"mission_id":"hong_kong_sandbox","target_complete":true,"key_secured":true,"key_id":"key_02"})
- world.set("sandbox_target_completed",{"loan_shark":false,"corporate_fixer":false,"harbour_businessman":false})
- world.call("load_game")
- check(not bool(world.get("sandbox_target_completed")["loan_shark"]), "legacy single-target checkpoint flags cannot silently migrate target completion")
- check(service.progress.recovered_keys.has("key_02"), "a key explicitly stored in campaign recovery remains preserved")
-
+ check(not service.progress.completed.has("the_streets") and not world.get("extraction_active"), "district extraction remains locked until target completion")
  world.queue_free()
  await process_frame
+
  service.campaign_path = old_path
  service.active_mission = old_active
  service.progress.restore(old_progress)
- for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_sandbox.json",temp + "_sandbox.json.bak",temp + "_sandbox.json.tmp",temp + "_legacy_station.json",temp + "_legacy_station.json.bak",temp + "_legacy_station.json.tmp"]:
+ for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_legacy_station.json",temp + "_legacy_station.json.bak",temp + "_legacy_station.json.tmp"]:
   if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
  print("HK RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)

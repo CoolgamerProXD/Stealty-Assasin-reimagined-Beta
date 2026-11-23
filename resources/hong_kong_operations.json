@@ -43,13 +43,14 @@
       2
     ],
     "witness_line": "The courier signed for a sealed manifest. Ruby: The courier carries the first key; the train contact can corroborate the transfer.",
-    "extraction_line": "Ruby: Train contact confirmed. The market handoff is our next lead."
+    "extraction_line": "Ruby: Train contact confirmed. The market handoff is our next lead.",
+    "target_id": "usb_robber"
   },
   "the_streets": {
     "map": "city",
-    "target": "Mina Lau, market intermediary",
+    "target": "Market Vendor",
     "placement": "guard",
-    "clue": "The intermediary works inside MARKET OFFICE. Their bodyguard carries Key 02.",
+    "clue": "The market vendor is mandatory. The separate guarded office contains physical Key 02.",
     "target_pos": [
       -16,
       0.05,
@@ -75,7 +76,7 @@
       0.05,
       0
     ],
-    "target_line": "The broker in the district records office made the arrangements.",
+    "target_line": "The vendor’s ledger disguises extortion as market taxes and points to a commercial fixer. The buyer is not named.",
     "intel_text": "A market receipt names the district records broker and says the bodyguard carries Key 02.",
     "witness": "Market vendor",
     "witness_pos": [
@@ -83,14 +84,18 @@
       0.05,
       19
     ],
-    "witness_line": "A guarded courier made the market handoff. Ruby: The bodyguard has the key; the market receipt identifies the next broker.",
-    "extraction_line": "Ruby: Market contact secured. We move on the records broker."
+    "witness_line": "A guarded market office holds the next handoff record. Ruby: The vendor is the objective; the office key is separate.",
+    "extraction_line": "Ruby: Market contact secured. We move on the records broker.",
+    "key_id": "key_02",
+    "target_id": "market_vendor",
+    "target_role": "employee",
+    "target_outfit_id": "market_vendor"
   },
   "the_district": {
     "map": "city",
-    "target": "Jonas Wu, district broker",
+    "target": "Corporate Fixer",
     "placement": "safe",
-    "clue": "The broker works in DISTRICT RECORDS. Its records safe contains Key 03.",
+    "clue": "The corporate fixer is mandatory. Physical Key 03 is in the records safe.",
     "target_pos": [
       16,
       0.05,
@@ -116,7 +121,7 @@
       0.05,
       0
     ],
-    "target_line": "The next meeting is at a harbour liaison office. I never met the buyer.",
+    "target_line": "The fixer routed the market payments through legitimate corporate records. The client remains unidentified.",
     "intel_text": "A routing slip identifies the records safe as the Key 03 location and names a waterfront liaison.",
     "witness": "Records clerk",
     "witness_pos": [
@@ -124,14 +129,18 @@
       0.05,
       19
     ],
-    "witness_line": "Our broker kept one sealed item in the records safe. Ruby: The routing slip should identify the waterfront contact.",
-    "extraction_line": "Ruby: The broker is accounted for. Follow the trail to the waterfront."
+    "witness_line": "The records safe holds Key 03. Ruby: The fixer is the target; retrieve the key physically.",
+    "extraction_line": "Ruby: The broker is accounted for. Follow the trail to the waterfront.",
+    "key_id": "key_03",
+    "target_id": "corporate_fixer",
+    "target_role": "manager",
+    "target_outfit_id": "executive"
   },
   "the_harbour": {
     "map": "city",
-    "target": "Elias Ng, waterfront liaison",
+    "target": "Wealthy Harbour Businessman",
     "placement": "guard",
-    "clue": "The liaison and bodyguard are inside HARBOUR LIAISON by the waterfront. The bodyguard carries Key 04.",
+    "clue": "The wealthy harbour businessman is mandatory. The escort carries physical Key 04.",
     "target_pos": [
       16,
       0.05,
@@ -157,7 +166,7 @@
       0.05,
       -35
     ],
-    "target_line": "The final coordinator took the archive route toward the mountains.",
+    "target_line": "The businessman’s Prometheus project received discreet Covenant funding and sent field-finding requests. The client and research purpose remain unknown.",
     "intel_text": "A quay ledger confirms the liaison’s bodyguard holds Key 04 and references a mountain field archive.",
     "witness": "Quay attendant",
     "witness_pos": [
@@ -165,8 +174,12 @@
       0.05,
       -20
     ],
-    "witness_line": "The liaison arrived with an escort and asked about a mountain delivery. Ruby: Watch the bodyguard for the key.",
-    "extraction_line": "Ruby: The liaison is contained. The mountain field archive is next."
+    "witness_line": "The escort carries Key 04. Ruby: The businessman is the target; do not confuse an interview with completion.",
+    "extraction_line": "Ruby: The liaison is contained. The mountain field archive is next.",
+    "key_id": "key_04",
+    "target_id": "harbour_businessman",
+    "target_role": "manager",
+    "target_outfit_id": "executive"
   },
   "ngong_ping": {
     "map": "mountain",
@@ -212,7 +225,8 @@
       10
     ],
     "witness_line": "Field workers used an archive office near the village, not the monument. Ruby: The safe is our priority.",
-    "extraction_line": "Ruby: The hidden complex is mapped, the director is contained and Key 05 is secure. All five keys are ready for decryption."
+    "extraction_line": "Ruby: The hidden complex is mapped, the director is contained and Key 05 is secure. All five keys are ready for decryption.",
+    "target_id": "field_coordinator"
   },
   "hong_kong_sandbox": {
     "map": "city",
@@ -411,5 +425,47 @@
         ]
       }
     ]
+  },
+  "house": {
+    "map": "house",
+    "target": "Safe-house guard",
+    "target_id": "",
+    "placement": "safe",
+    "clue": "All five physical keys are required before deployment. The safe contains a separate 70-digit code.",
+    "target_pos": [
+      -6,
+      0.05,
+      3
+    ],
+    "guard_pos": [
+      5,
+      0.05,
+      -6
+    ],
+    "safe_pos": [
+      0,
+      0.05,
+      -8
+    ],
+    "spawn": [
+      0,
+      0.05,
+      8
+    ],
+    "exit": [
+      0,
+      0.05,
+      14
+    ],
+    "target_line": "The guard is local security, not a mandatory campaign target.",
+    "intel_text": "",
+    "witness": "",
+    "witness_pos": [
+      0,
+      0.05,
+      0
+    ],
+    "witness_line": "",
+    "extraction_line": "Ruby: The five keys and separate safe code are secured. Begin USB decryption."
   }
 }

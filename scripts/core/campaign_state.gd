@@ -25,7 +25,7 @@ func persist() -> bool:
 func checkpoint_path(id: String) -> String:
  if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
  if id == "initiation": return "user://initiation_save.json"
- if id in ["tung_chung", "hong_kong_sandbox", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
+ if id in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping", "house", "hong_kong_sandbox"]:
   return "user://blackline_" + id + "_save.json"
  return ""
 
@@ -73,6 +73,15 @@ func equip_outfit(id: String) -> bool:
   return false
  return true
 
+func record_mission_target(id: String, target_id: String) -> bool:
+ if active_mission != id: return false
+ var previous: Dictionary = progress.completed_targets.duplicate(true)
+ if not progress.record_target_completion(id, target_id): return false
+ if not persist():
+  progress.completed_targets = previous
+  return false
+ return true
+
 func secure_mission_key(id: String, key_id: String) -> bool:
  if active_mission != id: return false
  var previous := progress.recovered_keys.duplicate()
@@ -82,8 +91,27 @@ func secure_mission_key(id: String, key_id: String) -> bool:
   return false
  return true
 
+func record_house_code(code: String) -> bool:
+ if active_mission != "house" or not progress.usb_ready() or not progress.is_unlocked("house"): return false
+ var previous_code := progress.house_code
+ var previous_recovered := progress.house_code_recovered
+ if not progress.record_house_code(code): return false
+ if not persist():
+  progress.house_code = previous_code
+  progress.house_code_recovered = previous_recovered
+  return false
+ return true
+
+func mark_betrayal_seen() -> bool:
+ if not progress.usb_decryption_seen or not progress.completed.has("house") or progress.betrayal_seen: return false
+ progress.betrayal_seen = true
+ if not persist():
+  progress.betrayal_seen = false
+  return false
+ return true
+
 func acknowledge_usb_decryption() -> bool:
- if not progress.usb_ready() or not progress.completed.has("ngong_ping"): return false
+ if not progress.usb_ready() or not progress.completed.has("ngong_ping") or not progress.completed.has("house") or not progress.house_code_recovered: return false
  var previous := progress.usb_decryption_seen
  progress.usb_decryption_seen = true
  if not persist():

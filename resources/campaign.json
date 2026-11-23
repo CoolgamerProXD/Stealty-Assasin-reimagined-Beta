@@ -12,6 +12,82 @@
       "unlock": "quiet_line"
     },
     {
+      "id": "tung_chung",
+      "name": "OPERATION 01  /  TUNG CHUNG",
+      "description": "The USB robber, Constance’s operative, the first physical key, and a separate train pursuit.",
+      "scene": "res://scenes/mission_tung_chung.tscn",
+      "briefing": "Ruby: The USB robber and Constance’s operative are both active in Tung Chung. Permanently complete both through the assessment tag, physically recover Key 01, then pursue the separate train courier and extract.",
+      "debrief": "Ruby: The robber never opened the sealed USB. Constance’s operative confirms a handoff toward the streets; the file’s contents and client remain unknown.",
+      "unlock": "",
+      "key_id": "key_01",
+      "target_ids": [
+        "usb_robber",
+        "constance_operative"
+      ]
+    },
+    {
+      "id": "the_streets",
+      "name": "OPERATION 02  /  THE STREETS",
+      "description": "A market operation targeting Constance’s local vendor and a separate physical key.",
+      "scene": "res://scenes/mission_the_streets.tscn",
+      "briefing": "Ruby: The market vendor is a mandatory target. Permanently complete the target with an assessment tag, physically recover Key 02 from the guarded office, and extract.",
+      "debrief": "Ruby: The market evidence points to a corporate fixer. Key 02 is physically verified.",
+      "unlock": "",
+      "key_id": "key_02",
+      "target_ids": [
+        "market_vendor"
+      ]
+    },
+    {
+      "id": "the_district",
+      "name": "OPERATION 03  /  COMMERCIAL DISTRICT",
+      "description": "A corporate operation targeting the fixer and a separately secured records key.",
+      "scene": "res://scenes/mission_the_district.tscn",
+      "briefing": "Ruby: Find the corporate fixer, permanently complete the target with an assessment tag, recover Key 03 from the records safe, then extract.",
+      "debrief": "Ruby: The fixer’s routing records lead to the wealthy businessman at the harbour. Key 03 is secure.",
+      "unlock": "",
+      "key_id": "key_03",
+      "target_ids": [
+        "corporate_fixer"
+      ]
+    },
+    {
+      "id": "the_harbour",
+      "name": "OPERATION 04  /  HARBOUR & SKYLINE",
+      "description": "A waterfront operation targeting the wealthy businessman and Key 04.",
+      "scene": "res://scenes/mission_the_harbour.tscn",
+      "briefing": "Ruby: The wealthy harbour businessman is a mandatory target. Permanently complete the target, physically recover Key 04 from the escort, and extract.",
+      "debrief": "Ruby: The businessman’s archive points to the Ngong Ping field operation. Key 04 is secure.",
+      "unlock": "",
+      "key_id": "key_04",
+      "target_ids": [
+        "harbour_businessman"
+      ]
+    },
+    {
+      "id": "ngong_ping",
+      "name": "OPERATION 05  /  NGONG PING",
+      "description": "The field operation reveals a vast, interconnected installation beneath and inside the Tian Tan Big Buddha.",
+      "scene": "res://scenes/mission_ngong_ping.tscn",
+      "briefing": "Ruby: The field archive was a screen. A huge installation lies beneath the Big Buddha and continues into concealed chambers within the statue. Find the hidden rear access, recover Key 05 from the separate field archive, locate Sora Cheng in the operations chamber, and reach the control-room extraction. The public monument must remain intact.",
+      "debrief": "Ruby: The installation is hidden beneath the statue and continues inside it. Key 05 is physically secured; the separate code needed for decryption is still missing.",
+      "unlock": "",
+      "key_id": "key_05",
+      "target_ids": [
+        "field_coordinator"
+      ]
+    },
+    {
+      "id": "house",
+      "name": "OPERATION 06  /  THE HOUSE",
+      "description": "A short recovery mission: enter the small safe house, open the guarded safe, record the separate 70-digit code, and leave.",
+      "scene": "res://scenes/mission_house.tscn",
+      "briefing": "Ruby: All five physical keys are verified, but their file still needs a separate 70-digit code. Enter the safe house, reach the wall safe, recover the code, and extract. Keep this short and quiet; the local guards are not additional targets.",
+      "debrief": "Ruby: The safe supplied the independent 70-digit code. Five keys and the code open the USB decryption session; the file itself remains unrevealed.",
+      "unlock": "",
+      "target_ids": []
+    },
+    {
       "id": "meridian",
       "name": "OPTIONAL  /  THE MERIDIAN",
       "description": "Trace a missing archive through a luxury hotel.",
@@ -20,40 +96,6 @@
       "debrief": "Ruby: Locke's account, Chen's testimony and the records point beyond the hotel. The Covenant is not our employer, and I intend to learn who is paying them.",
       "unlock": "",
       "optional": true
-    },
-    {
-      "id": "tung_chung",
-      "name": "OPERATION 01  /  TUNG CHUNG",
-      "description": "A moving courier, the first physical key, and a train-line pursuit.",
-      "scene": "res://scenes/mission_tung_chung.tscn",
-      "briefing": "Ruby: The USB robber and Constance’s operative are both active in Tung Chung. Permanently complete both through the assessment tag, physically recover Key 01, then pursue the separate train courier and extract.",
-      "debrief": "Ruby: The robber never opened the sealed USB. Constance’s operative confirms a handoff toward the streets; the file’s contents and client remain unknown.",
-      "unlock": "",
-      "key_id": "key_01"
-    },
-    {
-      "id": "hong_kong_sandbox",
-      "name": "OPERATION 02  /  HONG KONG: THE SANDBOX",
-      "description": "Three connected districts. Three mandatory targets. Three physical keys. Choose your route.",
-      "scene": "res://scenes/mission_hong_kong_sandbox.tscn",
-      "briefing": "Ruby: The transfer touches three parts of the city: a market lender, a commercial fixer, and the businessman in the harbour tower. All three are mandatory. Find and permanently complete each target, then physically secure Keys 02, 03, and 04. The districts are connected; choose your order. Conversation and intelligence do not complete targets or grant keys.",
-      "debrief": "Ruby: Three targets, three keys, and one city-wide network. The documents tie the market debts to the fixer and the executive suite. The mountain archive is the next lead.",
-      "unlock": "",
-      "key_ids": [
-        "key_02",
-        "key_03",
-        "key_04"
-      ]
-    },
-    {
-      "id": "ngong_ping",
-      "name": "OPERATION 03  /  NGONG PING",
-      "description": "The final operation reveals a vast, interconnected installation beneath and inside the Tian Tan Big Buddha.",
-      "scene": "res://scenes/mission_ngong_ping.tscn",
-      "briefing": "Ruby: The field archive was a screen. A huge installation lies beneath the Big Buddha and continues into concealed chambers within the statue. Find the hidden rear access, recover Key 05 from the separate field archive, locate Sora Cheng in the operations chamber, and reach the control-room extraction. The public monument must remain intact.",
-      "debrief": "Ruby: The installation was hidden beneath the statue and threaded into its interior. Key 05 is physically secured; all five keys can now open the encrypted destination file.",
-      "unlock": "",
-      "key_id": "key_05"
     }
   ],
   "equipment": [
@@ -64,10 +106,13 @@
       "unlock_after": "",
       "missions": [
         "initiation",
-        "meridian",
         "tung_chung",
-        "hong_kong_sandbox",
-        "ngong_ping"
+        "the_streets",
+        "the_district",
+        "the_harbour",
+        "ngong_ping",
+        "house",
+        "meridian"
       ],
       "charges": 5
     },
@@ -77,10 +122,13 @@
       "description": "Temporarily disables one nearby person without graphic effects. Q uses it.",
       "unlock_after": "initiation",
       "missions": [
-        "meridian",
         "tung_chung",
-        "hong_kong_sandbox",
-        "ngong_ping"
+        "the_streets",
+        "the_district",
+        "the_harbour",
+        "ngong_ping",
+        "house",
+        "meridian"
       ],
       "charges": 0
     }

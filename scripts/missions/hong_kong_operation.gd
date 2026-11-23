@@ -1,4 +1,5 @@
 extends Node3D
+const HOUSE_SAFE_CODE := "8282276899555634186801128061495577508192436694724980912146277806558513"
 ## Early playable operations built on the existing exploration maps. Each
 ## deployment owns its objective state and checkpoint; the USB belongs to Campaign.
 @export var operation_id: String = "tung_chung"
@@ -11,6 +12,7 @@ var guard: HotelNpc
 var witness: HotelNpc
 var witness_found: bool = false
 var key_marker: Node3D
+var house_safe_marker: Node3D
 var intel_marker: Node3D
 var uniform_marker: Node3D
 var uniform_found: bool = false
@@ -94,7 +96,7 @@ func _ready() -> void:
  config = definitions[operation_id]
  save_path = Campaign.checkpoint_path(operation_id)
  var map: String = config["map"]
- var path := "res://scenes/tung_chung_preview.tscn" if map == "station" else ("res://scenes/ngong_ping_preview.tscn" if map == "mountain" else "res://scenes/hong_kong_preview.tscn")
+ var path := "res://scenes/tung_chung_preview.tscn" if map == "station" else ("res://scenes/ngong_ping_preview.tscn" if map == "mountain" else ("res://scenes/house_mission_map.tscn" if map == "house" else "res://scenes/hong_kong_preview.tscn"))
  scene = load(path).instantiate()
  scene.set_meta("operation_id", operation_id)
  add_child(scene)
@@ -117,21 +119,33 @@ func _ready() -> void:
   guard = scene.get("operative") as HotelNpc
   target.profile.identity = str(config["target"])
   guard.profile.identity = "Constance's operative"
+ elif operation_id == "house":
+  var house_target_at := _vec(config["target_pos"])
+  var house_guard_at := _vec(config["guard_pos"])
+  target = scene.call("_target", "Safe-house security", "security", house_target_at, house_target_at + Vector3(1.0,0,0)) as HotelNpc
+  guard = scene.call("_target", "House guard", "security", house_guard_at, house_guard_at + Vector3(-1.0,0,0)) as HotelNpc
+  witness = null
  else:
   var t := _vec(config["target_pos"])
   var g := _vec(config["guard_pos"])
-  target = scene.call("_target", str(config["target"]), "manager", t, t + Vector3(0,0,1.8)) as HotelNpc
+  var target_role := str(config.get("target_role", "manager"))
+  target = scene.call("_target", str(config["target"]), target_role, t, t + Vector3(0,0,1.8)) as HotelNpc
   guard = scene.call("_target", "Bodyguard", "security", g, g + Vector3(0,0,1.8)) as HotelNpc
+  var target_outfit := str(config.get("target_outfit_id", ""))
+  if not target_outfit.is_empty():
+   target.profile.outfit_id = target_outfit
+   target.person.set_outfit(target_outfit)
   if operation_id == "ngong_ping":
    target.profile.outfit_id = "facility_director"
    target.person.set_outfit("facility_director")
    guard.profile.outfit_id = "facility_security"
    guard.person.set_outfit("facility_security")
- var witness_at := _vec(config["witness_pos"])
- witness = scene.call("_target", str(config["witness"]), "civilian", witness_at, witness_at + Vector3(0,0,1.4)) as HotelNpc
+ if operation_id != "house":
+  var witness_at := _vec(config["witness_pos"])
+  witness = scene.call("_target", str(config["witness"]), "civilian", witness_at, witness_at + Vector3(0,0,1.4)) as HotelNpc
  npc_list = scene.get("npcs")
  if operation_id == "hong_kong_sandbox": _setup_sandbox()
- if operation_id != "ngong_ping":
+ if operation_id not in ["ngong_ping", "house"]:
   var restricted_center := _vec(config["target_pos"])
   scene.set_meta("restricted_rect", Rect2(restricted_center.x-3.0, restricted_center.z-3.0, 6.0, 6.0))
  for npc: HotelNpc in npc_list:
@@ -197,6 +211,9 @@ func _setup_sandbox() -> void:
  target_complete = false
 
 func _build_markers() -> void:
+ if operation_id == "house":
+  _build_house_markers()
+  return
  if operation_id == "hong_kong_sandbox":
   _build_sandbox_markers()
   return
@@ -249,6 +266,33 @@ func _build_markers() -> void:
  exit_label.text = "BOARD TRAIN" if operation_id == "tung_chung" else "EXTRACTION"
  exit_label.position = Vector3(0,1.5,0)
  exit_label.font_size = 30
+ exit_label.pixel_size = 0.004
+ exit_marker.add_child(exit_label)
+
+func _build_house_markers() -> void:
+ house_safe_marker = Node3D.new()
+ house_safe_marker.name = "HouseWallSafe"
+ house_safe_marker.position = _vec(config["safe_pos"])
+ add_child(house_safe_marker)
+ _part(house_safe_marker, Vector3(0,0.85,0), Vector3(1.0,1.25,0.32), Color(0.22,0.25,0.25))
+ _part(house_safe_marker, Vector3(0,0.9,-0.19), Vector3(0.42,0.55,0.08), Color(0.58,0.47,0.31))
+ var safe_label := Label3D.new()
+ safe_label.text = "WALL SAFE  /  70-DIGIT CODE"
+ safe_label.position = Vector3(0,1.75,0)
+ safe_label.font_size = 23
+ safe_label.pixel_size = 0.004
+ safe_label.modulate = Color(0.93,0.79,0.52)
+ house_safe_marker.add_child(safe_label)
+ house_safe_marker.visible = not Campaign.progress.house_code_recovered
+ exit_marker = Node3D.new()
+ exit_marker.name = "HouseExit"
+ exit_marker.position = _vec(config["exit"])
+ add_child(exit_marker)
+ _part(exit_marker, Vector3(0,0.05,0), Vector3(2.2,0.08,2.2), Color(0.28,0.65,0.62))
+ var exit_label := Label3D.new()
+ exit_label.text = "EXIT  /  STREET"
+ exit_label.position = Vector3(0,1.35,0)
+ exit_label.font_size = 27
  exit_label.pixel_size = 0.004
  exit_marker.add_child(exit_label)
 
@@ -445,6 +489,11 @@ func _begin_intro() -> void:
   "the_harbour":
    intro_start = at + Vector3(1.6,2.6,-3)
    intro_end = at + Vector3(-1.4,1.8,2)
+  "house":
+   intro_start = Vector3(-10,5,15)
+   intro_end = Vector3(-5,3.2,10)
+   intro_look_start = Vector3(0,1.5,-3)
+   intro_look_end = Vector3(0,1.5,-3)
   "ngong_ping":
    intro_start = Vector3(6,10,3)
    intro_end = Vector3(-5,8,1)
@@ -461,6 +510,11 @@ func _begin_intro() -> void:
   establishing_start = neighbourhood.to_global(Vector3(0,6,8))
   establishing_end = neighbourhood.to_global(Vector3(0,5,14))
   establishing_focus = neighbourhood.to_global(Vector3(0,2,42))
+ elif operation_id == "house":
+  has_establishing = true
+  establishing_start = Vector3(0,5,19)
+  establishing_end = Vector3(0,3.5,15)
+  establishing_focus = Vector3(0,1,-4)
  elif operation_id == "tung_chung":
   has_establishing = true
   establishing_start = Vector3(0,4.2,7)
@@ -515,6 +569,9 @@ func _unhandled_input(event: InputEvent) -> void:
 # A single source of truth for the next mandatory step. Optional witnesses and
 # intel never participate in this decision.
 func _next_objective() -> String:
+ if operation_id == "house":
+  if not Campaign.progress.house_code_recovered: return "Search the back room and open the wall safe for the separate 70-digit code."
+  return "Five keys and the 70-digit code are secured. Leave through the street exit."
  if operation_id == "hong_kong_sandbox":
   for record: Dictionary in sandbox_target_data:
    if not bool(sandbox_target_completed.get(str(record["id"]), false)):
@@ -577,8 +634,9 @@ func _process(delta: float) -> void:
   for passenger: StylizedPerson in train_passengers: passenger.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
- var total := 6 if operation_id == "tung_chung" else (7 if operation_id == "hong_kong_sandbox" else 3)
+ var total := 2 if operation_id == "house" else (6 if operation_id == "tung_chung" else (7 if operation_id == "hong_kong_sandbox" else 3))
  var remaining := int(not target_complete) + int(not key_secured) + 1
+ if operation_id == "house": remaining = int(not Campaign.progress.house_code_recovered) + 1
  if operation_id == "tung_chung": remaining += int(not operative_complete)
  if operation_id == "hong_kong_sandbox":
   remaining = 1
@@ -595,6 +653,9 @@ func _process(delta: float) -> void:
  var outfit_text := str(DisguiseSystem.outfit(player.outfit_id).get("name","Civilian clothes"))
  var key_status := "%s %s" % [key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "MISSING"]
  var optional_status := "OPTIONAL INTEL: %s   ·   WITNESS: %s" % ["SECURED" if intel_found else "OPEN", "SPOKEN" if witness_found else "OPEN"]
+ if operation_id == "house":
+  key_status = "FIVE PHYSICAL KEYS VERIFIED  ·  70-DIGIT CODE %s" % ("RECOVERED" if Campaign.progress.house_code_recovered else "MISSING")
+  optional_status = "LOCAL SECURITY ONLY  /  NO ADDITIONAL TARGETS"
  if operation_id == "hong_kong_sandbox":
   var secured_count := 0
   for key_record: Dictionary in config.get("keys", []):
@@ -693,6 +754,9 @@ func _try_acquire_outfit() -> bool:
 func _interact() -> void:
  if intro_active or extraction_active or not story_phase.is_empty(): return
  if _try_acquire_outfit(): return
+ if operation_id == "house":
+  _interact_house()
+  return
  if operation_id == "ngong_ping" and ngong_facility and not facility_discovered and player.global_position.distance_to(ngong_facility.entry_point) < 2.8:
   facility_discovered = ngong_facility.open_hidden_entry()
   if facility_discovered:
@@ -753,11 +817,36 @@ func _interact() -> void:
   elif Campaign.complete(operation_id, int(intel_found) + int(witness_found)):
    Campaign.ending["intel_found"] = intel_found
    Campaign.ending["witness_found"] = witness_found
-   var next := "res://scenes/usb_decryption.tscn" if operation_id == "ngong_ping" and Campaign.progress.usb_ready() and not Campaign.progress.usb_decryption_seen else "res://scenes/ending.tscn"
+   var next := "res://scenes/ending.tscn"
+   if operation_id == "ngong_ping" and Campaign.progress.usb_ready() and not Campaign.progress.completed.has("house"):
+    next = "res://scenes/mission_house.tscn"
+   elif operation_id == "house" and Campaign.progress.usb_ready() and not Campaign.progress.usb_decryption_seen:
+    next = "res://scenes/usb_decryption.tscn"
    _begin_extraction(next)
   else: message = "Campaign progress could not be saved."
   return
  message = str(config["clue"])
+
+func _interact_house() -> void:
+ if not Campaign.progress.house_code_recovered and house_safe_marker and _reachable(house_safe_marker.global_position):
+  if Campaign.record_house_code(HOUSE_SAFE_CODE):
+   house_safe_marker.visible = false
+   message = "SAFE OPEN  /  SEPARATE 70-DIGIT CODE RECOVERED:\n" + HOUSE_SAFE_CODE
+  else: message = "The safe is locked. Verify all five keys and campaign storage."
+  return
+ if _reachable(exit_marker.global_position):
+  if not Campaign.progress.house_code_recovered:
+   message = "Ruby: Recover the 70-digit code from the safe first."
+  elif Campaign.complete("house", 1):
+   Campaign.ending["code_recovered"] = true
+   Campaign.ending["keys_verified"] = Campaign.progress.usb_ready()
+   _begin_extraction("res://scenes/usb_decryption.tscn")
+  else: message = "House completion could not be saved."
+  return
+ if _reachable(target.global_position, target.get_rid()) or _reachable(guard.global_position, guard.get_rid()):
+  message = "LOCAL SECURITY  /  Not a mandatory target. Avoid or temporarily disable the guards."
+  return
+ message = _next_objective()
 
 func _interact_sandbox() -> void:
  for index: int in range(sandbox_targets.size()):
@@ -1300,7 +1389,10 @@ func _fire() -> void:
   message = "Glazing fractured. The pane is non-solid after the brief stylized break effect." if pane.break_glass() else "That pane is already broken."
  elif not hit.is_empty() and hit["collider"] is HotelNpc:
   var npc := hit["collider"] as HotelNpc
-  if operation_id == "hong_kong_sandbox" and sandbox_targets.has(npc):
+  if operation_id == "house" and npc.incapacitate(12.0):
+   message = "Assessment pulse temporarily disabled local security; no target objective is awarded."
+   reticle.call("confirm_hit")
+  elif operation_id == "hong_kong_sandbox" and sandbox_targets.has(npc):
    var target_index := sandbox_targets.find(npc)
    var target_record: Dictionary = sandbox_target_data[target_index]
    var target_id := str(target_record["id"])
@@ -1314,15 +1406,19 @@ func _fire() -> void:
   elif npc == train_contact and not train_contact_complete:
    message = "Ruby: We need the contact's account. Speak to them instead."
   elif operation_id == "tung_chung" and npc == guard and not operative_complete:
-   operative_complete = true
-   guard.complete_objective(false)
-   message = "Ruby: Constance's operative permanently completed. Non-graphic assessment tag confirmed."
+   if Campaign.record_mission_target(operation_id, "constance_operative"):
+    operative_complete = true
+    guard.complete_objective(false)
+    message = "Ruby: Constance's operative permanently completed. Non-graphic assessment tag confirmed."
+   else: message = "Could not persist the operative objective. Retry after checking campaign storage."
    reticle.call("confirm_hit")
   elif npc == target and not target_complete:
-   target_complete = true
-   target.complete_objective(false)
-   if operation_id == "tung_chung": _begin_story("escape")
-   message = "Ruby: Target tagged. " + str(config["clue"])
+   if Campaign.record_mission_target(operation_id, str(config.get("target_id", ""))):
+    target_complete = true
+    target.complete_objective(false)
+    if operation_id == "tung_chung": _begin_story("escape")
+    message = "Ruby: Target tagged. " + str(config["clue"])
+   else: message = "Could not persist target completion. Retry after checking campaign storage."
   elif npc.incapacitate(12.0): message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
   reticle.call("confirm_hit")
  else: message = "Assessment pulse discharged."
@@ -1349,6 +1445,10 @@ func save_game() -> void:
  var p := player.global_position
  var wardrobe := player.outfit_snapshot()
  var npc_clothing := _outfits_taken_by_npc()
+ if operation_id == "house":
+  var house_data := {"mission_id":"house","objective_schema":2,"position":[p.x,p.y,p.z],"equipment":player.equipment.snapshot(),"outfits":wardrobe,"npc_outfits_taken":npc_clothing}
+  message = "Checkpoint saved." if SaveStore.write(save_path, house_data) else "Checkpoint save failed."
+  return
  if operation_id == "hong_kong_sandbox":
   var completed_targets: Array[String] = []
   for record: Dictionary in sandbox_target_data:
@@ -1362,7 +1462,7 @@ func save_game() -> void:
   var data := {"mission_id": operation_id,"sandbox_targets_completed": completed_targets,"sandbox_intel_completed": completed_intel,"sandbox_key_marker_positions": marker_positions,"uniform_found": false,"intel_found": not completed_intel.is_empty(),"witness_found": witness_found,"position": [p.x,p.y,p.z],"equipment": player.equipment.snapshot(),"outfits": wardrobe,"npc_outfits_taken": npc_clothing}
   message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
   return
- var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "operative_complete": operative_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "facility_discovered": facility_discovered, "train_chase_active": train_chase_active, "train_chase_finished": train_chase_finished, "train_contact_position": [train_contact.global_position.x, train_contact.global_position.y, train_contact.global_position.z] if train_contact else [], "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot(), "outfits": wardrobe, "npc_outfits_taken": npc_clothing}
+ var data := {"mission_id": operation_id, "objective_schema": 2, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "operative_complete": operative_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "facility_discovered": facility_discovered, "train_chase_active": train_chase_active, "train_chase_finished": train_chase_finished, "train_contact_position": [train_contact.global_position.x, train_contact.global_position.y, train_contact.global_position.z] if train_contact else [], "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot(), "outfits": wardrobe, "npc_outfits_taken": npc_clothing}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -1371,6 +1471,19 @@ func load_game() -> void:
   message = "No valid checkpoint for this operation."
   return
  var campaign_wardrobe := {"owned":Campaign.progress.acquired_outfits,"equipped":Campaign.progress.equipped_outfit}
+ if operation_id == "house":
+  player.restore_outfits(data.get("outfits",campaign_wardrobe))
+  _restore_npc_outfits(data.get("npc_outfits_taken",[]))
+  player.equipment.restore(data.get("equipment"), Campaign.progress, operation_id)
+  var house_position: Variant = data.get("position", [])
+  if house_position is Array and house_position.size() == 3 and (house_position[0] is int or house_position[0] is float) and (house_position[1] is int or house_position[1] is float) and (house_position[2] is int or house_position[2] is float):
+   var saved_house_point := _vec(house_position)
+   if saved_house_point.is_finite() and absf(saved_house_point.x) < 11.0 and absf(saved_house_point.z) < 15.0 and saved_house_point.y > -1.0 and saved_house_point.y < 3.0:
+    player.global_position = saved_house_point
+    player.velocity = Vector3.ZERO
+  house_safe_marker.visible = not Campaign.progress.house_code_recovered
+  message = "House checkpoint restored. The campaign safe-code record remains authoritative."
+  return
  player.restore_outfits(data.get("outfits",campaign_wardrobe))
  _restore_npc_outfits(data.get("npc_outfits_taken",[]))
  facility_discovered = operation_id == "ngong_ping" and data.get("facility_discovered",false) == true
@@ -1419,8 +1532,10 @@ func load_game() -> void:
  var expected := str(Campaign.progress.mission(operation_id).get("key_id", ""))
  var saved_key_valid: bool = data.get("key_id", "") == expected and data.get("key_secured", false) == true and Campaign.progress.recovered_keys.has(expected)
  var previous_stage := train_stage
- target_complete = data.get("target_complete", false) == true
- operative_complete = operation_id == "tung_chung" and data.get("operative_complete", false) == true
+ var saved_targets: Array = Campaign.progress.completed_targets.get(operation_id, [])
+ var objective_schema_valid := int(data.get("objective_schema", 0)) >= 2
+ target_complete = objective_schema_valid and data.get("target_complete", false) == true and str(config.get("target_id", "")) in saved_targets
+ operative_complete = operation_id == "tung_chung" and objective_schema_valid and data.get("operative_complete", false) == true and "constance_operative" in saved_targets
  key_secured = saved_key_valid and target_complete and (operation_id != "tung_chung" or operative_complete)
  # A checkpoint is never resumed mid-presentation: target completion
  # converges on the same post-escape state as a cinematic skip (also migrates
@@ -1428,6 +1543,7 @@ func load_game() -> void:
  escape_seen = target_complete if operation_id == "tung_chung" else false
  train_departure_seen = data.get("train_departure_seen", data.get("train_stage", "") == "aboard") == true
  target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
+ if operation_id == "tung_chung": guard.restore_objective(operative_complete, false)
  if operation_id == "tung_chung":
   if target_complete:
    _drop_station_key()
