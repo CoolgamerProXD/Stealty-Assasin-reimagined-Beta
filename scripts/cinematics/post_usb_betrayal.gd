@@ -16,7 +16,9 @@ var effect: AudioStreamPlayer
 func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  if not Campaign.progress.usb_decryption_seen or not Campaign.progress.completed.has("house"):
-  get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+  # This guard can run while the scene is still being attached by SceneTree.
+  # Defer the redirect to avoid removing the current scene during _ready().
+  get_tree().call_deferred("change_scene_to_file", "res://scenes/main_menu.tscn")
   return
  var world := WorldEnvironment.new()
  var environment := Environment.new()
