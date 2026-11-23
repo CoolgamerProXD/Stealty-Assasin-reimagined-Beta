@@ -55,7 +55,7 @@ func run() -> void:
  var code_fixture := "8282276899555634186801128061495577508192436694724980912146277806558513"
  check(code_fixture.length() == 70 and not service.progress.record_house_code(code_fixture.substr(0,69)), "House rejects a truncated safe code")
  check(service.progress.record_house_code(code_fixture) and service.progress.mark_complete("house"), "the independent 70-digit safe code is persisted and required to finish House")
- check(Campaign.acknowledge_usb_decryption() and Campaign.mark_betrayal_seen(), "decryption and the betrayal record are gated behind all five keys and House completion")
+ check(service.acknowledge_usb_decryption() and service.mark_betrayal_seen(), "decryption and the betrayal record are gated behind all five keys and House completion")
  var objective_copy := CampaignProgress.new()
  objective_copy.configure(definition)
  objective_copy.restore(service.progress.snapshot())
