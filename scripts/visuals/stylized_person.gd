@@ -49,6 +49,7 @@ var cc0_skeleton: Skeleton3D
 var left_hand_attachment: BoneAttachment3D
 var right_hand_attachment: BoneAttachment3D
 var cc0_bones: Dictionary = {}
+var cc0_neutral_rotations: Dictionary = {}
 var cc0_clothes: Array[MeshInstance3D] = []
 var cc0_shoes: Array[MeshInstance3D] = []
 var underwear_straps: Array[MeshInstance3D] = []
@@ -187,6 +188,7 @@ func _load_cc0_model(model_name: String) -> void:
  cc0_model = null
  cc0_skeleton = null
  cc0_bones.clear()
+ cc0_neutral_rotations.clear()
  cc0_clothes.clear()
  cc0_shoes.clear()
  left_hand_attachment = null
@@ -212,6 +214,7 @@ func _load_cc0_model(model_name: String) -> void:
  for bone_name: String in ["upperleg01.L", "upperleg01.R", "lowerleg01.L", "lowerleg01.R", "upperarm01.L", "upperarm01.R", "lowerarm01.L", "lowerarm01.R", "spine03", "spine04"]:
   var bone_index := cc0_skeleton.find_bone(bone_name)
   if bone_index >= 0: cc0_bones[bone_name] = bone_index
+ _build_cc0_neutral_pose()
  _collect_model_meshes(cc0_model)
  # The imported skinned body fully replaces primitive body meshes. Existing
  # controller/collision nodes are untouched; the procedural rig remains as a
@@ -314,10 +317,59 @@ func _animate_cc0_rig(swing: float, gait: float, blend: float) -> void:
  _set_cc0_bone("lowerarm01.R", Vector3.RIGHT, weapon_aim_blend * 0.7, blend)
  _set_cc0_bone("spine03", Vector3.RIGHT, -0.05 * clampf(gait / 3.0, 0.0, 1.0) - crouch_pose * 0.22, blend)
 
+func _build_cc0_neutral_pose() -> void:
+ if cc0_skeleton == null: return
+ cc0_neutral_rotations.clear()
+ cc0_skeleton.reset_bone_poses()
+ cc0_skeleton.force_update_all_bone_transforms()
+ # Make the exported bind-pose limbs usable as standing idle poses. The CC0
+ # source rigs store limb chains in a wide spread; align each joint segment in
+ # global space, then retain its model-specific local correction for animation.
+ for side: String in ["L", "R"]:
+  var leg_chain: Array[String] = [
+   "upperleg01." + side,
+   "upperleg02." + side,
+   "lowerleg01." + side,
+   "lowerleg02." + side,
+   "foot." + side
+  ]
+  for index: int in range(leg_chain.size() - 1):
+   _align_cc0_segment(leg_chain[index], leg_chain[index + 1], Vector3.DOWN)
+  var arm_chain: Array[String] = [
+   "upperarm01." + side,
+   "upperarm02." + side,
+   "lowerarm01." + side,
+   "lowerarm02." + side,
+   "wrist." + side
+  ]
+  for index: int in range(arm_chain.size() - 1):
+   _align_cc0_segment(arm_chain[index], arm_chain[index + 1], Vector3.DOWN if index > 0 else Vector3.ZERO)
+ cc0_skeleton.force_update_all_bone_transforms()
+
+func _align_cc0_segment(parent_name: String, child_name: String, desired_direction: Vector3) -> void:
+ var parent_index := cc0_skeleton.find_bone(parent_name)
+ var child_index := cc0_skeleton.find_bone(child_name)
+ if parent_index < 0 or child_index < 0: return
+ var parent_transform := cc0_skeleton.get_bone_global_pose(parent_index)
+ var child_transform := cc0_skeleton.get_bone_global_pose(child_index)
+ var current_direction := child_transform.origin - parent_transform.origin
+ if current_direction.length_squared() < 0.000001: return
+ var target_direction := desired_direction
+ if parent_name.begins_with("upperarm01."):
+  target_direction = Vector3(signf(current_direction.x) * 0.32, -0.95, 0.0)
+ if target_direction.length_squared() < 0.000001: return
+ var global_delta := Quaternion(current_direction.normalized(), target_direction.normalized())
+ var frame := parent_transform.basis.orthonormalized().get_rotation_quaternion()
+ var correction := frame.inverse() * global_delta * frame
+ cc0_skeleton.set_bone_pose_rotation(parent_index, correction)
+ cc0_neutral_rotations[parent_name] = correction
+ cc0_skeleton.force_update_all_bone_transforms()
+
 func _set_cc0_bone(bone_name: String, axis: Vector3, angle: float, weight: float) -> void:
  if not cc0_bones.has(bone_name): return
  var index: int = cc0_bones[bone_name]
- var target := Quaternion(axis, angle)
+ var neutral: Quaternion = cc0_neutral_rotations.get(bone_name, Quaternion.IDENTITY)
+ var target := neutral * Quaternion(axis, angle)
  cc0_skeleton.set_bone_pose_rotation(index, cc0_skeleton.get_bone_pose_rotation(index).slerp(target, weight))
 
 # Original stylized assessment sidearm, attached to the animated hand joint.

@@ -6,6 +6,7 @@ var failures := 0
 var captures := 0
 var output := ""
 var capture_manifest: Array[Dictionary] = []
+var staged_pose_checks: Dictionary = {}
 var campaign: Node
 var saved_progress: Dictionary
 var saved_active := ""
@@ -176,31 +177,21 @@ func _settle_person(person: StylizedPerson) -> void:
 	# their real skeletal/procedural rigs to a settled standing idle before stills.
 	for frame: int in range(12):
 		person.animate_motion(0.12, 0.0)
-	var skeleton_info := "missing"
 	if person.cc0_skeleton:
-		var thigh_index := person.cc0_skeleton.find_bone("upperleg01.L")
-		skeleton_info = "bones=%d thigh=%d" % [person.cc0_skeleton.get_bone_count(), thigh_index]
-		if thigh_index >= 0:
+		var instance_id := person.get_instance_id()
+		if not staged_pose_checks.has(instance_id):
 			person.cc0_skeleton.force_update_all_bone_transforms()
-			var bone_positions := PackedStringArray()
-			for bone_name: String in [
-				"upperleg01.L", "upperleg02.L", "foot.L",
-				"upperleg01.R", "upperleg02.R", "foot.R"
-			]:
-				var bone_index := person.cc0_skeleton.find_bone(bone_name)
-				if bone_index >= 0:
-					bone_positions.append(
-						"%s=%s" % [bone_name, person.cc0_skeleton.get_bone_global_pose(bone_index).origin]
-					)
-			skeleton_info += " pose=%s limbs=%s" % [
-				person.cc0_skeleton.get_bone_pose_rotation(thigh_index),
-				" ".join(bone_positions)
-			]
-	print(
-		"A006 POSE: actor=%s model=%s root_rotation=%s gait=%.3f crouch=%.3f seated=%.3f %s"
-		% [person.get_parent().name, person.cc0_model_name, person.rotation,
-		person.gait_speed, person.crouch_amount, person.seated_blend, skeleton_info]
-	)
+			var left_hip := person.cc0_skeleton.find_bone("upperleg01.L")
+			var left_foot := person.cc0_skeleton.find_bone("foot.L")
+			var right_hip := person.cc0_skeleton.find_bone("upperleg01.R")
+			var right_foot := person.cc0_skeleton.find_bone("foot.R")
+			var legs_down := false
+			if left_hip >= 0 and left_foot >= 0 and right_hip >= 0 and right_foot >= 0:
+				var left_vector := person.cc0_skeleton.get_bone_global_pose(left_foot).origin - person.cc0_skeleton.get_bone_global_pose(left_hip).origin
+				var right_vector := person.cc0_skeleton.get_bone_global_pose(right_foot).origin - person.cc0_skeleton.get_bone_global_pose(right_hip).origin
+				legs_down = left_vector.normalized().dot(Vector3.DOWN) > 0.9 and right_vector.normalized().dot(Vector3.DOWN) > 0.9
+			check(legs_down, "CC0 staged character legs settle into an upright idle")
+			staged_pose_checks[instance_id] = true
 
 
 func _freeze_npcs() -> void:
