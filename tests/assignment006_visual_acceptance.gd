@@ -176,27 +176,20 @@ func _settle_person(person: StylizedPerson) -> void:
 	# their real skeletal/procedural rigs to a settled standing idle before stills.
 	for frame: int in range(12):
 		person.animate_motion(0.12, 0.0)
+	var skeleton_info := "missing"
 	if person.cc0_skeleton:
 		var thigh_index := person.cc0_skeleton.find_bone("upperleg01.L")
+		skeleton_info = "bones=%d thigh=%d" % [person.cc0_skeleton.get_bone_count(), thigh_index]
 		if thigh_index >= 0:
-			print(
-				"A006_POSE: actor=",
-				person.get_parent().name,
-				" model=",
-				person.cc0_model_name,
-				" crouch=",
-				person.crouch_amount,
-				" seated=",
-				person.seated_blend,
-				" gait=",
-				person.gait_speed,
-				" hip_rest=",
+			skeleton_info += " rest=%s pose=%s" % [
 				person.cc0_skeleton.get_bone_rest(thigh_index),
-				" hip_pose=",
-				person.cc0_skeleton.get_bone_pose_rotation(thigh_index),
-				" hip_global=",
-				person.cc0_skeleton.get_bone_global_pose(thigh_index)
-			)
+				person.cc0_skeleton.get_bone_pose_rotation(thigh_index)
+			]
+	print(
+		"A006_POSE: actor=%s model=%s gait=%.3f crouch=%.3f seated=%.3f %s"
+		% [person.get_parent().name, person.cc0_model_name, person.gait_speed,
+		person.crouch_amount, person.seated_blend, skeleton_info]
+	)
 
 
 func _freeze_npcs() -> void:
