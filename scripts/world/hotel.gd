@@ -269,17 +269,19 @@ func _build_meridian_wing() -> void:
  _box(Vector3(-39,3.63,-8.7),Vector3(4,0.04,2),Color(0.33,0.20,0.18),false)
  # A glazed dining screen divides the large ground floor into recognisable
  # public corridor and restaurant spaces. Two wide doors preserve circulation.
- for span: Vector2 in [Vector2(-42,-37.25),Vector2(-34.75,-21.25),Vector2(-18.75,-12)]:
+ for span: Vector2 in [Vector2(-42,-39.2),Vector2(-32.8,-21.25),Vector2(-18.75,-12)]:
   var mid := (span.x + span.y) * 0.5
   var width := span.y - span.x
   _box(Vector3(mid,0.55,-7),Vector3(width,1.10,0.18),dark,true)
   get_child(get_child_count()-1).add_to_group("new_furniture_collision")
   _hotel_window(Vector3(mid,1.93,-7),Vector3(width,1.66,0.10),true)
   _box(Vector3(mid,2.80,-7),Vector3(width,0.16,0.22),brass,false)
- for x: float in [-36.0,-20.0]:
-  for side: float in [-1.25,1.25]:
-   _box(Vector3(x+side,1.47,-7),Vector3(0.12,2.94,0.22),dark,false)
-  _box(Vector3(x,2.88,-7),Vector3(2.6,0.18,0.22),dark,false)
+ # Give the main restaurant portal a genuinely wide, unobstructed opening;
+ # jambs align to the screen returns instead of pinching the sightline at center.
+ for jamb_x: float in [-39.2,-32.8,-21.25,-18.75]:
+  _box(Vector3(jamb_x,1.47,-7),Vector3(0.12,2.94,0.22),dark,false)
+ for entry: Array in [[-36.0,6.52],[-20.0,2.72]]:
+  _box(Vector3(float(entry[0]),2.88,-7),Vector3(float(entry[1]),0.18,0.22),dark,false)
  # Upper guest gallery and lower dining / service lounge.
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
   for y: float in [2.95,6.85]:
@@ -287,7 +289,7 @@ func _build_meridian_wing() -> void:
   for z: float in [-15.7,15.7]:
    _box(Vector3(x,4.9,z),Vector3(2.1,1.8,0.06),dark,false)
    _box(Vector3(x,4.9,z + (0.04 if z < 0 else -0.04)),Vector3(1.7,1.35,0.04),Color(0.42,0.39,0.31),false)
- for x: float in [-38.0,-31.0,-24.0,-17.0]:
+ for x: float in [-40.5,-31.0,-24.0,-17.0]:
   _box(Vector3(x,0.45,-10),Vector3(2.4,0.9,1.3),dark,true)
   _box(Vector3(x,0.95,-10),Vector3(2.5,0.12,1.4),Color(0.65,0.57,0.46),false)
   for z: float in [-11.55,-8.45]:
@@ -324,8 +326,8 @@ func _build_meridian_wing() -> void:
   var dining_light := OmniLight3D.new()
   dining_light.position = Vector3(x,2.65,-10)
   dining_light.light_color = Color(1.0,0.78,0.56)
-  dining_light.light_energy = 0.45
-  dining_light.omni_range = 9.0
+  dining_light.light_energy = 0.95
+  dining_light.omni_range = 12.0
   dining_light.shadow_enabled = false
   dining_light.add_to_group("quality_practicals")
   dining_light.add_to_group("dining_practicals")

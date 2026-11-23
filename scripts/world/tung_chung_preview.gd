@@ -80,19 +80,19 @@ func _environment() -> void:
  data.background_mode = Environment.BG_COLOR
  data.background_color = Color(0.025, 0.045, 0.055) if station_mood else Color(0.11, 0.17, 0.22)
  data.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
- data.ambient_light_color = Color(0.52, 0.61, 0.64) if station_mood else Color(0.75, 0.82, 0.85)
- # Keep the station night-cool without crushing shadow detail. Local practicals
- # do most of the illumination; this restrained fill only lifts dark materials.
- data.ambient_light_energy = 0.72 if station_mood else 0.9
+ data.ambient_light_color = Color(0.62, 0.69, 0.71) if station_mood else Color(0.75, 0.82, 0.85)
+ # Retain the night-cool palette while lifting station shadow detail so public
+ # circulation, furniture and characters remain legible in the darker scene.
+ data.ambient_light_energy = 1.0 if station_mood else 0.9
  data.adjustment_enabled = station_mood
- data.adjustment_contrast = 1.025 if station_mood else 1.0
- data.adjustment_saturation = 0.93 if station_mood else 1.0
+ data.adjustment_contrast = 1.0 if station_mood else 1.0
+ data.adjustment_saturation = 0.96 if station_mood else 1.0
  env.environment = data
  add_child(env)
  var sun := DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-48, -25, 0)
- sun.light_color = Color(0.64, 0.76, 0.81) if station_mood else Color.WHITE
- sun.light_energy = 0.30 if station_mood else 0.85
+ sun.light_color = Color(0.66, 0.76, 0.80) if station_mood else Color.WHITE
+ sun.light_energy = 0.48 if station_mood else 0.85
  if operation == "the_streets":
   sun.light_color = Color(1.0,0.82,0.68)
  elif operation == "the_district":
@@ -351,14 +351,14 @@ func _station_lighting() -> void:
  var lights: Array[Array] = [
   # Ceiling practicals overlap gently to avoid dark gaps across the public
   # concourse; no single broad ambient wash is used as a substitute.
-  [Vector3(-15,4.55,-3),Color(1.0,0.78,0.60),1.20,12.0],
-  [Vector3(-5,4.55,1),Color(0.72,0.88,0.91),1.25,12.0],
-  [Vector3(5,4.55,-2),Color(0.78,0.90,0.91),1.25,12.0],
-  [Vector3(15,4.55,1),Color(1.0,0.76,0.56),1.15,12.0],
-  [Vector3(-10,4.55,9),Color(0.80,0.91,0.92),0.90,10.0],
-  [Vector3(0,4.55,9),Color(0.82,0.91,0.92),0.90,10.0],
-  [Vector3(10,4.55,9),Color(0.80,0.91,0.92),0.90,10.0],
-  [Vector3(19.8,3.1,10),Color(0.50,0.76,0.82),0.70,8.0],
+  [Vector3(-15,4.55,-3),Color(1.0,0.78,0.60),1.55,13.0],
+  [Vector3(-5,4.55,1),Color(0.72,0.88,0.91),1.60,13.0],
+  [Vector3(5,4.55,-2),Color(0.78,0.90,0.91),1.60,13.0],
+  [Vector3(15,4.55,1),Color(1.0,0.76,0.56),1.50,13.0],
+  [Vector3(-10,4.55,9),Color(0.80,0.91,0.92),1.20,11.0],
+  [Vector3(0,4.55,9),Color(0.82,0.91,0.92),1.20,11.0],
+  [Vector3(10,4.55,9),Color(0.80,0.91,0.92),1.20,11.0],
+  [Vector3(19.8,3.1,10),Color(0.50,0.76,0.82),0.90,9.0],
  ]
  for spec: Array in lights:
   var light := OmniLight3D.new()

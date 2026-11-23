@@ -1,6 +1,6 @@
 # Assignment 007 changes — performance not yet remeasured
 
-The station visual pass adds eight shadowless OmniLight3D practicals (they remain governed by the existing quality/practicals settings) and door/livery geometry. This adds some scene work; no local Godot profile, fresh CI timing, or Windows/Iris Xe measurement exists for the change. Existing Assignment 006 Linux/Mesa numbers below are historical and must not be presented as current measurements.
+The station visual pass adds eight shadowless OmniLight3D practicals (they remain governed by the existing quality/practicals settings) and door/livery geometry. Assignment 007 raised their energy and ambient fill after full-resolution images showed the concourse was underexposed; the Meridian portal was widened and two dining practicals were strengthened. This adds scene work; no target-device measurement exists for the change. Existing Assignment 006 Linux/Mesa numbers below are historical and must not be presented as current measurements.
 
 # Assignment 006 target performance status
 

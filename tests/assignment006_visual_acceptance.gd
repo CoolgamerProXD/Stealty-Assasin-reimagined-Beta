@@ -161,15 +161,46 @@ func _close_world() -> void:
 		await process_frame
 
 
+func _settle_person(person: StylizedPerson) -> void:
+	if person == null:
+		return
+	person.set_seated(false)
+	person.crouch_amount = 0.0
+	person.idle_activity = "idle"
+	person.gait_speed = 0.0
+	person.phase = 0.0
+	person.upper_body.position = Vector3.ZERO
+	person.upper_body.rotation = Vector3.ZERO
+	person.rotation = Vector3.ZERO
+	# Capture fixtures stop actors between arbitrary navigation frames. Blend
+	# their real skeletal/procedural rigs to a settled standing idle before stills.
+	for frame: int in range(12):
+		person.animate_motion(0.12, 0.0)
+
+
 func _freeze_npcs() -> void:
 	if world == null:
 		return
+	var player := world.get("player") as HotelPlayer
+	if player:
+		player.velocity = Vector3.ZERO
+		player.stance_height = 1.8
+		player.crouching = false
+		player.body_mesh.crouch_amount = 0.0
+		player.set_physics_process(false)
+		_settle_person(player.body_mesh)
 	for node: Node in world.get_children():
 		if node is HotelNpc:
-			node.set_physics_process(false)
+			var direct_npc := node as HotelNpc
+			direct_npc.velocity = Vector3.ZERO
+			direct_npc.set_physics_process(false)
+			_settle_person(direct_npc.person)
 		for nested: Node in node.get_children():
 			if nested is HotelNpc:
-				nested.set_physics_process(false)
+				var nested_npc := nested as HotelNpc
+				nested_npc.velocity = Vector3.ZERO
+				nested_npc.set_physics_process(false)
+				_settle_person(nested_npc.person)
 
 
 func _position_characters(player_position: Vector3, npc_position: Vector3) -> HotelNpc:
