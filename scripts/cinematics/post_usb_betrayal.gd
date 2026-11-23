@@ -59,8 +59,8 @@ func _ready() -> void:
  camera = Camera3D.new()
  Campaign.configure_camera(camera)
  camera.position = Vector3(-4,3.0,5.5)
- camera.look_at(Vector3(0,1.25,-2.7),Vector3.UP)
  add_child(camera)
+ camera.look_at(Vector3(0,1.25,-2.7),Vector3.UP)
  camera.make_current()
  effect = AudioStreamPlayer.new()
  effect.bus = "SFX"

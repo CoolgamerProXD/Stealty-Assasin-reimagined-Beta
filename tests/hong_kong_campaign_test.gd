@@ -55,12 +55,29 @@ func run() -> void:
  var code_fixture := "8282276899555634186801128061495577508192436694724980912146277806558513"
  check(code_fixture.length() == 70 and not service.progress.record_house_code(code_fixture.substr(0,69)), "House rejects a truncated safe code")
  check(service.progress.record_house_code(code_fixture) and service.progress.mark_complete("house"), "the independent 70-digit safe code is persisted and required to finish House")
- check(service.acknowledge_usb_decryption() and service.mark_betrayal_seen(), "decryption and the betrayal record are gated behind all five keys and House completion")
+ check(service.acknowledge_usb_decryption() and service.progress.usb_decryption_seen and not service.progress.betrayal_seen, "decryption opens only after all five keys and House completion; the rescue is still pending")
  var objective_copy := CampaignProgress.new()
  objective_copy.configure(definition)
  objective_copy.restore(service.progress.snapshot())
- check(objective_copy.completed_targets.get("tung_chung",[]).has("constance_operative") and objective_copy.completed.has("the_harbour") and objective_copy.completed.has("house") and objective_copy.house_code.length() == 70 and objective_copy.betrayal_seen, "explicit targets, House code and post-decryption betrayal state survive campaign save restoration")
+ check(objective_copy.completed_targets.get("tung_chung",[]).has("constance_operative") and objective_copy.completed.has("the_harbour") and objective_copy.completed.has("house") and objective_copy.house_code.length() == 70 and objective_copy.usb_decryption_seen and not objective_copy.betrayal_seen, "explicit targets, House code and pending post-decryption state survive campaign save restoration")
  service.persist()
+ var keys_before_rescue: Array[String] = service.progress.recovered_keys.duplicate()
+ var targets_before_rescue: Dictionary = service.progress.completed_targets.duplicate(true)
+ var post_story := load("res://scenes/post_usb_betrayal.tscn").instantiate() as Node3D
+ root.add_child(post_story)
+ await process_frame
+ await process_frame
+ check(not post_story.get("waiting_for_rescue") and post_story.get("camera").is_current() and not service.progress.betrayal_seen, "valid saved decryption state opens the interactive Ruby betrayal scene")
+ post_story.set("waiting_for_rescue", true)
+ var rescue_event := InputEventAction.new()
+ rescue_event.action = "interact"
+ rescue_event.pressed = true
+ post_story.call("_unhandled_input", rescue_event)
+ check(post_story.get("rescued") and service.progress.betrayal_seen and service.progress.recovered_keys == keys_before_rescue and service.progress.completed_targets == targets_before_rescue, "pressing E rescues Ruby and records betrayal without changing any target or key progress")
+ await create_timer(4.1).timeout
+ check(post_story.get("continue_button").visible and str(post_story.get("subtitles").text).contains("hunt the Covenant"), "post-rescue dialogue preserves the unresolved contents and begins the quiet hunt")
+ post_story.queue_free()
+ await process_frame
 
  var awareness_guard := HotelNpc.new()
  awareness_guard.profile = NpcProfile.new()
