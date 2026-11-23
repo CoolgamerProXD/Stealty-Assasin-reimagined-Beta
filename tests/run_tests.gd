@@ -595,6 +595,10 @@ func run() -> void:
  var campaign_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
  check(campaign.configure(campaign_data), "campaign data loads")
  check(campaign.is_unlocked("initiation") and not campaign.is_unlocked("meridian") and not campaign.is_unlocked("future"), "campaign starts in chronological order")
+ check(not campaign.bus_stop_seen and not campaign.mark_bus_stop_seen(), "opening cannot be marked complete without a callsign")
+ check(not campaign.set_agent_name("   ") and not campaign.set_agent_name("line\nbreak"), "empty and multiline callsigns are rejected")
+ check(campaign.set_agent_name("Agent Seven") and campaign.mark_bus_stop_seen(), "valid player-selected callsign completes the opening gate")
+ check(not campaign.set_agent_name("Changed"), "completed opening freezes the selected callsign")
  check(not campaign.item_unlocked("quiet_line") and not campaign.select_item("quiet_line"), "locked equipment cannot be selected")
  check(campaign.mark_complete("initiation") and not campaign.is_unlocked("meridian") and campaign.item_unlocked("quiet_line"), "completion unlocks quiet line without presenting Meridian ahead of the main story")
  check(campaign.next_mission() == "tung_chung" and not campaign.is_unlocked("meridian"), "Tung Chung follows Initiation while optional Meridian remains out of the required sequence")
@@ -602,9 +606,9 @@ func run() -> void:
  var campaign_copy := CampaignProgress.new()
  campaign_copy.configure(campaign_data)
  campaign_copy.restore(campaign.snapshot())
- check(campaign_copy.completed.has("initiation") and campaign_copy.selected == "quiet_line" and campaign_copy.is_unlocked("initiation"), "campaign progress and replay survive restore")
+ check(campaign_copy.completed.has("initiation") and campaign_copy.selected == "quiet_line" and campaign_copy.is_unlocked("initiation") and campaign_copy.bus_stop_seen and campaign_copy.agent_name == "Agent Seven", "campaign progress, callsign and opening completion survive restore")
  campaign_copy.restore({"completed": ["initiation", "meridian"], "last_mission": "meridian"})
- check(campaign_copy.completed.has("initiation") and not campaign_copy.completed.has("meridian") and campaign_copy.last_mission.is_empty(), "legacy saves keep safe training progress but cannot skip newly mandatory operations")
+ check(campaign_copy.completed.has("initiation") and campaign_copy.bus_stop_seen and not campaign_copy.completed.has("meridian") and campaign_copy.last_mission.is_empty(), "legacy saves keep safe training progress and avoid replaying the new opening")
  campaign_copy.restore({"completed": ["meridian"], "selected": "quiet_line"})
  check(campaign_copy.completed.is_empty() and campaign_copy.selected == "training_sidearm", "out-of-order save cannot bypass unlocks")
  var gadget_world: Node = scene.instantiate()
@@ -925,11 +929,39 @@ func run() -> void:
  var isolated_path := "user://assassin_campaign_test_%d.json" % Time.get_ticks_usec()
  service.campaign_path = isolated_path
  service.progress.restore({})
- check(service.begin("initiation"), "campaign begins an unlocked mission")
+ check(service.begin("initiation"), "first Initiation start opens the required bus-stop story")
+ await process_frame
+ await process_frame
+ var opening: Node = current_scene
+ check(opening != null and opening.scene_file_path == "res://scenes/bus_stop_opening.tscn", "new campaign starts with the bus-stop opening, before Initiation")
+ if opening != null and opening.scene_file_path == "res://scenes/bus_stop_opening.tscn":
+  opening.call("_confirm_name", "Mara Vale")
+  opening.set("elapsed", 2.3)
+  opening.call("_process", 0.0)
+  var trip_event := InputEventAction.new()
+  trip_event.action = "interact"
+  trip_event.pressed = true
+  opening.call("_unhandled_input", trip_event)
+  opening.call("_process", 1.1)
+  var evade_event := InputEventAction.new()
+  evade_event.action = "move_right"
+  evade_event.pressed = true
+  opening.call("_unhandled_input", evade_event)
+  opening.call("_unhandled_input", trip_event)
+  opening.call("_process", 2.1)
+  check(not service.progress.bus_stop_seen and service.progress.completed_targets.is_empty() and service.progress.recovered_keys.is_empty(), "opening actions do not award a mission target or USB key")
+  opening.call("_finish_opening")
+  await process_frame
+  await process_frame
+  check(current_scene != null and current_scene.scene_file_path == "res://scenes/main_menu.tscn" and service.progress.bus_stop_seen and service.progress.agent_name == "Mara Vale" and service.pending_briefing.is_empty(), "chosen callsign and opening persist before the Initiation briefing")
+ else:
+  check(false, "opening actions do not award a mission target or USB key")
+  check(false, "chosen callsign and opening persist before the Initiation briefing")
+ check(service.begin("initiation"), "campaign begins Initiation after the story opening")
  await process_frame
  await process_frame
  var deployed: Node = current_scene
- check(deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn", "campaign changes to Initiation scene")
+ check(deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn", "campaign changes to Initiation scene after the opening")
  if deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn":
   check(deployed.get("intro_active") and not (deployed.get("player") as HotelPlayer).is_physics_processing(), "Initiation starts with a skippable entry cinematic")
   var entry_skip := InputEventAction.new()

@@ -11,7 +11,11 @@ func _ready() -> void:
  ui_audio.stream = ProceduralSound.tone(520.0, 0.06, 0.025)
  add_child(ui_audio)
  _build_shell()
- if Campaign.return_to_maps:
+ if not Campaign.pending_briefing.is_empty():
+  var pending := Campaign.pending_briefing
+  Campaign.pending_briefing = ""
+  _briefing(pending)
+ elif Campaign.return_to_maps:
   Campaign.return_to_maps = false
   _missions()
  else:
@@ -122,6 +126,7 @@ func _briefing(id: String) -> void:
   return
  _text(str(entry.get("name", id)), 30)
  _text("RUBY  /  BRIEFING", 16)
+ _text("AGENT  /  " + Campaign.display_agent_name(), 15)
  _text(str(entry.get("briefing", "")), 20)
  var item: String = Campaign.progress.selected
  var allowed: bool = Campaign.progress.item_allowed(item, id)

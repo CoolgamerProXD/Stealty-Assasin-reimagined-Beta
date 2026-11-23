@@ -74,6 +74,19 @@ class PopulationDataTests(unittest.TestCase):
         self.assertEqual(initiation["primary_target"]["id"], "assessment_unit")
         self.assertEqual(initiation["required_action"], "disable_assessment_unit")
 
+    def test_first_campaign_start_routes_through_bus_stop_and_agent_name(self):
+        scene = ROOT / "scenes/bus_stop_opening.tscn"
+        script = ROOT / "scripts/cinematics/bus_stop_opening.gd"
+        campaign = (ROOT / "scripts/core/campaign_state.gd").read_text()
+        progress = (ROOT / "scripts/core/campaign_progress.gd").read_text()
+        self.assertTrue(scene.is_file())
+        self.assertTrue(script.is_file())
+        self.assertIn('id == "initiation" and not progress.bus_stop_seen', campaign)
+        self.assertIn('var bus_stop_seen: bool = false', progress)
+        self.assertIn('var agent_name: String = ""', progress)
+        self.assertIn('"bus_stop_seen": bus_stop_seen', progress)
+        self.assertIn('"agent_name": agent_name', progress)
+
     def test_hong_kong_campaign_has_distinct_ordered_city_operations(self):
         campaign = json.loads((ROOT / "resources/campaign.json").read_text())
         ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())

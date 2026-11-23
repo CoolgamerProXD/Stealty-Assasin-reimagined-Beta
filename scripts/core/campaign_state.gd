@@ -8,6 +8,7 @@ var progress: CampaignProgress = CampaignProgress.new()
 var active_mission: String = ""
 var load_checkpoint: bool = false
 var return_to_maps: bool = false
+var pending_briefing: String = ""
 var ending: Dictionary = {}
 var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "music_volume": 1.0, "sfx_volume": 1.0, "ambient_volume": 1.0, "dialogue_volume": 1.0, "graphics": "MEDIUM", "show_fps": false, "shadows": true, "practicals": true, "long_view": true}
 
@@ -21,6 +22,34 @@ func _ready() -> void:
 
 func persist() -> bool:
  return SaveStore.write(campaign_path, progress.snapshot())
+
+func display_agent_name() -> String:
+ return progress.agent_name if not progress.agent_name.is_empty() else "Agent"
+
+func set_agent_name(value: String) -> bool:
+ if progress.bus_stop_seen: return false
+ var previous := progress.agent_name
+ if not progress.set_agent_name(value): return false
+ if persist(): return true
+ progress.agent_name = previous
+ return false
+
+func finish_bus_stop(value: String) -> bool:
+ if progress.bus_stop_seen or pending_briefing != "initiation": return false
+ var previous_name := progress.agent_name
+ if not progress.set_agent_name(value): return false
+ if not progress.mark_bus_stop_seen():
+  progress.agent_name = previous_name
+  return false
+ if not persist():
+  progress.agent_name = previous_name
+  progress.bus_stop_seen = false
+  return false
+ pending_briefing = "initiation"
+ active_mission = ""
+ load_checkpoint = false
+ get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+ return true
 
 func checkpoint_path(id: String) -> String:
  if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
@@ -38,6 +67,13 @@ func begin(id: String, resume: bool = false) -> bool:
  var entry := progress.mission(id)
  if entry.is_empty() or not ResourceLoader.exists(str(entry["scene"])): return false
  if resume and not has_checkpoint(id): return false
+ if id == "initiation" and not progress.bus_stop_seen:
+  if not ResourceLoader.exists("res://scenes/bus_stop_opening.tscn"): return false
+  pending_briefing = "initiation"
+  active_mission = ""
+  load_checkpoint = false
+  get_tree().change_scene_to_file("res://scenes/bus_stop_opening.tscn")
+  return true
  var old_last := progress.last_mission
  progress.last_mission = id
  if not persist():

@@ -14,6 +14,8 @@ var usb_decryption_seen: bool = false
 var house_code_recovered: bool = false
 var house_code: String = ""
 var betrayal_seen: bool = false
+var bus_stop_seen: bool = false
+var agent_name: String = ""
 var selected: String = "training_sidearm"
 var last_mission: String = ""
 var acquired_outfits: Array[String] = ["civilian"]
@@ -33,6 +35,23 @@ func configure(data: Variant) -> bool:
   if not item is Dictionary or not item.get("id") is String or not item.get("missions") is Array: return false
   equipment.append(item.duplicate(true))
  return not missions.is_empty()
+
+func set_agent_name(value: String) -> bool:
+ var normalized := value.strip_edges()
+ if normalized.is_empty() or normalized.length() > 24:
+  return false
+ for index: int in range(normalized.length()):
+  var codepoint := normalized.unicode_at(index)
+  if codepoint < 32 or codepoint == 127:
+   return false
+ agent_name = normalized
+ return true
+
+func mark_bus_stop_seen() -> bool:
+ if bus_stop_seen or agent_name.is_empty():
+  return false
+ bus_stop_seen = true
+ return true
 
 func mission(id: String) -> Dictionary:
  for entry: Dictionary in missions:
@@ -169,6 +188,8 @@ func restore(data: Dictionary) -> void:
  house_code_recovered = false
  house_code = ""
  betrayal_seen = false
+ bus_stop_seen = false
+ agent_name = ""
  var schema_version := int(data.get("schema_version", 1))
  acquired_outfits.assign(["civilian"])
  equipped_outfit = "civilian"
@@ -235,6 +256,10 @@ func restore(data: Dictionary) -> void:
   mark_complete("house")
  usb_decryption_seen = data.get("usb_decryption_seen", false) == true and usb_ready() and completed.has("ngong_ping") and completed.has("house") and house_code_recovered
  betrayal_seen = schema_version >= 2 and data.get("betrayal_seen", false) == true and usb_decryption_seen
+ var stored_agent_name: Variant = data.get("agent_name", "")
+ if schema_version >= 3 and stored_agent_name is String:
+  set_agent_name(stored_agent_name)
+ bus_stop_seen = data.get("bus_stop_seen", false) == true or completed.has("initiation") or not completed.is_empty()
  var desired: Variant = data.get("selected", "training_sidearm")
  selected = "training_sidearm"
  if desired is String: select_item(desired)
@@ -249,4 +274,4 @@ func restore(data: Dictionary) -> void:
  if desired_outfit is String: equip_outfit(desired_outfit)
 
 func snapshot() -> Dictionary:
- return {"schema_version": 2, "completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "completed_targets": completed_targets.duplicate(true), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "house_code_recovered": house_code_recovered, "house_code": house_code, "betrayal_seen": betrayal_seen, "selected": selected, "last_mission": last_mission, "acquired_outfits": acquired_outfits.duplicate(), "equipped_outfit": equipped_outfit}
+ return {"schema_version": 3, "completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "completed_targets": completed_targets.duplicate(true), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "house_code_recovered": house_code_recovered, "house_code": house_code, "betrayal_seen": betrayal_seen, "bus_stop_seen": bus_stop_seen, "agent_name": agent_name, "selected": selected, "last_mission": last_mission, "acquired_outfits": acquired_outfits.duplicate(), "equipped_outfit": equipped_outfit}
