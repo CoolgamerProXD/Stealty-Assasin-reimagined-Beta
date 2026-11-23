@@ -37,6 +37,7 @@ func configure(data: Variant) -> bool:
  return not missions.is_empty()
 
 func set_agent_name(value: String) -> bool:
+ if bus_stop_seen: return false
  var normalized := value.strip_edges()
  if normalized.is_empty() or normalized.length() > 24:
   return false

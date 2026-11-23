@@ -51,8 +51,8 @@ func _build_environment() -> void:
  var camera := Camera3D.new()
  Campaign.configure_camera(camera)
  camera.position = Vector3(0, 3.0, 9.5)
- camera.look_at(Vector3(0, 1.15, -0.7), Vector3.UP)
  add_child(camera)
+ camera.look_at(Vector3(0, 1.15, -0.7), Vector3.UP)
  camera.make_current()
 
 func _build_actors() -> void:
