@@ -181,14 +181,25 @@ func _settle_person(person: StylizedPerson) -> void:
 		var thigh_index := person.cc0_skeleton.find_bone("upperleg01.L")
 		skeleton_info = "bones=%d thigh=%d" % [person.cc0_skeleton.get_bone_count(), thigh_index]
 		if thigh_index >= 0:
-			skeleton_info += " rest=%s pose=%s" % [
-				person.cc0_skeleton.get_bone_rest(thigh_index),
-				person.cc0_skeleton.get_bone_pose_rotation(thigh_index)
+			person.cc0_skeleton.force_update_all_bone_transforms()
+			var bone_positions := PackedStringArray()
+			for bone_name: String in [
+				"upperleg01.L", "upperleg02.L", "foot.L",
+				"upperleg01.R", "upperleg02.R", "foot.R"
+			]:
+				var bone_index := person.cc0_skeleton.find_bone(bone_name)
+				if bone_index >= 0:
+					bone_positions.append(
+						"%s=%s" % [bone_name, person.cc0_skeleton.get_bone_global_pose(bone_index).origin]
+					)
+			skeleton_info += " pose=%s limbs=%s" % [
+				person.cc0_skeleton.get_bone_pose_rotation(thigh_index),
+				" ".join(bone_positions)
 			]
 	print(
-		"A006 POSE: actor=%s model=%s gait=%.3f crouch=%.3f seated=%.3f %s"
-		% [person.get_parent().name, person.cc0_model_name, person.gait_speed,
-		person.crouch_amount, person.seated_blend, skeleton_info]
+		"A006 POSE: actor=%s model=%s root_rotation=%s gait=%.3f crouch=%.3f seated=%.3f %s"
+		% [person.get_parent().name, person.cc0_model_name, person.rotation,
+		person.gait_speed, person.crouch_amount, person.seated_blend, skeleton_info]
 	)
 
 
