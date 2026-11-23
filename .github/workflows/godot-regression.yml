@@ -131,7 +131,7 @@ jobs:
           python3 - "$RUNNER_TEMP/assignment006-visual.log" "$test_status" <<'PYCODE'
           import pathlib, re, sys
           lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()
-          important = [line for line in lines if re.search(r"^A006 (RESULT|FAIL):|SCRIPT ERROR|ERROR:", line)]
+          important = [line for line in lines if re.search(r"^A006 (POSE|RESULT|FAIL):|SCRIPT ERROR|ERROR:", line)]
           if not important:
               important = [f"visual acceptance process exited with status {sys.argv[2]} without a result line"]
           text = " | ".join(important[-15:])
