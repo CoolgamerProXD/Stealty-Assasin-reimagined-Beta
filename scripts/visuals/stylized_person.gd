@@ -183,7 +183,8 @@ func _load_cc0_model(model_name: String) -> void:
   for strap: MeshInstance3D in underwear_straps: reusable_parts.append(strap)
   for reusable: Node3D in reusable_parts:
    if is_instance_valid(reusable) and reusable.get_parent() == cc0_model: reusable.reparent(self, false)
-  remove_child(cc0_model)
+  # queue_free() detaches the old imported model at end of frame. Removing
+  # it synchronously can fail while a scene is adding character children.
   cc0_model.queue_free()
  cc0_model = null
  cc0_skeleton = null
