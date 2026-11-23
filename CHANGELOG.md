@@ -42,8 +42,8 @@ Added permanent, independently stored Initiation lesson coins, an equip/replenis
 
 ## 2026-11-16 — CC0 rig neutral pose correction
 - Diagnosed the wide frozen poses as the imported CC0 bind pose: with zero procedural gait, the skeleton's hip-to-foot chains were still spread laterally. Build a model-specific neutral pose by aligning the leg chains down and relaxing the arm chains, then layer existing gait/gesture rotations over those corrections.
-- Added a staged-pose regression check and re-captured the full 18-view suite. Godot 4.4.1 run [45153819125](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/45153819125) passed 153 Assignment 006 checks, the full headless regression suite, and all 18 native-resolution capture jobs. The Windows job was skipped for this commit and remains pending a `[windows]`-tagged rerun.
-- The new 1280×720 review JPEGs are in `screenshots/assignment007/review-run-45153819125/`. Manual review confirms the horizontal split poses are substantially reduced in facility and gameplay views; several fixtures remain staged/awkward and overall blockout-level environments still need art review. No human playtest, cultural review or target-device measurements are implied.
+- Added a staged-pose regression check and re-captured the full 18-view suite. Godot 4.4.1 run [45153819125](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/45153819125) passed 153 Assignment 006 checks, the full headless regression suite, and all 18 native-resolution capture jobs. Follow-up [run 45155176281](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/45155176281) passed both Windows export/headless smoke and Linux headless regression, plus all 18 review jobs.
+- The 1280×720 review JPEGs are in `screenshots/assignment007/review-run-45153819125/`. Manual review confirms the horizontal split poses are substantially reduced in facility and gameplay views; several fixtures remain awkwardly seated/hovering and the environments remain blockout-level. No human playtest, cultural review or target-device measurements are implied.
 
 # Quality overhaul
 
