@@ -505,6 +505,8 @@ func _begin_intro() -> void:
  # A short location establishing shot precedes a cut to the physical target.
  # Ngong Ping's existing panorama already frames the public landmark.
  var neighbourhood: Node3D = scene.find_child("MissionNeighbourhood", true, false)
+ if not neighbourhood and operation_id in ["the_streets", "the_district", "the_harbour"]:
+  neighbourhood = scene.find_child("District_" + operation_id, true, false) as Node3D
  if neighbourhood:
   has_establishing = true
   establishing_start = neighbourhood.to_global(Vector3(0,6,8))
@@ -681,7 +683,10 @@ func _process(delta: float) -> void:
  reticle.visible = player.aiming and not intro_active and not extraction_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
- if operation_id == "hong_kong_sandbox":
+ if operation_id == "house":
+  # House guards and safe are intentionally not target/intel overlays.
+  pass
+ elif operation_id == "hong_kong_sandbox":
   for index: int in range(sandbox_targets.size()):
    var target_id := str(sandbox_target_data[index]["id"])
    _overlay(sandbox_targets[index].person, red_overlay if player.instinct_active and not bool(sandbox_target_completed.get(target_id, false)) else null)
