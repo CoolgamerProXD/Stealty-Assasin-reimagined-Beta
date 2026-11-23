@@ -959,7 +959,7 @@ func run() -> void:
    if obj.kind == "extract": deployed.call("_on_interaction", obj)
   await process_frame
   await process_frame
-  check(current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn" and service.progress.is_unlocked("meridian"), "objective completion saves unlock and opens Ruby scene")
+  check(current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn" and service.progress.is_unlocked("tung_chung") and not service.progress.is_unlocked("meridian"), "Initiation completion opens Ruby's handoff and unlocks Tung Chung, not optional Meridian")
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn":
    current_scene.call("_apply_timeline", 6.0, 0.1)
    check(current_scene.get("actor").position.z < 0.0 and current_scene.get("left_door").position.x < -2.0, "cinematic timeline opens doors and walks outside")
@@ -972,11 +972,11 @@ func run() -> void:
    await process_frame
    await physics_frame
    await process_frame
-   check(service.progress.is_unlocked("meridian"), "skipping Ruby scene preserves campaign unlock")
+   check(service.progress.is_unlocked("tung_chung") and not service.progress.is_unlocked("meridian"), "skipping Ruby scene preserves the required Tung Chung unlock")
   else:
    check(false, "cinematic timeline opens doors and walks outside")
    check(false, "cinematic starts synthesized door sound")
-   check(false, "skipping Ruby scene preserves campaign unlock")
+   check(false, "skipping Ruby scene preserves the required Tung Chung unlock")
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn":
    current_scene.call("_continue")
    await process_frame
@@ -987,19 +987,19 @@ func run() -> void:
   check(false, "campaign mission creates pause menu")
   check(false, "pause stops simulation and releases mouse")
   check(false, "resume restarts simulation")
-  check(false, "objective completion saves unlock and opens Ruby scene")
+  check(false, "Initiation completion opens Ruby's handoff and unlocks Tung Chung, not optional Meridian")
   check(false, "cinematic timeline opens doors and walks outside")
   check(false, "cinematic starts synthesized door sound")
-  check(false, "skipping Ruby scene preserves campaign unlock")
+  check(false, "skipping Ruby scene preserves the required Tung Chung unlock")
   check(false, "debrief can be skipped to main menu")
  if current_scene != null and current_scene.scene_file_path == "res://scenes/main_menu.tscn":
   check(service.begin("initiation"), "completed Initiation can be replayed")
   await process_frame
   await process_frame
-  check(current_scene != null and current_scene.scene_file_path == "res://scenes/initiation.tscn" and service.progress.is_unlocked("meridian"), "replay does not relock Meridian")
+  check(current_scene != null and current_scene.scene_file_path == "res://scenes/initiation.tscn" and service.progress.is_unlocked("tung_chung") and not service.progress.is_unlocked("meridian"), "Initiation replay preserves Tung Chung access without unlocking optional Meridian")
  else:
   check(false, "completed Initiation can be replayed")
-  check(false, "replay does not relock Meridian")
+  check(false, "Initiation replay preserves Tung Chung access without unlocking optional Meridian")
  if current_scene != null:
   current_scene.queue_free()
   current_scene = null
