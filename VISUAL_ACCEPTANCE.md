@@ -1,3 +1,7 @@
+# Assignment 007 — active visual implementation update (not yet verified)
+
+Updated the Tung Chung campaign station with a gentler cool fill, broader overlapping ceiling practicals, platform screen-door frames and restrained train livery; moved the Meridian restaurant review camera through the actual room opening. The capture harness now retains lossless native PNGs, saves native-resolution JPEGs for review/CI transport, writes a manifest, and asks CI to verify dimensions and byte counts. These edits have not yet run in Godot, and no resultant frame has been reviewed. They are implementation changes, not visual sign-off. The older Assignment 006 run and its low-resolution previews remain historical baseline evidence only.
+
 # Assignment 006 visual acceptance report
 
 **Status: INCOMPLETE — no campaign-wide art sign-off.** This report distinguishes Godot import/functional automation, staged screenshots, and human visual/device review. None are interchangeable. The current bar is the `ART_DIRECTION.md` and `RENDERING_PIPELINE.md` gate set; a passing engine test alone is not acceptance.

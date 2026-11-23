@@ -1,3 +1,7 @@
+# Assignment 007 in-progress note
+
+The current active branch adds Tung Chung station/train visual details and improves the review evidence path for the 18-scene automated capture suite. Run `tests/assignment006_visual_acceptance.gd` through the pinned Godot 4.4.1 Xvfb command in `.github/workflows/godot-regression.yml`; examine original PNGs as well as native-resolution review JPEGs. The 320×180 and 160×90 images are previews only. Local Godot execution and human review remain outstanding; do not infer visual acceptance from static parsing or manifest checks.
+
 # Second-pass development notes
 
 Preserve the existing mission/save contract and keep new routes within their dedicated floor-local navigation regions. `EnvironmentDressing` and preview `DistrictDetails` batch colorized decorative geometry; do not assume that a visible prop has collision. The stance rig uses torso translation and knee joints driven by the current physical stance, with footsteps derived from the same gait phase. Synthetic CI capture scenes use staged cameras; overhead plans deliberately hide roof/slab visuals. Run the full Godot suite and Windows export when changing these systems, and playtest on actual target hardware before making quality or performance claims.

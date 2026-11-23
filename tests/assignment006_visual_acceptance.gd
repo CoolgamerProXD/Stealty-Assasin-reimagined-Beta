@@ -5,6 +5,7 @@ var checks := 0
 var failures := 0
 var captures := 0
 var output := ""
+var capture_manifest: Array[Dictionary] = []
 var campaign: Node
 var saved_progress: Dictionary
 var saved_active := ""
@@ -72,20 +73,67 @@ func _capture(name: String, include_hud: bool = false) -> void:
 		await process_frame
 	await RenderingServer.frame_post_draw
 	var image := root.get_texture().get_image()
+	if image == null:
+		check(false, name + " produced a readable viewport image")
+		return
 	check(
-		image != null and image.get_width() >= 1280 and image.get_height() >= 720,
+		image.get_width() >= 1280 and image.get_height() >= 720,
 		name + " rendered at 1280x720 or higher"
 	)
 	var full_path := output.path_join(name + ".png")
-	image.save_png(full_path)
+	var png_error := image.save_png(full_path)
+	var saved_png := Image.new()
+	var png_read_error := saved_png.load(full_path)
+	var png_valid := (
+		png_error == OK
+		and png_read_error == OK
+		and saved_png.get_width() == image.get_width()
+		and saved_png.get_height() == image.get_height()
+	)
+	check(png_valid, name + " lossless PNG exists and reopens at native resolution")
 	var preview := image.duplicate() as Image
 	preview.resize(320, 180, Image.INTERPOLATE_LANCZOS)
 	preview.save_jpg(output.path_join(name + "_thumb.jpg"), 0.58)
-	# Compact 160x90 review frames are embedded in the CI check annotations so
-	# they remain inspectable when the separate Actions artifact host is blocked.
+	# Native-resolution JPEGs are only an inspection transport for the check API;
+	# the artifact keeps the original lossless PNG. Bound each annotation payload
+	# so it survives GitHub's command-size limit while retaining 1280x720 pixels.
+	var review_path := output.path_join(name + "_inspect.jpg")
+	var review_image := image.duplicate() as Image
+	var review_quality := 0.65
+	var review_error := review_image.save_jpg(review_path, review_quality)
+	var review_bytes := FileAccess.get_file_as_bytes(review_path)
+	while review_error == OK and review_bytes.size() > 42000 and review_quality > 0.06:
+		review_quality = maxf(0.05, review_quality - 0.08)
+		review_error = review_image.save_jpg(review_path, review_quality)
+		review_bytes = FileAccess.get_file_as_bytes(review_path)
+	var saved_review := Image.new()
+	var review_read_error := saved_review.load(review_path)
+	var review_valid := (
+		review_error == OK
+		and review_read_error == OK
+		and saved_review.get_width() == image.get_width()
+		and saved_review.get_height() == image.get_height()
+		and review_bytes.size() <= 42000
+	)
+	check(
+		review_valid,
+		name + " native-resolution review JPEG reopens within the annotation size budget"
+	)
+	# 320x180/160x90 previews remain useful for quick summaries only.
 	var annotation_preview := preview.duplicate() as Image
 	annotation_preview.resize(160, 90, Image.INTERPOLATE_LANCZOS)
 	annotation_preview.save_jpg(output.path_join(name + "_preview.jpg"), 0.25)
+	capture_manifest.append({
+		"name": name,
+		"png": name + ".png",
+		"width": image.get_width(),
+		"height": image.get_height(),
+		"png_bytes": FileAccess.get_file_as_bytes(full_path).size(),
+		"inspect_jpeg": name + "_inspect.jpg",
+		"inspect_jpeg_bytes": review_bytes.size(),
+		"inspect_jpeg_quality": review_quality,
+		"inspect_jpeg_native_resolution": review_valid
+	})
 	print(
 		"A006_CAPTURE: ",
 		name,
@@ -95,7 +143,12 @@ func _capture(name: String, include_hud: bool = false) -> void:
 		image.get_width(),
 		"x",
 		image.get_height(),
-		"]"
+		"] PNG=",
+		FileAccess.get_file_as_bytes(full_path).size(),
+		" review-JPEG=",
+		review_bytes.size(),
+		" quality=",
+		review_quality
 	)
 
 
@@ -188,7 +241,9 @@ func run() -> void:
 	_freeze_npcs()
 	_camera(Vector3(-5.0, 1.7, 6.0), Vector3(-5.0, 1.3, -6.0), 66.0)
 	await _capture("03_meridian_main_environment")
-	_camera(Vector3(-25.0, 1.65, 3.0), Vector3(-35.0, 1.3, -7.0), 66.0)
+	# Frame the real restaurant through its built opening at x=-36 rather than
+	# shooting across the solid glazed service partition from the wrong room.
+	_camera(Vector3(-36.0, 1.55, -3.5), Vector3(-35.0, 1.25, -10.5), 58.0)
 	await _capture("04_meridian_interior_lighting")
 	await _close_world()
 
@@ -321,6 +376,32 @@ func run() -> void:
 		await _capture("18_campaign_hud_gameplay", true)
 	await _close_world()
 	check(captures == 18, "all 18 distinct requested in-game views were captured")
+	var manifest_path := output.path_join("manifest.json")
+	var manifest_file := FileAccess.open(manifest_path, FileAccess.WRITE)
+	if manifest_file:
+		var manifest := {
+			"minimum_resolution": [1280, 720],
+			"capture_count": capture_manifest.size(),
+			"captures": capture_manifest
+		}
+		manifest_file.store_string(JSON.stringify(manifest, "  "))
+		manifest_file.close()
+	var parsed_manifest: Variant = null
+	if FileAccess.file_exists(manifest_path):
+		parsed_manifest = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+	var manifest_valid := manifest_file != null and parsed_manifest is Dictionary
+	if manifest_valid:
+		manifest_valid = parsed_manifest.get("captures", []).size() == 18
+	check(
+		manifest_valid,
+		"machine-readable manifest records all full-resolution image paths, dimensions, and byte sizes"
+	)
+	for entry: Dictionary in capture_manifest:
+		var image_path := output.path_join(str(entry["png"]))
+		var image_valid := FileAccess.file_exists(image_path)
+		if image_valid:
+			image_valid = FileAccess.get_file_as_bytes(image_path).size() == int(entry["png_bytes"])
+		check(image_valid, str(entry["name"]) + " original PNG survives final manifest audit")
 
 	campaign.progress.restore(saved_progress)
 	campaign.active_mission = saved_active

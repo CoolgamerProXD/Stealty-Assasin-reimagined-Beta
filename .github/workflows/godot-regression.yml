@@ -140,6 +140,34 @@ jobs:
           PYCODE
           if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^A006 FAIL:' "$RUNNER_TEMP/assignment006-visual.log"; then exit 1; fi
           grep -E '^A006 RESULT: [0-9]+ checks, 0 failures; 18 requested views staged$' "$RUNNER_TEMP/assignment006-visual.log"
+      - name: Verify Assignment 006 full-resolution capture manifest
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import json, pathlib, sys
+          root = pathlib.Path("assignment006-visual-acceptance")
+          manifest_path = root / "manifest.json"
+          if not manifest_path.is_file():
+              raise SystemExit("capture manifest missing; original-image validation cannot pass")
+          manifest = json.loads(manifest_path.read_text())
+          captures = manifest.get("captures", [])
+          if manifest.get("capture_count") != 18 or len(captures) != 18:
+              raise SystemExit(f"expected 18 manifest entries, got {len(captures)}")
+          for entry in captures:
+              width, height = entry.get("width", 0), entry.get("height", 0)
+              png = root / entry["png"]
+              review = root / entry["inspect_jpeg"]
+              if width < 1280 or height < 720:
+                  raise SystemExit(f"{entry['name']}: original below 1280x720: {width}x{height}")
+              if not png.is_file() or png.stat().st_size != entry.get("png_bytes") or png.stat().st_size == 0:
+                  raise SystemExit(f"{entry['name']}: lossless PNG missing/truncated")
+              if not review.is_file() or review.stat().st_size != entry.get("inspect_jpeg_bytes") or review.stat().st_size > 42000:
+                  raise SystemExit(f"{entry['name']}: native-resolution review JPEG missing/truncated/oversize")
+              if entry.get("inspect_jpeg_native_resolution") is not True:
+                  raise SystemExit(f"{entry['name']}: review JPEG failed native-resolution reopen")
+          print("Verified 18 readable native-resolution originals, 18 bounded review JPEGs, and matching byte counts.")
+          PYCODE
       - name: Upload Assignment 006 genuine campaign views
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -218,6 +246,25 @@ jobs:
               for index in range(0, len(encoded), 3000):
                   title = path.stem.replace("_preview", "")
                   print(f"::notice title=a006_{title}_{index // 3000}::{encoded[index:index + 3000]}")
+          PYCODE
+      - name: Expose native-resolution visual review images
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          paths = sorted(pathlib.Path("assignment006-visual-acceptance").glob("*_inspect.jpg"))
+          if len(paths) != 18:
+              raise SystemExit(f"expected 18 native-resolution review JPEGs, got {len(paths)}")
+          for path in paths:
+              payload = path.read_bytes()
+              if not 0 < len(payload) <= 42000:
+                  raise SystemExit(f"{path}: payload size {len(payload)} outside 1..42000 bytes")
+              encoded = base64.b64encode(payload).decode("ascii")
+              if len(encoded) > 56000:
+                  raise SystemExit(f"{path}: base64 annotation would exceed the safe command limit")
+              title = path.stem.removesuffix("_inspect")
+              print(f"::notice title=a006_native_{title}::{encoded}")
           PYCODE
 
   windows:

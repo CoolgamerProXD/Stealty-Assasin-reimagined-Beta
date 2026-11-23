@@ -1,3 +1,7 @@
+# Assignment 007 changes — performance not yet remeasured
+
+The station visual pass adds eight shadowless OmniLight3D practicals (they remain governed by the existing quality/practicals settings) and door/livery geometry. This adds some scene work; no local Godot profile, fresh CI timing, or Windows/Iris Xe measurement exists for the change. Existing Assignment 006 Linux/Mesa numbers below are historical and must not be presented as current measurements.
+
 # Assignment 006 target performance status
 
 Run [44522902577](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44522902577) reported 30-frame fixed-view Linux Xvfb/Mesa Compatibility samples at 1280×720: Tung Chung LOW 38.420 ms mean / 41.620 ms p95 (26.03 FPS), MEDIUM 112.732 / 174.480 ms (8.87 FPS), HIGH 167.088 / 173.228 ms (5.98 FPS); Ngong Ping LOW 82.224 / 90.172 ms (12.16 FPS), MEDIUM 137.221 / 143.359 ms (7.29 FPS), HIGH 144.992 / 150.781 ms (6.90 FPS). These short staged software-renderer samples are exceptionally slow and noisy, not interactive-route or target-laptop results. They are evidence that this scene set needs real optimization and hardware review, not evidence of good user-device performance.

@@ -80,17 +80,19 @@ func _environment() -> void:
  data.background_mode = Environment.BG_COLOR
  data.background_color = Color(0.025, 0.045, 0.055) if station_mood else Color(0.11, 0.17, 0.22)
  data.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
- data.ambient_light_color = Color(0.47, 0.58, 0.61) if station_mood else Color(0.75, 0.82, 0.85)
- data.ambient_light_energy = 0.58 if station_mood else 0.9
+ data.ambient_light_color = Color(0.52, 0.61, 0.64) if station_mood else Color(0.75, 0.82, 0.85)
+ # Keep the station night-cool without crushing shadow detail. Local practicals
+ # do most of the illumination; this restrained fill only lifts dark materials.
+ data.ambient_light_energy = 0.72 if station_mood else 0.9
  data.adjustment_enabled = station_mood
- data.adjustment_contrast = 1.08 if station_mood else 1.0
- data.adjustment_saturation = 0.88 if station_mood else 1.0
+ data.adjustment_contrast = 1.025 if station_mood else 1.0
+ data.adjustment_saturation = 0.93 if station_mood else 1.0
  env.environment = data
  add_child(env)
  var sun := DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-48, -25, 0)
- sun.light_color = Color(0.61, 0.75, 0.81) if station_mood else Color.WHITE
- sun.light_energy = 0.22 if station_mood else 0.85
+ sun.light_color = Color(0.64, 0.76, 0.81) if station_mood else Color.WHITE
+ sun.light_energy = 0.30 if station_mood else 0.85
  if operation == "the_streets":
   sun.light_color = Color(1.0,0.82,0.68)
  elif operation == "the_district":
@@ -242,9 +244,33 @@ func _station() -> void:
  else:
   _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.61,0.69,0.68), true, "painted_metal")
   _box(Vector3(0,1.8,11.92), Vector3(37,1.0,0.05), dark, false, "glass")
- for x: float in [-16.0,-12.0,-8.0,-4.0,0.0,4.0,8.0,12.0,16.0]:
-  if campaign_train and x == 16.0: continue
-  _box(Vector3(x,1.8,11.87), Vector3(2.3,0.75,0.06), Color(0.31,0.44,0.47))
+ if campaign_train:
+  # Continuous silver body with a dark glazed band and restrained red/teal
+  # livery. The platform-side glass doors sit in front of the train body.
+  _box(Vector3(-1.25,0.72,11.91),Vector3(35.0,0.10,0.045),Color(0.78,0.27,0.20),false,"emissive")
+  _box(Vector3(-1.25,1.04,11.91),Vector3(35.0,0.075,0.045),Color(0.22,0.58,0.62),false,"emissive")
+ for x: float in [-14.0,-10.0,-6.0,-2.0,2.0,6.0,10.0,14.0]:
+  # Sliding platform-screen door pair, stainless jambs, safety threshold and
+  # two subtle amber door markers. Horizontal floor/track alignment stays fixed.
+  _box(Vector3(x,1.78,11.56),Vector3(2.55,1.70,0.055),Color(0.34,0.54,0.57,0.46),false,"glass")
+  for side: float in [-1.0,0.0,1.0]:
+   _box(
+    Vector3(x + side * 1.30, 1.78, 11.52),
+    Vector3(0.075, 1.82, 0.10),
+    Color(0.63, 0.69, 0.66),
+    false,
+    "brushed_metal"
+   )
+  _box(Vector3(x,0.90,11.50),Vector3(2.72,0.11,0.13),Color(0.30,0.37,0.37),false,"brushed_metal")
+  _box(Vector3(x,0.97,11.43),Vector3(1.00,0.035,0.025),Color(0.94,0.62,0.24),false,"emissive")
+  for side: float in [-1.0,1.0]:
+   _box(
+    Vector3(x + side * 0.78, 2.42, 11.50),
+    Vector3(0.07, 0.20, 0.025),
+    Color(0.92, 0.60, 0.23),
+    false,
+    "emissive"
+   )
  _box(Vector3(-1.25 if campaign_train else 0,0.65,11.9), Vector3(35.5 if campaign_train else 38,0.12,0.06), orange)
  _box(Vector3(1,4.2,8), Vector3(9,0.8,0.2), dark)
  _sign("PLATFORM  /  TRAINS", Vector3(1,4.2,7.86), 40)
@@ -323,11 +349,16 @@ func _station_lighting() -> void:
  # Low-cost practicals: one cool overhead rhythm and two warm service pools.
  # They never cast shadows; the existing directional light owns the shadow map.
  var lights: Array[Array] = [
-  [Vector3(-15,4.55,-3),Color(1.0,0.69,0.43),0.62,8.0],
-  [Vector3(-5,4.55,1),Color(0.67,0.85,0.88),0.48,9.0],
-  [Vector3(5,4.55,-2),Color(0.76,0.88,0.87),0.48,9.0],
-  [Vector3(15,4.55,1),Color(0.96,0.67,0.42),0.58,8.0],
-  [Vector3(19.8,3.1,10),Color(0.45,0.72,0.77),0.42,6.0],
+  # Ceiling practicals overlap gently to avoid dark gaps across the public
+  # concourse; no single broad ambient wash is used as a substitute.
+  [Vector3(-15,4.55,-3),Color(1.0,0.78,0.60),1.20,12.0],
+  [Vector3(-5,4.55,1),Color(0.72,0.88,0.91),1.25,12.0],
+  [Vector3(5,4.55,-2),Color(0.78,0.90,0.91),1.25,12.0],
+  [Vector3(15,4.55,1),Color(1.0,0.76,0.56),1.15,12.0],
+  [Vector3(-10,4.55,9),Color(0.80,0.91,0.92),0.90,10.0],
+  [Vector3(0,4.55,9),Color(0.82,0.91,0.92),0.90,10.0],
+  [Vector3(10,4.55,9),Color(0.80,0.91,0.92),0.90,10.0],
+  [Vector3(19.8,3.1,10),Color(0.50,0.76,0.82),0.70,8.0],
  ]
  for spec: Array in lights:
   var light := OmniLight3D.new()

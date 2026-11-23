@@ -1,3 +1,9 @@
+# Assignment 007 — current active-branch work (verification pending)
+
+Active branch is `arena/9199c996-stealty-assasin-reimagined-bet`, based at `b574488` for this continuation. This work improves Tung Chung's station light distribution and platform/train door detail, reframes the Meridian restaurant capture through its real opening, and strengthens Assignment 006's genuine-image evidence pipeline: reopened full-resolution PNGs, native-resolution review JPEGs, a JSON manifest and per-file CI validation. CI check annotations receive the native-resolution review files; low-resolution previews remain quick summaries only.
+
+No Godot runtime, Windows export, or renders have been run locally for these changes. The former Godot download attempt failed at GitHub release-asset TLS. These code and workflow edits need a fresh CI run and full-resolution image inspection; automated capture is not human visual acceptance, playtesting, cultural review or target-device measurement.
+
 # Assignment 006 — current branch verification
 
 - [Run 44518105768](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44518105768), head `019784c3aa27b6526dd2c56d86941e16a805a47d`, passed both Windows and headless jobs. The Windows job imported/exported with official Godot 4.4.1 and launched configured scenes headlessly; the Linux job passed the behavioral/integrated campaign, imported character, disguise, multi-level facility, camera, rendered and staged capture suites. This is automated verification only.

@@ -1,5 +1,9 @@
 # PROJECT ASSASSIN — Technical Handoff and Recovery Audit
 
+## Assignment 007 — implementation in progress (INCOMPLETE)
+
+The active branch is `arena/9199c996-stealty-assasin-reimagined-bet`; current baseline at continuation was `b574488`. This iteration adjusts Tung Chung campaign station illumination and train/platform details, fixes the Meridian restaurant capture angle, and adds native-resolution review JPEGs plus a machine-readable image manifest to the existing 18-view acceptance harness and CI checks. No Godot runtime/export/capture was completed locally; the earlier GitHub release-asset download failed. Verify with a fresh headless and opt-in `[windows]` CI run, inspect the genuine full-resolution captures, and preserve the human visual, continuous playtest, cultural review, and Windows/Iris Xe requirements as outstanding until performed.
+
 ## Assignment 006 — finish campaign-wide visual transformation (INCOMPLETE)
 
 **Current checkout:** branch `arena/9199c996-stealty-assasin-reimagined-bet`, based on `c5c9f11d9079ba9c906c520ce25227ffd8476fe7`. Assignment 005 was explicitly incomplete; previous Assignment 004 acceptance is not Assignment 006 completion.
