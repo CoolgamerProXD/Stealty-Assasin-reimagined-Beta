@@ -186,7 +186,7 @@ func _settle_person(person: StylizedPerson) -> void:
 				person.cc0_skeleton.get_bone_pose_rotation(thigh_index)
 			]
 	print(
-		"A006_POSE: actor=%s model=%s gait=%.3f crouch=%.3f seated=%.3f %s"
+		"A006 POSE: actor=%s model=%s gait=%.3f crouch=%.3f seated=%.3f %s"
 		% [person.get_parent().name, person.cc0_model_name, person.gait_speed,
 		person.crouch_amount, person.seated_blend, skeleton_info]
 	)
