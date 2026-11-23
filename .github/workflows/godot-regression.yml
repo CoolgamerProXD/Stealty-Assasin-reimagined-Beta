@@ -162,7 +162,7 @@ jobs:
                   raise SystemExit(f"{entry['name']}: original below 1280x720: {width}x{height}")
               if not png.is_file() or png.stat().st_size != entry.get("png_bytes") or png.stat().st_size == 0:
                   raise SystemExit(f"{entry['name']}: lossless PNG missing/truncated")
-              if not review.is_file() or review.stat().st_size != entry.get("inspect_jpeg_bytes") or review.stat().st_size > 42000:
+              if not review.is_file() or review.stat().st_size != entry.get("inspect_jpeg_bytes") or review.stat().st_size > 29900:
                   raise SystemExit(f"{entry['name']}: native-resolution review JPEG missing/truncated/oversize")
               if entry.get("inspect_jpeg_native_resolution") is not True:
                   raise SystemExit(f"{entry['name']}: review JPEG failed native-resolution reopen")
@@ -292,12 +292,15 @@ jobs:
           name = os.environ["CAPTURE_NAME"]
           path = pathlib.Path("assignment006-visual-acceptance") / f"{name}_inspect.jpg"
           payload = path.read_bytes()
-          if not 0 < len(payload) <= 42000:
-              raise SystemExit(f"{path}: payload size {len(payload)} outside 1..42000 bytes")
+          if not 0 < len(payload) <= 29900:
+              raise SystemExit(f"{path}: payload size {len(payload)} outside 1..29900 bytes")
           encoded = base64.b64encode(payload).decode("ascii")
-          for index in range(0, len(encoded), 3000):
-              chunk = encoded[index:index + 3000]
-              title = f"a006_native_{name}_{index // 3000:02d}"
+          # Actions exposes at most ten annotations per check run, and the
+          # checks API truncates longer annotation bodies at 4096 characters.
+          # This budget guarantees <=10 independently recoverable 4000-char chunks.
+          for index in range(0, len(encoded), 4000):
+              chunk = encoded[index:index + 4000]
+              title = f"a006_native_{name}_{index // 4000:02d}"
               print(f"::notice title={title}::{chunk}")
           PYCODE
 

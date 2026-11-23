@@ -96,13 +96,13 @@ func _capture(name: String, include_hud: bool = false) -> void:
 	preview.save_jpg(output.path_join(name + "_thumb.jpg"), 0.58)
 	# Native-resolution JPEGs are only an inspection transport for the check API;
 	# the artifact keeps the original lossless PNG. Bound each annotation payload
-	# so it survives GitHub's command-size limit while retaining 1280x720 pixels.
+	# so it survives GitHub's annotation message/count limits while retaining 1280x720 pixels.
 	var review_path := output.path_join(name + "_inspect.jpg")
 	var review_image := image.duplicate() as Image
 	var review_quality := 0.65
 	var review_error := review_image.save_jpg(review_path, review_quality)
 	var review_bytes := FileAccess.get_file_as_bytes(review_path)
-	while review_error == OK and review_bytes.size() > 42000 and review_quality > 0.06:
+	while review_error == OK and review_bytes.size() > 29900 and review_quality > 0.06:
 		review_quality = maxf(0.05, review_quality - 0.08)
 		review_error = review_image.save_jpg(review_path, review_quality)
 		review_bytes = FileAccess.get_file_as_bytes(review_path)
@@ -113,7 +113,7 @@ func _capture(name: String, include_hud: bool = false) -> void:
 		and review_read_error == OK
 		and saved_review.get_width() == image.get_width()
 		and saved_review.get_height() == image.get_height()
-		and review_bytes.size() <= 42000
+		and review_bytes.size() <= 29900
 	)
 	check(
 		review_valid,
