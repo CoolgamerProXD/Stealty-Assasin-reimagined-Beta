@@ -289,7 +289,7 @@ func _build_meridian_wing() -> void:
   for z: float in [-15.7,15.7]:
    _box(Vector3(x,4.9,z),Vector3(2.1,1.8,0.06),dark,false)
    _box(Vector3(x,4.9,z + (0.04 if z < 0 else -0.04)),Vector3(1.7,1.35,0.04),Color(0.42,0.39,0.31),false)
- for x: float in [-40.5,-31.0,-24.0,-17.0]:
+ for x: float in [-38.0,-31.0,-24.0,-17.0]:
   _box(Vector3(x,0.45,-10),Vector3(2.4,0.9,1.3),dark,true)
   _box(Vector3(x,0.95,-10),Vector3(2.5,0.12,1.4),Color(0.65,0.57,0.46),false)
   for z: float in [-11.55,-8.45]:
