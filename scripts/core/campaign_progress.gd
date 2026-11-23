@@ -131,7 +131,7 @@ func record_house_code(code: String) -> bool:
  if not is_unlocked("house") or code.length() != 70:
   return false
  for index: int in range(code.length()):
-  var digit := code.unicode_at(index)
+  var digit: int = code.unicode_at(index)
   if digit < 48 or digit > 57: return false
  house_code = code
  house_code_recovered = true
@@ -222,7 +222,7 @@ func restore(data: Dictionary) -> void:
  if schema_version >= 2 and data.get("house_code_recovered", false) == true and restored_house_code is String and restored_house_code.length() == 70 and is_unlocked("house"):
   var digits_only := true
   for index: int in range(restored_house_code.length()):
-   var digit := restored_house_code.unicode_at(index)
+   var digit: int = restored_house_code.unicode_at(index)
    if digit < 48 or digit > 57: digits_only = false
   if digits_only:
    house_code = restored_house_code
