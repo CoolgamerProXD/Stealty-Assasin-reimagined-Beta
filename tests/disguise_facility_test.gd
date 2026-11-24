@@ -123,6 +123,12 @@ func run() -> void:
 	check(mountain.find_child("FacilitySlab_Sublevel_1",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_2",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_3",true,false) != null,"facility has three physically separate interconnected underground floors")
 	check(mountain.find_child("BuddhaInteriorNavigation_1",true,false) != null and mountain.find_child("BuddhaInteriorNavigation_5",true,false) != null and mountain.find_child("ConcealedBuddhaInteriorFloor_5",true,false) != null and mountain.find_child("StatueCoreConnectingRamp",true,false) != null,"five chamber floors connect to the buried installation through the statue core")
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
+	check(mountain.find_children("*","FloorPanelJoint",true,false).size() >= 80 and mountain.find_children("*","RecessedWallPanel",true,false).size() >= 30,"PROMETHEUS rooms use panelized floor inlays, wall modules, structural piers and ceiling service spines")
+	check(mountain.find_child("CeilingLightDiffuser",true,false) != null and mountain.find_child("DoorwayWayfindingStrip",true,false) != null,"facility interiors include practical ceiling fixtures and egress wayfinding")
+	var statue_practicals := 0
+	for candidate: Node in facility.get_children():
+		if candidate is OmniLight3D and candidate.name.begins_with("BuddhaInteriorPractical_") and is_equal_approx((candidate as OmniLight3D).light_energy,0.78): statue_practicals += 1
+	check(statue_practicals == 5,"each of the five occupied statue chambers has a distinct non-shadowing practical light")
 	check(final_world.get("target").global_position.y < -7.0 and final_world.get("exit_marker").global_position.y < -7.0,"final coordinator and extraction occupy the hidden complex")
 	var field_office := mountain.find_child("MountainFieldOffice",true,false)
 	var key_marker: Node3D = final_world.get("key_marker")

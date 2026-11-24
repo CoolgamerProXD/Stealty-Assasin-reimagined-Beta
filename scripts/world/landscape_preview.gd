@@ -78,6 +78,78 @@ func _flush_canopies() -> void:
  trees.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  add_child(trees)
 
+# A compact, four-sided facade system keeps the city readable when the camera
+# turns. Shallow, non-colliding bays sit on the solid building shell; they are
+# architectural openings and framing, not false doors or extra walkable space.
+func _build_city_block_facade(x: float, z: float, height: float, wall: Color) -> void:
+ var operation := str(get_meta("operation_id", ""))
+ var glass_palette: Array[Color] = [Color(0.14,0.29,0.34),Color(0.20,0.37,0.41),Color(0.28,0.40,0.41),Color(0.34,0.39,0.38)]
+ var frame := wall.darkened(0.42)
+ var sill := wall.lightened(0.12)
+ var facade_windows := 0
+ var levels: Array[float] = [2.05,4.35,6.65,8.95]
+ for level_index: int in range(levels.size()):
+  var y: float = levels[level_index]
+  if y + 0.72 >= height: continue
+  for bay_index: int in range(3):
+   var offset := [-2.85,0.0,2.85][bay_index]
+   var glass: Color = glass_palette[(bay_index+level_index+int(absf(x+z))%4)%glass_palette.size()]
+   if operation == "the_district" and level_index % 2 == 0:
+    glass = Color(0.24,0.43,0.47)
+   elif operation == "the_harbour":
+    glass = Color(0.25,0.46,0.49) if level_index % 2 == 0 else Color(0.17,0.34,0.39)
+   # Side street facades on both X ends.
+   for side: float in [-1.0,1.0]:
+    var face_x := x + side*5.035
+    var pane_z := z+offset
+    _accent(Vector3(face_x,y,pane_z),Vector3(0.07,1.38,1.68),glass)
+    _accent(Vector3(face_x+side*0.055,y,pane_z-0.88),Vector3(0.10,1.50,0.08),frame)
+    _accent(Vector3(face_x+side*0.055,y,pane_z+0.88),Vector3(0.10,1.50,0.08),frame)
+    _accent(Vector3(face_x+side*0.06,y-0.75,pane_z),Vector3(0.16,0.09,1.82),sill)
+    _accent(Vector3(face_x+side*0.06,y+0.75,pane_z),Vector3(0.10,0.08,1.82),frame)
+    _accent(Vector3(face_x+side*0.07,y,pane_z),Vector3(0.12,1.35,0.055),frame)
+    facade_windows += 1
+   # The rear facade is fully articulated. The street-facing facade keeps its
+   # ground floor open for the authored shopfront/entry while upper floors read.
+   for side: float in [-1.0,1.0]:
+    if side > 0.0 and level_index == 0: continue
+    var face_z := z + side*4.535
+    var pane_x := x+offset
+    _accent(Vector3(pane_x,y,face_z),Vector3(1.68,1.38,0.07),glass)
+    _accent(Vector3(pane_x-0.88,y,face_z+side*0.055),Vector3(0.08,1.50,0.10),frame)
+    _accent(Vector3(pane_x+0.88,y,face_z+side*0.055),Vector3(0.08,1.50,0.10),frame)
+    _accent(Vector3(pane_x,y-0.75,face_z+side*0.06),Vector3(1.82,0.09,0.16),sill)
+    _accent(Vector3(pane_x,y+0.75,face_z+side*0.055),Vector3(1.82,0.08,0.10),frame)
+    _accent(Vector3(pane_x,y,face_z+side*0.07),Vector3(0.055,1.35,0.12),frame)
+    facade_windows += 1
+   # A few upper-floor balconies create depth on the office and harbour blocks;
+   # solid guard rails are deliberate, visible edges, not walkable platforms.
+   if operation in ["the_district","the_harbour"] and bay_index == 1 and level_index == 1 and (int(absf(x+z)) % 2 == 0):
+    var balcony_x := x + 5.18
+    _accent(Vector3(balcony_x,y-0.9,z+offset),Vector3(0.75,0.12,2.25),frame)
+    _accent(Vector3(balcony_x+0.32,y-0.35,z+offset),Vector3(0.06,0.95,2.25),sill)
+    for rail_z: float in [-0.9,0.0,0.9]:
+     _accent(Vector3(balcony_x+0.32,y-0.35,z+offset+rail_z),Vector3(0.06,0.95,0.055),frame)
+ # Air-conditioning condensers and rain leaders are placed sparingly on service
+ # sides, a functional response to the dense humid-city building type.
+ if int(absf(x-z)) % 3 == 0:
+  for level_index: int in range(1,mini(3,levels.size())):
+   var y: float = levels[level_index]
+   if y+0.3 >= height: continue
+   var side_x := x-5.18
+   _accent(Vector3(side_x,y-0.92,z+2.8),Vector3(0.48,0.42,0.72),frame.lightened(0.12))
+   for vent: float in [-0.12,0.0,0.12]:
+    _accent(Vector3(side_x-0.25,y-0.92,z+2.8+vent),Vector3(0.035,0.30,0.045),frame.darkened(0.22))
+ for side: float in [-1.0,1.0]:
+  _accent(Vector3(x+side*4.86,height+0.18,z),Vector3(0.22,0.32,9.25),frame)
+  _accent(Vector3(x,height+0.18,z+side*4.37),Vector3(10.0,0.32,0.22),frame)
+ # A narrow rooftop plant screen gives each building a believable service edge.
+ if int(absf(x+z)) % 3 == 1:
+  for side: float in [-1.0,1.0]:
+   _accent(Vector3(x+side*2.9,height+0.75,z),Vector3(0.12,1.1,4.7),frame)
+  _accent(Vector3(x,height+0.75,z-2.3),Vector3(5.8,1.1,0.12),frame)
+ set_meta("city_facade_bays",int(get_meta("city_facade_bays",0))+facade_windows)
+
 # Fictional accessible upper walkway; it is not connected to the NPC navmesh.
 func _city_walkway() -> void:
  var ramp := StaticBody3D.new()
@@ -268,20 +340,8 @@ func _city() -> void:
     continue
    var building := Color(0.42+absf(x)*0.002,0.44,0.42+absf(z)*0.002)
    _box(Vector3(x,h/2,z),Vector3(10,h,9),building,true)
-   for level: int in range(1,3):
-    for dx: float in [-3.0,0.0,3.0]:
-     _box(Vector3(x+dx,2.0+level*2.0,z+4.54),Vector3(1.6,1.2,0.06),Color(0.22,0.34,0.38))
    _box(Vector3(x,0.3,z+4.9),Vector3(10,0.6,0.8),dark)
-   # Street-facing bays give the blocks readable fronts from the main road.
-   var face_x := x + (5.04 if x < 0.0 else -5.04)
-   var glass := Color(0.22,0.34,0.37) if z > 0.0 else Color(0.17,0.29,0.34)
-   for floor_index: int in range(1,4):
-    var y := 2.0 + float(floor_index)*1.65
-    if y + 0.6 < h:
-     for dz: float in [-2.8,0.0,2.8]:
-      _accent(Vector3(face_x,y,z+dz),Vector3(0.08,1.18,1.65),glass)
-      _accent(Vector3(face_x + (0.06 if x < 0.0 else -0.06),y,z+dz),Vector3(0.04,1.22,0.05),pale)
-    _accent(Vector3(face_x,y+0.72,z),Vector3(0.11,0.07,8.5),Color(0.58,0.57,0.50))
+   _build_city_block_facade(x,z,h,building)
    # Setback roof volumes vary the silhouette without creating fake interiors.
    var extra_height := 2.5 + float(int(absf(x+z)) % 4) * 0.8
    _accent(Vector3(x,h+extra_height*0.5,z),Vector3(7.8,extra_height,6.8),building.darkened(0.1))
@@ -652,14 +712,15 @@ func _sphere(pos: Vector3, dimensions: Vector3, color: Color) -> MeshInstance3D:
  var mesh := SphereMesh.new()
  mesh.radius = 0.5
  mesh.height = 1.0
- mesh.radial_segments = 12
- mesh.rings = 6
+ mesh.radial_segments = 28
+ mesh.rings = 16
  visual.mesh = mesh
  visual.scale = dimensions
  visual.position = pos
  var material := StandardMaterial3D.new()
  material.albedo_color = color
- material.roughness = 0.92
+ material.roughness = 0.78
+ material.metallic = 0.08
  visual.material_override = material
  add_child(visual)
  return visual

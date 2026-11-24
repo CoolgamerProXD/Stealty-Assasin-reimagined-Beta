@@ -10,7 +10,7 @@ permissions:
 jobs:
   headless:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install official Godot 4.4.1
@@ -175,6 +175,47 @@ jobs:
           name: assignment006-visual-acceptance
           path: assignment006-visual-acceptance/*
           if-no-files-found: ignore
+      - name: Assignment 008 current-build native 1280x720 captures
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/assignment008-visual-acceptance" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 300 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/assignment008_visual_acceptance.gd 2>&1 | tee "$RUNNER_TEMP/assignment008-visual.log"
+          test_status=${PIPESTATUS[0]}
+          set -e
+          if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^A008 FAIL:' "$RUNNER_TEMP/assignment008-visual.log"; then exit 1; fi
+          grep -E '^A008 RESULT: [0-9]+ checks, 0 failures; 18 current-build views staged$' "$RUNNER_TEMP/assignment008-visual.log"
+      - name: Verify Assignment 008 full-resolution manifest
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import json, pathlib
+          root = pathlib.Path("assignment008-visual-acceptance")
+          manifest_path = root / "manifest.json"
+          if not manifest_path.is_file(): raise SystemExit("Assignment 008 manifest missing")
+          manifest = json.loads(manifest_path.read_text())
+          captures = manifest.get("captures", [])
+          if manifest.get("capture_count") != 18 or len(captures) != 18: raise SystemExit(f"expected 18 images, got {len(captures)}")
+          names = {entry.get("name") for entry in captures}
+          if not {"01_bus_stop_callsign_recruitment","02_initiation_assessment_hall","05_tung_chung_station","07_hong_kong_streets","08_hong_kong_commercial_district","09_hong_kong_harbour_skyline","11_ngong_ping_exterior_statue","13_facility_monumental_interior","14_facility_central_operations","15_facility_vertical_statue_core","16_house_separate_70_digit_safe","17_post_usb_ruby_rescue"}.issubset(names):
+              raise SystemExit("a required campaign location/story view is missing")
+          for entry in captures:
+              if entry.get("width") != 1280 or entry.get("height") != 720: raise SystemExit(f"{entry['name']}: expected 1280x720")
+              for key in ("png", "inspect_jpeg"):
+                  path = root / entry[key]
+                  expected = entry["png_bytes"] if key == "png" else entry["inspect_jpeg_bytes"]
+                  if not path.is_file() or path.stat().st_size != expected or expected <= 0: raise SystemExit(f"{entry['name']}: {key} missing or truncated")
+          print("Verified 18 current-build 1280x720 images covering opening, campaign, Hong Kong, PROMETHEUS, House and Ruby rescue.")
+          PYCODE
+      - name: Upload Assignment 008 full-resolution visual evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: assignment008-visual-acceptance
+          path: assignment008-visual-acceptance/*
+          if-no-files-found: ignore
       - name: Upload rendered comparisons
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -200,7 +241,7 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual"):
+          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual", "assignment008-visual"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
@@ -211,8 +252,8 @@ jobs:
                   selected = failures + errors[:12] + errors[-12:]
                   if len(errors) > 24:
                       selected.append(f"ERROR SUMMARY: {len(errors)} total; only first/last 12 shown")
-              elif name in ("tests", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual"):
-                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^A006 POSE:|^A006 RESULT:|^A006 FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
+              elif name in ("tests", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual", "assignment008-visual"):
+                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^A006 POSE:|^A006 RESULT:|^A006 FAIL:|^A008 POSE:|^A008 RESULT:|^A008 FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -262,7 +303,7 @@ jobs:
           PYCODE
 
   visual-review:
-    name: Native-resolution visual review — ${{ matrix.capture }}
+    name: Assignment 008 native-resolution visual review — ${{ matrix.capture }}
     needs: headless
     if: needs.headless.result == 'success'
     runs-on: ubuntu-latest
@@ -271,8 +312,8 @@ jobs:
       fail-fast: false
       matrix:
         capture:
-          - 01_initiation_assessment_hall
-          - 02_initiation_player_npc
+          - 01_bus_stop_callsign_recruitment
+          - 02_initiation_assessment_hall
           - 03_meridian_main_environment
           - 04_meridian_interior_lighting
           - 05_tung_chung_station
@@ -286,15 +327,15 @@ jobs:
           - 13_facility_monumental_interior
           - 14_facility_central_operations
           - 15_facility_vertical_statue_core
-          - 16_instinct_target_and_discovered_intel
-          - 17_instinct_secret_undiscovered_hidden
+          - 16_house_separate_70_digit_safe
+          - 17_post_usb_ruby_rescue
           - 18_campaign_hud_gameplay
     steps:
       - name: Download genuine native-resolution capture artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: assignment006-visual-acceptance
-          path: assignment006-visual-acceptance
+          name: assignment008-visual-acceptance
+          path: assignment008-visual-acceptance
       - name: Expose one full-resolution review image in bounded check annotations
         shell: bash
         env:
@@ -303,7 +344,7 @@ jobs:
           python3 - <<'PYCODE'
           import base64, os, pathlib
           name = os.environ["CAPTURE_NAME"]
-          path = pathlib.Path("assignment006-visual-acceptance") / f"{name}_inspect.jpg"
+          path = pathlib.Path("assignment008-visual-acceptance") / f"{name}_inspect.jpg"
           payload = path.read_bytes()
           if not 0 < len(payload) <= 29900:
               raise SystemExit(f"{path}: payload size {len(payload)} outside 1..29900 bytes")
@@ -313,7 +354,7 @@ jobs:
           # This budget guarantees <=10 independently recoverable 4000-char chunks.
           for index in range(0, len(encoded), 4000):
               chunk = encoded[index:index + 4000]
-              title = f"a006_native_{name}_{index // 4000:02d}"
+              title = f"a008_native_{name}_{index // 4000:02d}"
               print(f"::notice title={title}::{chunk}")
           PYCODE
 

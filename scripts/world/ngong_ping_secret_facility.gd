@@ -222,7 +222,27 @@ func _build_room(label: String, center: Vector3, span: Vector2, tint: Color, sub
 	# A distinctive sill and service access panel identify each room without
 	# turning its modest, playable footprint into empty decorative volume.
 	_box("RoomFloorInset",Vector3(x,y+0.025,z),Vector3(width-0.9,0.045,depth-0.9),tint.lightened(0.12))
+	# Large-format stone/composite floor panels, a dark perimeter reveal, and
+	# readable egress bands give the room an authored architectural floor rather
+	# than a single colour plane. The flush inlay does not alter collision.
+	for grid_x: float in range(-int(width*0.5)+2,int(width*0.5),2):
+		_box("FloorPanelJoint",Vector3(x+grid_x,y+0.049,z),Vector3(0.018,0.006,depth-1.2),tint.darkened(0.15))
+	for grid_z: float in range(-int(depth*0.5)+2,int(depth*0.5),2):
+		_box("FloorPanelJoint",Vector3(x,y+0.049,z+grid_z),Vector3(width-1.2,0.006,0.018),tint.darkened(0.15))
+	_box("FloorPerimeterReveal",Vector3(x,y+0.05,z-depth*0.5+0.65),Vector3(width-1.0,0.018,0.055),Color(0.12,0.20,0.22))
+	_box("FloorPerimeterReveal",Vector3(x,y+0.05,z+depth*0.5-0.65),Vector3(width-1.0,0.018,0.055),Color(0.12,0.20,0.22))
+	# Repeated wall bays, corner pilasters and a continuous service ceiling
+	# articulate scale while leaving room entrances and NPC routes untouched.
+	for side: float in [-1.0,1.0]:
+		for dx: float in [-width*0.38,width*0.38]:
+			_box("RoomStructuralPilaster",Vector3(x+dx,y+2.20,z+side*(depth*0.5-0.15)),Vector3(0.20,4.25,0.12),tint.lightened(0.14))
+		for panel_x: float in [-width*0.25,0.0,width*0.25]:
+			_box("RecessedWallPanel",Vector3(x+panel_x,y+2.65,z+side*(depth*0.5-0.13)),Vector3(width*0.19,1.45,0.055),tint.darkened(0.14))
+			_box("WallPanelCap",Vector3(x+panel_x,y+3.43,z+side*(depth*0.5-0.08)),Vector3(width*0.19,0.055,0.075),tint.lightened(0.10))
+	_box("CeilingServiceSpine",Vector3(x,y+h-0.17,z),Vector3(width-0.6,0.13,0.32),Color(0.13,0.20,0.22))
+	_box("CeilingLightDiffuser",Vector3(x,y+h-0.265,z),Vector3(width*0.45,0.045,0.16),Color(0.62,0.79,0.77))
 	_box("WallMountedAccessPanel",Vector3(x+width*0.5-0.32,y+1.35,z+depth*0.5-0.5),Vector3(0.12,1.0,0.55),Color(0.16,0.24,0.27))
+	_box("DoorwayWayfindingStrip",Vector3(x,y+0.07,z+depth*0.5-0.54),Vector3(2.15,0.018,0.11),Color(0.86,0.58,0.24))
 
 func _build_operations_chamber(center: Vector3) -> void:
 	var x := center.x
@@ -340,6 +360,19 @@ func _build_buddha_interior() -> void:
 		var console_x: float = width*0.5-console_width*0.5-0.5
 		_box("ConcealedCentralArchiveConsole",Vector3(console_x,floor_y+0.58,-29),Vector3(console_width,1.1,1.0),Color(0.17,0.25,0.28),true)
 		_box("InnerArchiveConsoleLight",Vector3(console_x,floor_y+1.17,-29.25),Vector3(console_width*0.8,0.05,0.06),Color(0.24,0.70,0.72))
+		var chamber_light := OmniLight3D.new()
+		chamber_light.name = "BuddhaInteriorPractical_%d" % (i+1)
+		chamber_light.position = Vector3(0,floor_y+3.12,-29)
+		chamber_light.light_color = Color(1.0,0.76,0.48) if i == 0 else Color(0.72,0.86,0.84)
+		chamber_light.light_energy = 0.78
+		chamber_light.omni_range = 9.0
+		chamber_light.shadow_enabled = false
+		chamber_light.add_to_group("quality_practicals")
+		var service := get_node_or_null("/root/Campaign")
+		if service:
+			var settings: Dictionary = service.get("settings")
+			chamber_light.visible = str(settings.get("graphics","MEDIUM")) != "LOW" and bool(settings.get("practicals",true))
+		add_child(chamber_light)
 	# This hidden passage opens into the upper operations galleries and shows the
 	# statue's internal structural ribs as part of the facility architecture.
 	_add_facility_zone(Rect2(-8.0,-36.0,16.0,14.0),1.6,21.0,"buddha_interior")
@@ -377,8 +410,8 @@ func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void
 			var lamp := OmniLight3D.new()
 			lamp.position = Vector3(x,floor_y+3.85,z)
 			lamp.light_color = Color(0.52,0.72,0.76) if floor_y > -10.0 else Color(0.98,0.68,0.38)
-			lamp.light_energy = 0.32
-			lamp.omni_range = 7.5
+			lamp.light_energy = 0.52
+			lamp.omni_range = 9.0
 			lamp.shadow_enabled = false
 			lamp.add_to_group("quality_practicals")
 			var graphics_quality := "MEDIUM"
@@ -434,8 +467,22 @@ func _box(node_name: String, center: Vector3, size: Vector3, tint: Color, solid:
 		mesh.size = size
 		mesh_cache[key] = mesh
 	mesh_instance.mesh = mesh_cache[key]
-	var material_key := tint.to_html(true)
-	if not material_cache.has(material_key): material_cache[material_key] = _material(tint,0.82)
+	var finish := "stone"
+	if node_name.contains("Rail") or node_name.contains("Frame") or node_name.contains("Rib") or node_name.contains("Panel") or node_name.contains("Rack") or node_name.contains("Pipe"):
+		finish = "hardware"
+	elif node_name.contains("Light") or node_name.contains("Lamp") or node_name.contains("Luminaire") or node_name.contains("Guide") or node_name.contains("Display") or node_name.contains("Screen"):
+		finish = "emissive"
+	elif node_name.contains("Floor") or node_name.contains("Ramp") or node_name.contains("Slab"):
+		finish = "floor"
+	var material_key := tint.to_html(true) + ":" + finish
+	if not material_cache.has(material_key):
+		var material := _material(tint,0.86 if finish in ["stone","floor"] else (0.38 if finish == "hardware" else 0.48))
+		if finish == "hardware": material.metallic = 0.42
+		elif finish == "emissive":
+			material.emission_enabled = true
+			material.emission = tint
+			material.emission_energy_multiplier = 0.32
+		material_cache[material_key] = material
 	mesh_instance.material_override = material_cache[material_key]
 	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if not solid else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	holder.add_child(mesh_instance)

@@ -289,6 +289,34 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   for dx: float in [-3.0,0.0,3.0]:
    _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
    _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
+ # The upper storey is a real, visible volume rather than one blank silhouette:
+ # framed glazing wraps the side and rear elevations, with a continuous slab
+ # edge and a restrained service-level air-conditioning unit.
+ var upper_glass := Color(0.16,0.31,0.36) if operation_id == "the_streets" else (Color(0.22,0.39,0.42) if operation_id == "the_district" else Color(0.26,0.45,0.49))
+ var frame := dark.lightened(0.18)
+ for dx: float in [-3.0,0.0,3.0]:
+  _box(Vector3(x+dx,4.08,z),Vector3(2.22,0.16,8.15),frame)
+  _box(Vector3(x+dx,7.0,z),Vector3(2.22,0.20,8.15),frame)
+  for y: float in [4.85,6.15]:
+   _box(Vector3(x+dx,y,z+4.065),Vector3(1.58,1.0,0.08),upper_glass)
+   for side: float in [-1.0,1.0]:
+    _box(Vector3(x+dx+side*0.84,y,z+4.11),Vector3(0.07,1.08,0.08),frame)
+   _box(Vector3(x+dx,y-0.55,z+4.11),Vector3(1.74,0.08,0.12),wall.lightened(0.14))
+   _box(Vector3(x+dx,y+0.55,z+4.11),Vector3(1.74,0.08,0.12),frame)
+   _box(Vector3(x+dx,y,z+4.13),Vector3(0.055,0.98,0.10),frame)
+  for side: float in [-1.0,1.0]:
+   for bay_z: float in [-2.8,0.0,2.8]:
+    _box(Vector3(x+side*5.11,5.55,z+bay_z),Vector3(0.08,1.45,1.52),upper_glass)
+    _box(Vector3(x+side*5.17,5.55,z+bay_z-0.81),Vector3(0.10,1.55,0.07),frame)
+    _box(Vector3(x+side*5.17,5.55,z+bay_z+0.81),Vector3(0.10,1.55,0.07),frame)
+    _box(Vector3(x+side*5.18,4.76,z+bay_z),Vector3(0.14,0.08,1.66),wall.lightened(0.12))
+  # A pair of vertical rain leaders and a roof coping finish the block silhouette.
+  for side: float in [-1.0,1.0]:
+   _box(Vector3(x+side*4.78,5.5,z+4.18),Vector3(0.10,3.0,0.10),frame)
+  _box(Vector3(x,7.16,z+4.02),Vector3(10.15,0.18,0.35),wall.lightened(0.10))
+  _box(Vector3(x-4.45,5.0,z-3.0),Vector3(0.72,0.42,0.56),dark)
+  for vent: float in [-0.12,0.0,0.12]:
+   _box(Vector3(x-4.83,5.0,z-3.0+vent),Vector3(0.04,0.28,0.045),wall.lightened(0.12))
  var room_region := NavigationRegion3D.new()
  room_region.position = Vector3(x,0.05,z)
  var room_nav := NavigationMesh.new()

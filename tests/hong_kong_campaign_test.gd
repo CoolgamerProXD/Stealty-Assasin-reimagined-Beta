@@ -20,6 +20,72 @@ func near_player(world: Node3D, point: Vector3) -> void:
  player.velocity = Vector3.ZERO
  await physics_frame
 
+func tag_live_target(world: Node3D, npc: HotelNpc) -> void:
+ var player: HotelPlayer = world.get("player")
+ for other: HotelNpc in world.get("npc_list"):
+  other.set_physics_process(false)
+ player.set_physics_process(false)
+ player.set_process_unhandled_input(false)
+ player.global_position = npc.global_position + Vector3(0,0,4.0)
+ player.velocity = Vector3.ZERO
+ player.stance_height = 1.8
+ player.aiming = true
+ player.equipment.selected = "training_sidearm"
+ player.equipment.charges = 5
+ player.camera.make_current()
+ player.camera.look_at(npc.global_position + Vector3.UP*1.1,Vector3.UP)
+ for frame: int in range(3): await physics_frame
+ player.camera.look_at(npc.global_position + Vector3.UP*1.1,Vector3.UP)
+ world.call("_fire")
+ await physics_frame
+
+func recover_live_key(world: Node3D) -> bool:
+ var player: HotelPlayer = world.get("player")
+ var marker: Node3D = world.get("key_marker")
+ if marker == null: return false
+ player.global_position = marker.global_position + Vector3(1.25,0,0)
+ player.velocity = Vector3.ZERO
+ player.camera.look_at(marker.global_position + Vector3.UP*0.65,Vector3.UP)
+ for frame: int in range(3): await physics_frame
+ for attempt: int in range(3):
+  world.call("_interact")
+  if bool(world.get("key_secured")): return true
+  await physics_frame
+ return false
+
+func complete_live_operation(service: Node, operation_id: String, target_id: String, checkpoint_path: String) -> bool:
+ service.active_mission = operation_id
+ var world := load("res://scenes/mission_" + operation_id + ".tscn").instantiate() as Node3D
+ root.add_child(world)
+ await process_frame
+ await process_frame
+ world.call("_skip_cinematic")
+ var target: HotelNpc = world.get("target")
+ for npc: HotelNpc in world.get("npc_list"): npc.set_physics_process(false)
+ await near_player(world,target.global_position)
+ world.call("_interact")
+ check(not bool(world.get("target_complete")) and not service.progress.completed_targets.get(operation_id,[]).has(target_id),operation_id + " target dialogue is intelligence, not completion")
+ await tag_live_target(world,target)
+ check(bool(world.get("target_complete")) and target.objective_completed and service.progress.completed_targets.get(operation_id,[]).has(target_id),operation_id + " target is completed through the playable assessment ray and saved objective")
+ check(await recover_live_key(world) and bool(world.get("key_secured")) and service.progress.recovered_keys.has(str(service.progress.mission(operation_id).get("key_id",""))),operation_id + " physical key is collected through the in-game interaction")
+ world.set("save_path",checkpoint_path)
+ world.call("save_game")
+ var checkpoint := SaveStore.read(checkpoint_path)
+ check(checkpoint.get("target_complete",false) and checkpoint.get("key_secured",false),operation_id + " mission checkpoint stores target and collected-key state")
+ world.set("target_complete",false)
+ world.set("key_secured",false)
+ world.call("load_game")
+ check(bool(world.get("target_complete")) and bool(world.get("key_secured")),operation_id + " loading checkpoint restores campaign-verified target and key progress")
+ var persisted := CampaignProgress.new()
+ persisted.configure(JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json")))
+ persisted.restore(SaveStore.read(service.campaign_path))
+ check(persisted.completed_targets.get(operation_id,[]).has(target_id) and persisted.recovered_keys.has(str(service.progress.mission(operation_id).get("key_id",""))),operation_id + " campaign save independently preserves target ID and physical key")
+ var completed := service.complete(operation_id,0)
+ check(completed and service.progress.completed.has(operation_id),operation_id + " extraction prerequisite accepts completed target and physical key")
+ world.queue_free()
+ await process_frame
+ return completed
+
 func run() -> void:
  var service: Node = root.get_node("Campaign")
  var old_path: String = service.campaign_path
@@ -116,14 +182,28 @@ func run() -> void:
  await near_player(station, operative.global_position)
  station.call("_interact")
  check(not station.get("operative_complete"), "Constance's operative dialogue cannot complete that objective")
- station.set("target_complete", true)
- station.call("_secure_key")
- check(not service.progress.recovered_keys.has("key_01"), "Key 01 stays unavailable until both distinct Tung Chung targets are complete")
- # A legacy checkpoint cannot restore a finished pursuit or key while omitting
+ await tag_live_target(station,operative)
+ check(bool(station.get("operative_complete")) and service.progress.completed_targets.get("tung_chung",[]).has("constance_operative"), "Constance's real operative NPC is permanently completed by the playable assessment ray")
+ robber.stunned_time = 0.0
+ robber.set_state("idle")
+ await tag_live_target(station,robber)
+ check(bool(station.get("target_complete")) and service.progress.completed_targets.get("tung_chung",[]).has("usb_robber"), "the USB robber target is permanently completed through the live scene")
+ station.call("_skip_cinematic")
+ check(str(station.get("story_phase")).is_empty() and station.get("key_marker").get_parent() == station, "Ruby's pursuit handoff drops Key 01 into the station world")
+ check(await recover_live_key(station) and service.progress.recovered_keys.has("key_01"), "Key 01 is physically recovered with the in-game interaction after both target records")
+ var station_checkpoint := temp + "_station_checkpoint.json"
+ station.set("save_path",station_checkpoint)
+ station.call("save_game")
+ var saved_station := SaveStore.read(station_checkpoint)
+ check(saved_station.get("objective_schema",0) == 2 and saved_station.get("target_complete",false) and saved_station.get("operative_complete",false) and saved_station.get("key_secured",false), "Tung Chung checkpoint saves both mandatory targets and collected Key 01")
+ station.call("load_game")
+ check(bool(station.get("target_complete")) and bool(station.get("operative_complete")) and bool(station.get("key_secured")), "Tung Chung save/load restores both target states and physical key state")
+ check(service.complete("tung_chung",0) and service.progress.completed.has("tung_chung"), "Tung Chung completes and unlocks Streets only after both targets and Key 01")
+ # An old checkpoint cannot restore a finished pursuit or key while omitting
  # the newly required operative objective.
  service.progress.recovered_keys.append("key_01")
  var legacy_station_save := temp + "_legacy_station.json"
- station.set("save_path", legacy_station_save)
+ station.set("save_path",legacy_station_save)
  SaveStore.write(legacy_station_save,{"mission_id":"tung_chung","target_complete":true,"key_id":"key_01","key_secured":true,"train_stage":"aboard"})
  station.call("load_game")
  check(not station.get("operative_complete") and not station.get("key_secured") and station.get("train_stage") != "aboard", "legacy Tung Chung checkpoints cannot bypass the operative target prerequisite")
@@ -140,37 +220,17 @@ func run() -> void:
  check(world.get("operation_id") == "the_streets", "Streets boots as its own selectable mission")
  var city: Node3D = world.get("scene")
  check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) == null and city.find_child("District_the_harbour",true,false) == null, "Streets loads its own distinct district without bundling the later operations")
+ check(int(city.get_meta("city_facade_bays",0)) >= 150 and city.find_child("DistrictDetails",true,false) != null, "Hong Kong street blocks have articulated four-sided window bays, frames, sills and roof-edge structure")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "connected street navigation is instantiated")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
- var people: Array = world.get("npc_list")
- for npc: HotelNpc in people: npc.set_physics_process(false)
- world.call("_skip_cinematic")
- var target: HotelNpc = world.get("target")
- await near_player(world,target.global_position)
- world.call("_interact")
- check(not world.get("target_complete") and not service.progress.recovered_keys.has("key_02"), "market target dialogue cannot complete the objective or award Key 02")
- target.incapacitate(12.0)
- world.call("_interact")
- check(not world.get("target_complete"), "temporary target incapacitation is not objective completion")
- world.call("_secure_key")
- check(not service.progress.recovered_keys.has("key_02"), "physical key remains locked until the target is permanently completed")
- var key_marker: Node3D = world.get("key_marker")
- check(key_marker.get_parent() == world.get("guard"), "Key 02 is represented by a separate physical marker on the escort")
- # Model the successful tag state to verify the distinct pickup interaction.
- target.stunned_time = 0.0
- target.set_state("returning")
- world.set("target_complete",true)
- var guard: HotelNpc = world.get("guard")
- await near_player(world,key_marker.global_position)
- world.call("_interact")
- check(service.progress.recovered_keys.has("key_02") and not key_marker.visible, "Key 02 is collected only by interacting with its physical marker")
- var exit: Node3D = world.get("exit_marker")
- await near_player(world,exit.global_position)
- world.set("target_complete",false)
- world.call("_interact")
- check(not service.progress.completed.has("the_streets") and not world.get("extraction_active"), "district extraction remains locked until target completion")
+ check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
  world.queue_free()
  await process_frame
+
+ check(await complete_live_operation(service,"the_streets","market_vendor",temp + "_streets_checkpoint.json"),"mandatory market vendor, Key 02, save/load and operation completion work in the Streets mission")
+ check(await complete_live_operation(service,"the_district","corporate_fixer",temp + "_district_checkpoint.json"),"mandatory corporate fixer, Key 03, save/load and operation completion work in the Commercial District mission")
+ check(await complete_live_operation(service,"the_harbour","harbour_businessman",temp + "_harbour_checkpoint.json"),"mandatory businessman, Key 04, save/load and operation completion work in Harbour")
+ check(await complete_live_operation(service,"ngong_ping","field_coordinator",temp + "_ngong_ping_checkpoint.json"),"mandatory field coordinator, Key 05, save/load and operation completion work in Ngong Ping before House")
 
  service.progress.restore({"schema_version":2,"completed":["initiation","tung_chung","the_streets","the_district"],"completed_targets":{"tung_chung":["usb_robber","constance_operative"],"the_streets":["market_vendor"],"the_district":["corporate_fixer"]},"recovered_keys":["key_01","key_02","key_03"]})
  service.active_mission = "the_harbour"
@@ -181,13 +241,14 @@ func run() -> void:
  var harbour_map: Node3D = harbour_world.get("scene")
  check(harbour_map.find_child("District_the_harbour",true,false) != null and harbour_map.find_child("CorporateFloorNavigation_4",true,false) != null, "Harbour alone builds the connected tower and accessible executive floor")
  check(not harbour_map.find_children("*","DestructibleGlass",true,false).is_empty(), "Harbour tower glazing has collision-backed breakable panes")
+ check(int(harbour_map.get_meta("city_facade_bays",0)) >= 150, "Harbour's approach skyline retains detailed city facades as well as the playable glass tower")
  harbour_world.queue_free()
  await process_frame
 
  service.campaign_path = old_path
  service.active_mission = old_active
  service.progress.restore(old_progress)
- for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_legacy_station.json",temp + "_legacy_station.json.bak",temp + "_legacy_station.json.tmp"]:
+ for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_legacy_station.json",temp + "_legacy_station.json.bak",temp + "_legacy_station.json.tmp",temp + "_station_checkpoint.json",temp + "_station_checkpoint.json.bak",temp + "_station_checkpoint.json.tmp",temp + "_streets_checkpoint.json",temp + "_streets_checkpoint.json.bak",temp + "_streets_checkpoint.json.tmp",temp + "_district_checkpoint.json",temp + "_district_checkpoint.json.bak",temp + "_district_checkpoint.json.tmp",temp + "_harbour_checkpoint.json",temp + "_harbour_checkpoint.json.bak",temp + "_harbour_checkpoint.json.tmp",temp + "_ngong_ping_checkpoint.json",temp + "_ngong_ping_checkpoint.json.bak",temp + "_ngong_ping_checkpoint.json.tmp"]:
   if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
  print("HK RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)

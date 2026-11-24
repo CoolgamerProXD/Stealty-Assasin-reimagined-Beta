@@ -202,9 +202,9 @@
     "placement": "safe",
     "clue": "Key 05 is in the FIELD ARCHIVE office beside the village approach, away from the public monument.",
     "target_pos": [
-      0.0,
+      8.5,
       -8.15,
-      -66.0
+      -67.0
     ],
     "guard_pos": [
       5.0,
