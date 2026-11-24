@@ -99,9 +99,10 @@ func _stage() -> void:
 		people.append(person)
 		var label := Label3D.new()
 		label.text = MODEL_NAMES[index].to_upper()
-		label.font_size = 72
+		label.font_size = 44
 		label.pixel_size = 0.006
 		label.position = Vector3(0.0, 2.16, 0.0)
+		label.rotation.y = PI
 		label.modulate = Color(0.94, 0.84, 0.65)
 		person.add_child(label)
 

@@ -314,7 +314,10 @@ func run() -> void:
 	await _capture("07_hong_kong_streets")
 	_camera(Vector3(58, 5.0, -3), Vector3(63, 1.0, -17), 62.0)
 	await _capture("08_hong_kong_commercial_district")
-	_camera(Vector3(0, 5.2, -54), Vector3(0, 5.2, -110), 62.0)
+	# Shoot from the far edge of the playable city back across the actual
+	# waterfront; the previous street-level angle hid the water and ferry
+	# behind the last row of buildings despite staging them correctly.
+	_camera(Vector3(0.0, 14.0, -94.0), Vector3(0.0, 6.0, -180.0), 62.0)
 	await _capture("09_hong_kong_harbour_skyline")
 	var harbour_scene := world.get("scene") as Node3D
 	check(
