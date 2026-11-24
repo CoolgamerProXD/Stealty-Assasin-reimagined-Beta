@@ -18,6 +18,7 @@ var elevator_lights: Array[OmniLight3D] = []
 var discovered: bool = false
 var mesh_cache: Dictionary = {}
 var material_cache: Dictionary = {}
+var statue_interior_nodes: Array[Node3D] = []
 
 func build(parent_world: Node3D) -> void:
 	world = parent_world
@@ -58,6 +59,12 @@ func _process(_delta: float) -> void:
 	if not landmark or not player: return
 	var concealed_interior := is_inside_statue(player.global_position)
 	landmark.visible = not concealed_interior
+	# The inner floors, consoles and ribs are built in world space for play, but
+	# must not cut through the public landmark silhouette from exterior views.
+	# Reveal them only after the player crosses into the concealed statue volume.
+	for interior_node: Node3D in statue_interior_nodes:
+		if interior_node.visible != concealed_interior:
+			interior_node.visible = concealed_interior
 
 func _build_hidden_entry() -> void:
 	# Carved bronze-and-stone frame is behind the seated figure, out of the public
@@ -294,6 +301,7 @@ func _build_sublevel_connectors() -> void:
 		lamp.shadow_enabled = false
 		add_child(lamp)
 func _build_buddha_interior() -> void:
+	var first_interior_child := get_child_count()
 	# A continuous hidden switchback corridor climbs from Sublevel 01 through
 	# the plinth into the statue's first inner chamber. Its 21.6 m ramp rises
 	# five metres (a gentle 13.4 degree slope); collision-backed sidewalls and a
@@ -376,6 +384,14 @@ func _build_buddha_interior() -> void:
 	# This hidden passage opens into the upper operations galleries and shows the
 	# statue's internal structural ribs as part of the facility architecture.
 	_add_facility_zone(Rect2(-8.0,-36.0,16.0,14.0),1.6,21.0,"buddha_interior")
+	# Keep every world-space chamber piece (including the inner nav regions) out
+	# of the public view. A single group of toggled nodes follows the real player
+	# entry state, rather than a hidden-shell camera trick or moving geometry.
+	for child_index: int in range(first_interior_child,get_child_count()):
+		var interior_node := get_child(child_index) as Node3D
+		if interior_node:
+			interior_node.visible = false
+			statue_interior_nodes.append(interior_node)
 
 func _add_navigation(region_name: String, y: float, z_min: float, z_max: float, x_min: float, x_max: float) -> void:
 	var region := NavigationRegion3D.new()

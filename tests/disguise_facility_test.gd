@@ -120,6 +120,8 @@ func run() -> void:
 	var facility := mountain.find_child("NgongPingSecretFacility",true,false) as NgongPingSecretFacility
 	var landmark := mountain.find_child("ScenicBuddhaLandmark",true,false) as Node3D
 	check(facility != null and landmark != null and landmark.visible,"Ngong Ping contains the public Buddha landmark and attached hidden installation")
+	var hidden_chamber_floor := mountain.find_child("ConcealedBuddhaInteriorFloor_5",true,false) as Node3D
+	check(hidden_chamber_floor != null and not hidden_chamber_floor.visible,"public exterior keeps world-space statue chambers out of the Buddha silhouette")
 	check(mountain.find_child("FacilitySlab_Sublevel_1",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_2",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_3",true,false) != null,"facility has three physically separate interconnected underground floors")
 	check(mountain.find_child("BuddhaInteriorNavigation_1",true,false) != null and mountain.find_child("BuddhaInteriorNavigation_5",true,false) != null and mountain.find_child("ConcealedBuddhaInteriorFloor_5",true,false) != null and mountain.find_child("StatueCoreConnectingRamp",true,false) != null,"five chamber floors connect to the buried installation through the statue core")
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
@@ -155,7 +157,7 @@ func run() -> void:
 	await create_timer(7.8).timeout
 	Input.action_release("move_back")
 	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position))
-	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
+	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible and hidden_chamber_floor.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
 	check(final_world.find_child("DisguiseInventory",true,false) != null,"mission builds the playable disguise inventory UI")
 
 	for node: Node in [final_world,subdued,player]:
