@@ -6,6 +6,9 @@ extends Node3D
 const FLOORS_UNDER := [-3.2,-8.2,-13.2]
 const FLOORS_INSIDE := [1.8,5.8,9.8,13.8,17.8]
 const CORE_CENTER := Vector3(0.0,0.0,-29.0)
+const OFFICE_CHAIR := preload("res://assets/kenney_furniture/chairCushion.glb")
+const LAPTOP := preload("res://assets/kenney_furniture/laptop.glb")
+const BOOKS := preload("res://assets/kenney_furniture/books.glb")
 var world: Node3D
 var player: HotelPlayer
 var landmark: Node3D
@@ -212,20 +215,17 @@ func _build_room(label: String, center: Vector3, span: Vector2, tint: Color, sub
 	sign.pixel_size = 0.004
 	sign.modulate = Color(0.85,0.81,0.68)
 	add_child(sign)
-	if style in [0,2,5,6,7,9]:
-		for dx: float in [-width*0.27,0.0,width*0.27]:
-			_box("ControlDesk",Vector3(x+dx,y+0.58,z-depth*0.24),Vector3(3.2,1.05,1.0),Color(0.19,0.25,0.27),true)
-			_box("DeskLightPanel",Vector3(x+dx,y+1.15,z-depth*0.24-0.12),Vector3(1.1,0.045,0.08),Color(0.20,0.73,0.77))
-			_box("WallDisplay",Vector3(x+dx,y+2.85,z-depth*0.5+0.16),Vector3(2.2,1.25,0.08),Color(0.10,0.27,0.31))
-	elif style in [3,4,10]:
-		for dx: float in [-width*0.27,0.0,width*0.27]:
-			_box("EquipmentRack",Vector3(x+dx,y+1.25,z-depth*0.25),Vector3(1.4,2.5,1.3),Color(0.19,0.24,0.25),true)
-			for lamp_y: float in [0.55,1.15,1.8]:
-				_box("RackStatusLamp",Vector3(x+dx-0.38,y+lamp_y,z-depth*0.25-0.67),Vector3(0.11,0.11,0.035),Color(0.24,0.82,0.70))
-	else:
-		for dx: float in [-width*0.28,0.0,width*0.28]:
-			_box("BunkBase",Vector3(x+dx,y+0.65,z-depth*0.22),Vector3(2.9,0.65,1.35),Color(0.28,0.30,0.29),true)
-			_box("BunkPillow",Vector3(x+dx,y+1.02,z-depth*0.22-0.45),Vector3(0.55,0.12,0.38),Color(0.68,0.65,0.56))
+	_build_room_fitout(center,span,style,tint)
+	# The entry is an actual framed opening with a recessed, powered sliding-door pocket.
+	var entry_z := z+depth*0.5+0.12
+	for side: float in [-1.0,1.0]:
+		_box("DoorJamb",Vector3(x+side*1.58,y+2.08,entry_z),Vector3(0.15,4.12,0.28),Color(0.46,0.52,0.50))
+		_box("SlidingDoorPocket",Vector3(x+side*1.94,y+2.05,entry_z-0.12),Vector3(0.58,3.78,0.14),Color(0.18,0.25,0.27))
+	_box("DoorHeader",Vector3(x,y+4.14,entry_z),Vector3(3.31,0.18,0.28),Color(0.46,0.52,0.50))
+	_box("DoorTrack",Vector3(x,y+4.27,entry_z-0.14),Vector3(2.94,0.055,0.15),Color(0.72,0.57,0.32))
+	_box("ThresholdMetal",Vector3(x,y+0.09,z+depth*0.5),Vector3(2.9,0.11,0.68),Color(0.45,0.52,0.51))
+	_box("DoorAccessReader",Vector3(x+1.82,y+1.35,entry_z+0.03),Vector3(0.12,0.42,0.08),Color(0.13,0.25,0.27))
+	_box("DoorReaderStatus",Vector3(x+1.82,y+1.52,entry_z+0.08),Vector3(0.045,0.055,0.025),Color(0.28,0.82,0.70))
 	# A distinctive sill and service access panel identify each room without
 	# turning its modest, playable footprint into empty decorative volume.
 	_box("RoomFloorInset",Vector3(x,y+0.025,z),Vector3(width-0.9,0.045,depth-0.9),tint.lightened(0.12))
@@ -250,6 +250,181 @@ func _build_room(label: String, center: Vector3, span: Vector2, tint: Color, sub
 	_box("CeilingLightDiffuser",Vector3(x,y+h-0.265,z),Vector3(width*0.45,0.045,0.16),Color(0.62,0.79,0.77))
 	_box("WallMountedAccessPanel",Vector3(x+width*0.5-0.32,y+1.35,z+depth*0.5-0.5),Vector3(0.12,1.0,0.55),Color(0.16,0.24,0.27))
 	_box("DoorwayWayfindingStrip",Vector3(x,y+0.07,z+depth*0.5-0.54),Vector3(2.15,0.018,0.11),Color(0.86,0.58,0.24))
+	# The interior gets a durable coved base, a separate ventilation branch,
+	# service access and visible cable routing rather than a blank ceiling slab.
+	_box("WallSkirting",Vector3(x,y+0.13,z-depth*0.5+0.18),Vector3(width-0.48,0.22,0.08),Color(0.21,0.28,0.30))
+	_box("WallSkirtingSouthLeft",Vector3(x-width*0.25,y+0.13,z+depth*0.5-0.18),Vector3(width*0.5-1.8,0.22,0.08),Color(0.21,0.28,0.30))
+	_box("WallSkirtingSouthRight",Vector3(x+width*0.25,y+0.13,z+depth*0.5-0.18),Vector3(width*0.5-1.8,0.22,0.08),Color(0.21,0.28,0.30))
+	for side: float in [-1.0,1.0]:
+		_box("WallSkirting",Vector3(x+side*(width*0.5-0.17),y+0.13,z),Vector3(0.08,0.22,depth-0.5),Color(0.21,0.28,0.30))
+	_box("SupplyDuct",Vector3(x-width*0.30,y+h-0.36,z-depth*0.22),Vector3(0.48,0.42,depth*0.48),Color(0.35,0.42,0.43))
+	_box("ReturnAirGrille",Vector3(x+width*0.5-0.18,y+h-0.8,z-depth*0.5+0.24),Vector3(0.06,0.72,1.75),Color(0.18,0.26,0.28))
+	for grille: float in [-0.28,-0.09,0.10,0.29]:
+		_box("ReturnAirGrilleSlat",Vector3(x+width*0.5-0.13,y+h-0.8+grille,z-depth*0.5+0.24),Vector3(0.055,0.035,1.62),Color(0.53,0.60,0.58))
+	_box("ConduitTrunk",Vector3(x-width*0.5+0.38,y+h-0.58,z),Vector3(0.10,0.10,depth-0.6),Color(0.25,0.34,0.35))
+	_box("JunctionBox",Vector3(x-width*0.5+0.40,y+2.45,z+depth*0.5-0.65),Vector3(0.25,0.34,0.17),Color(0.36,0.45,0.45))
+	_box("EmergencyFixture",Vector3(x-1.0,y+3.87,z+depth*0.5+0.10),Vector3(0.68,0.20,0.10),Color(0.76,0.27,0.18))
+
+func _build_room_fitout(center: Vector3, span: Vector2, style: int, tint: Color) -> void:
+	var x := center.x
+	var y := center.y
+	var z := center.z
+	var width := span.x
+	var depth := span.y
+	match style:
+		0:
+			# Monument access: staffed reception desks, queue lanes and baggage scan.
+			_build_workstation(center,Vector3(-8.0,0.0,-3.5),tint)
+			_build_workstation(center,Vector3(8.0,0.0,-3.5),tint)
+			_box("XrayBaggageConveyor",Vector3(x,y+0.55,z-4.0),Vector3(4.8,1.1,1.15),Color(0.18,0.25,0.27),true)
+			_box("BaggageScannerBelt",Vector3(x,y+1.12,z-4.0),Vector3(4.4,0.08,0.95),Color(0.22,0.34,0.36))
+			for lane_x: float in [-4.6,4.6]:
+				for side: float in [-1.0,1.0]: _box("AccessLanePost",Vector3(x+lane_x+side*0.78,y+1.05,z-2.25),Vector3(0.12,2.1,0.12),Color(0.25,0.34,0.35))
+				_box("AccessLaneHeader",Vector3(x+lane_x,y+2.1,z-2.25),Vector3(1.68,0.12,0.12),Color(0.47,0.58,0.56))
+				_box("AccessLaneStatus",Vector3(x+lane_x,y+1.95,z-2.16),Vector3(0.32,0.035,0.025),Color(0.28,0.82,0.70))
+			_box("SecureAccessCabinet",Vector3(x+width*0.5-1.0,y+1.0,z-depth*0.5+1.1),Vector3(0.9,2.0,0.75),Color(0.18,0.25,0.27),true)
+		1:
+			# Screening room: an operator desk and two clear scan lanes.
+			_build_workstation(center,Vector3(-5.8,0.0,-2.3),tint)
+			_build_workstation(center,Vector3(5.8,0.0,-2.3),tint)
+			for lane_x: float in [-3.3,3.3]:
+				_box("WalkThroughScannerBase",Vector3(x+lane_x,y+0.14,z-2.55),Vector3(1.48,0.28,0.72),Color(0.17,0.25,0.27))
+				for side: float in [-1.0,1.0]: _box("WalkThroughScannerUpright",Vector3(x+lane_x+side*0.61,y+1.23,z-2.55),Vector3(0.12,2.18,0.16),Color(0.39,0.48,0.48))
+				_box("WalkThroughScannerCrossbar",Vector3(x+lane_x,y+2.35,z-2.55),Vector3(1.34,0.12,0.16),Color(0.39,0.48,0.48))
+				_box("ScannerStatusDisplay",Vector3(x+lane_x,y+2.23,z-2.44),Vector3(0.46,0.16,0.035),Color(0.22,0.76,0.69))
+			_box("ScreeningTrayStack",Vector3(x,y+0.48,z-depth*0.5+0.85),Vector3(2.2,0.85,0.62),Color(0.24,0.31,0.32),true)
+		2:
+			# Records administration: two individual workstations and locked files.
+			for dx: float in [-4.6,4.6]: _build_workstation(center,Vector3(dx,0.0,-2.25),tint)
+			for dx: float in [-7.0,7.0]:
+				_box("RecordsCabinet",Vector3(x+dx,y+1.15,z-depth*0.5+1.05),Vector3(1.18,2.3,1.2),Color(0.23,0.31,0.32),true)
+				for shelf_y: float in [0.42,0.98,1.54,2.10]: _box("FileDrawerPull",Vector3(x+dx,y+shelf_y,z-depth*0.5+0.42),Vector3(0.62,0.045,0.035),Color(0.68,0.55,0.34))
+			_place_kenney(BOOKS,"IntakeFiles",Vector3(x-4.0,y+0.88,z-2.4),Vector3(0.075,0.0,-0.047),Vector3(0.8,0.8,0.8),0.12)
+		3:
+			# Staff quarters: two made-up bunks, personal lockers and a shared table.
+			for dx: float in [-4.4,4.4]: _build_bunk(center,dx,-2.8,tint)
+			for dx: float in [-7.2,7.2]:
+				_box("StaffLocker",Vector3(x+dx,y+1.15,z-2.35),Vector3(1.25,2.3,1.25),Color(0.22,0.31,0.32),true)
+				_box("LockerVent",Vector3(x+dx,y+1.8,z-1.69),Vector3(0.50,0.32,0.035),Color(0.47,0.57,0.55))
+			_box("QuartersTable",Vector3(x,y+0.78,z+2.8),Vector3(2.8,0.12,1.0),Color(0.29,0.20,0.15),true)
+			for dx: float in [-1.0,1.0]: _box("TableLeg",Vector3(x+dx,y+0.39,z+2.8),Vector3(0.10,0.78,0.10),Color(0.23,0.28,0.28))
+			_place_kenney(BOOKS,"StaffReading",Vector3(x+0.45,y+0.88,z+2.72),Vector3(0.075,0.0,-0.047),Vector3(0.7,0.7,0.7),-0.12)
+		4:
+			# Maintenance and storage: service racks flank a clear working aisle.
+			for dx: float in [-6.0,6.0]: _build_storage_rack(center,dx,-2.8,2.5)
+			_box("PortableGenerator",Vector3(x,y+0.78,z-depth*0.5+1.05),Vector3(2.3,1.55,1.35),Color(0.30,0.35,0.34),true)
+			_box("GeneratorServicePanel",Vector3(x,y+0.95,z-depth*0.5+0.34),Vector3(1.05,0.58,0.08),Color(0.15,0.25,0.27))
+			for dx: float in [-0.36,-0.12,0.12,0.36]: _box("GeneratorVent",Vector3(x+dx,y+0.95,z-depth*0.5+0.29),Vector3(0.035,0.44,0.03),Color(0.50,0.58,0.56))
+			_box("MaintenanceBench",Vector3(x,y+0.91,z+2.8),Vector3(4.8,0.14,0.86),Color(0.27,0.22,0.17),true)
+			for dx: float in [-2.2,2.2]: _box("BenchLeg",Vector3(x+dx,y+0.45,z+2.8),Vector3(0.12,0.9,0.12),Color(0.20,0.28,0.30))
+		5:
+			# Research: washable bench tops, sink bays, cabinets and observation hoods.
+			for dx: float in [-5.1,5.1]:
+				_box("ResearchBenchCabinet",Vector3(x+dx,y+0.50,z-depth*0.5+2.1),Vector3(4.2,1.0,1.25),Color(0.22,0.31,0.32),true)
+				_box("ResearchBenchTop",Vector3(x+dx,y+1.08,z-depth*0.5+2.1),Vector3(4.45,0.14,1.42),Color(0.58,0.62,0.57))
+				_box("FumeHoodBack",Vector3(x+dx,y+2.1,z-depth*0.5+1.55),Vector3(3.6,1.85,0.14),Color(0.23,0.37,0.39))
+				_box("FumeHoodSash",Vector3(x+dx,y+2.05,z-depth*0.5+1.45),Vector3(2.9,0.12,0.12),Color(0.67,0.72,0.66))
+				_box("LabInstrument",Vector3(x+dx-1.1,y+1.42,z-depth*0.5+2.05),Vector3(0.55,0.48,0.5),Color(0.19,0.28,0.31))
+				_box("LabInstrumentScreen",Vector3(x+dx-1.1,y+1.72,z-depth*0.5+1.78),Vector3(0.34,0.20,0.04),Color(0.22,0.76,0.70))
+				_box("SpecimenTray",Vector3(x+dx+0.9,y+1.19,z-depth*0.5+2.15),Vector3(0.75,0.10,0.42),Color(0.68,0.60,0.43))
+				_box("LabStorageCabinet",Vector3(x+dx,y+3.15,z-depth*0.5+0.44),Vector3(2.6,1.5,0.32),Color(0.20,0.30,0.32),true)
+		6:
+			# Surveillance gallery: operator benches face a dedicated display wall.
+			for dx: float in [-6.0,-3.0,0.0,3.0,6.0]:
+				_build_workstation(center,Vector3(dx,0.0,-2.8),tint)
+				_box("CameraFeedLabelStrip",Vector3(x+dx,y+2.45,z-depth*0.5+0.24),Vector3(2.1,0.10,0.07),Color(0.72,0.55,0.32))
+		7:
+			# Directorate suite: deliberate briefing table with seating and wall display.
+			_box("BriefingTableTop",Vector3(x,y+0.82,z-3.15),Vector3(6.2,0.16,2.2),Color(0.34,0.25,0.18),true)
+			for dx: float in [-2.7,2.7]:
+				for dz: float in [-3.8,-2.5]: _box("BriefingTablePedestal",Vector3(x+dx,y+0.40,z+dz),Vector3(0.18,0.8,0.18),Color(0.25,0.30,0.30))
+			for dx: float in [-4.3,-1.4,1.4,4.3]:
+				_place_kenney(OFFICE_CHAIR,"BriefingChair",Vector3(x+dx,y,z-1.6),Vector3(0.10,0.0,-0.10),Vector3(1.3,1.3,1.3),PI)
+			_box("DirectorateBriefingDisplay",Vector3(x,y+2.7,z-depth*0.5+0.18),Vector3(4.6,1.55,0.08),Color(0.12,0.31,0.35))
+			_box("DirectorateWallChart",Vector3(x+5.3,y+2.4,z-depth*0.5+0.18),Vector3(2.1,1.0,0.08),Color(0.51,0.45,0.35))
+		8:
+			# Restricted transit: benches and dispatch panels line the sides.
+			for dx: float in [-9.0,9.0]:
+				_box("TransitBenchSeat",Vector3(x+dx,y+0.56,z-2.5),Vector3(3.8,0.16,0.68),Color(0.29,0.37,0.38),true)
+				_box("TransitBenchBack",Vector3(x+dx,y+1.18,z-2.82),Vector3(3.8,1.1,0.14),Color(0.25,0.34,0.35))
+				for side: float in [-1.0,1.0]: _box("TransitBenchLeg",Vector3(x+dx+side*1.55,y+0.25,z-2.5),Vector3(0.12,0.5,0.55),Color(0.22,0.28,0.29))
+			for dx: float in [-9.0,9.0]: _box("TransitRouteBoard",Vector3(x+dx,y+2.65,z-depth*0.5+0.17),Vector3(3.2,1.3,0.08),Color(0.12,0.30,0.34))
+		9:
+			# Archive vault: secure compact shelving, inventory table and records.
+			for dx: float in [-6.4,6.4]: _build_storage_rack(center,dx,-2.9,3.1)
+			_box("ArchiveInventoryTable",Vector3(x,y+0.82,z-depth*0.5+1.45),Vector3(3.8,0.14,1.35),Color(0.27,0.20,0.15),true)
+			_place_kenney(BOOKS,"ArchiveRegister",Vector3(x,y+0.90,z-depth*0.5+1.35),Vector3(0.075,0.0,-0.047),Vector3(0.8,0.8,0.8),0.0)
+			for dx: float in [-1.35,1.35]: _box("VaultDoorBolt",Vector3(x+dx,y+1.6,z-depth*0.5+0.2),Vector3(0.12,1.8,0.14),Color(0.43,0.50,0.49))
+		10:
+			# Plant room: pumps, isolation valves and an electrical distribution board.
+			for dx: float in [-5.0,5.0]:
+				_box("AirHandlingUnit",Vector3(x+dx,y+1.4,z-depth*0.5+1.2),Vector3(3.4,2.8,2.4),Color(0.24,0.33,0.34),true)
+				for vent: float in [-0.8,-0.4,0.0,0.4,0.8]: _box("AirUnitLouvre",Vector3(x+dx+vent,y+1.35,z-depth*0.5-0.04),Vector3(0.12,1.7,0.05),Color(0.48,0.56,0.54))
+				_box("AirUnitServicePlate",Vector3(x+dx,y+1.1,z-depth*0.5-0.08),Vector3(0.62,0.42,0.04),Color(0.13,0.26,0.28))
+				_box("AirUnitStatus",Vector3(x+dx+0.20,y+1.26,z-depth*0.5-0.12),Vector3(0.08,0.08,0.03),Color(0.22,0.82,0.67))
+			_box("DistributionBoard",Vector3(x,y+1.65,z-depth*0.5+0.24),Vector3(3.2,3.3,0.24),Color(0.18,0.27,0.29),true)
+			for dx: float in [-1.0,0.0,1.0]:
+				_box("BreakerHandle",Vector3(x+dx,y+1.72,z-depth*0.5+0.08),Vector3(0.16,0.38,0.04),Color(0.68,0.56,0.34))
+				_box("BreakerStatus",Vector3(x+dx,y+2.18,z-depth*0.5+0.08),Vector3(0.10,0.10,0.035),Color(0.26,0.80,0.65))
+			for riser_y: float in [1.35,2.2,3.05]:
+				_box("PlantPipeRun",Vector3(x+width*0.5-0.48,y+riser_y,z),Vector3(0.18,0.16,depth-1.0),Color(0.52,0.58,0.55))
+			for pipe_y: float in [1.3,1.65,2.0]:
+				_box("PlantPipeRiser",Vector3(x+width*0.5-0.48,y+2.25,z+depth*0.5-0.85),Vector3(0.16,2.0,0.16),Color(0.52,0.58,0.55))
+				_box("IsolationValve",Vector3(x+width*0.5-0.48,y+pipe_y,z+depth*0.5-0.85),Vector3(0.52,0.08,0.08),Color(0.73,0.49,0.26))
+
+func _build_workstation(center: Vector3, offset: Vector3, tint: Color) -> void:
+	var desk := center+offset
+	var wood := Color(0.34,0.25,0.18)
+	var dark_metal := Color(0.16,0.23,0.25)
+	_box("DeskPedestal",desk+Vector3(-0.78,0.40,0.0),Vector3(0.50,0.80,0.72),dark_metal,true)
+	for dx: float in [-0.92,0.92]:
+		for dz: float in [-0.28,0.28]: _box("DeskLeg",desk+Vector3(dx,0.37,dz),Vector3(0.08,0.74,0.08),dark_metal)
+	_box("DeskWorktopWood",desk+Vector3(0.0,0.78,0.0),Vector3(2.10,0.13,0.92),wood,true)
+	_box("DeskEdgeBand",desk+Vector3(0.0,0.70,0.0),Vector3(2.13,0.05,0.95),Color(0.48,0.38,0.27))
+	_box("MonitorHousing",desk+Vector3(0.0,1.19,-0.30),Vector3(0.78,0.52,0.075),Color(0.13,0.19,0.21))
+	_box("MonitorDisplay",desk+Vector3(0.0,1.20,-0.255),Vector3(0.67,0.40,0.018),Color(0.16,0.55,0.60))
+	_box("MonitorStand",desk+Vector3(0.0,0.93,-0.28),Vector3(0.12,0.22,0.10),dark_metal)
+	_box("Keyboard",desk+Vector3(0.0,0.87,0.12),Vector3(0.52,0.035,0.18),Color(0.27,0.32,0.32))
+	_place_kenney(LAPTOP,"OpenLaptop",desk+Vector3(0.60,0.84,0.12),Vector3(0.132,0.0,-0.12),Vector3(0.65,0.65,0.65),-0.08)
+	_place_kenney(OFFICE_CHAIR,"WorkChair",desk+Vector3(0.0,0.0,1.10),Vector3(0.10,0.0,-0.10),Vector3(1.3,1.3,1.3),PI)
+	_box("DeskCableGrommet",desk+Vector3(-0.86,0.85,-0.32),Vector3(0.12,0.035,0.12),Color(0.20,0.28,0.29))
+
+func _build_bunk(center: Vector3, dx: float, dz: float, tint: Color) -> void:
+	var p := center+Vector3(dx,0.0,dz)
+	for side: float in [-1.0,1.0]:
+		_box("BunkFramePost",p+Vector3(side*0.78,0.84,-0.34),Vector3(0.12,1.68,0.12),Color(0.28,0.35,0.36))
+		_box("BunkFramePost",p+Vector3(side*0.78,0.84,0.34),Vector3(0.12,1.68,0.12),Color(0.28,0.35,0.36))
+		_box("BunkRail",p+Vector3(side*0.78,1.46,0.0),Vector3(0.12,0.20,0.88),Color(0.33,0.41,0.41))
+	_box("LowerBunkBase",p+Vector3(0.0,0.20,0.0),Vector3(1.55,0.30,0.92),Color(0.25,0.32,0.33),true)
+	_box("LowerBunkMattress",p+Vector3(0.0,0.43,0.0),Vector3(1.43,0.20,0.80),Color(0.47,0.51,0.47))
+	_box("LowerBunkCover",p+Vector3(0.0,0.56,0.12),Vector3(1.40,0.08,0.52),Color(0.31,0.41,0.41))
+	_box("UpperBunkBase",p+Vector3(0.0,1.12,0.0),Vector3(1.55,0.25,0.92),Color(0.25,0.32,0.33),true)
+	_box("UpperBunkMattress",p+Vector3(0.0,1.30,0.0),Vector3(1.43,0.16,0.80),Color(0.47,0.51,0.47))
+	_box("UpperBunkPillow",p+Vector3(0.0,1.40,-0.28),Vector3(0.52,0.10,0.24),Color(0.71,0.69,0.61))
+	_box("BunkLadderSide",p+Vector3(0.94,0.67,0.0),Vector3(0.06,1.25,0.07),Color(0.33,0.41,0.41))
+	for rung_y: float in [0.25,0.62,0.99,1.36]: _box("BunkLadderRung",p+Vector3(0.94,rung_y,0.0),Vector3(0.08,0.06,0.75),Color(0.43,0.49,0.46))
+
+func _build_storage_rack(center: Vector3, dx: float, dz: float, width: float) -> void:
+	var p := center+Vector3(dx,0.0,dz)
+	for side: float in [-1.0,1.0]: _box("StorageRackUpright",p+Vector3(side*width*0.5,1.65,0.0),Vector3(0.08,3.3,0.10),Color(0.31,0.40,0.41))
+	for shelf_y: float in [0.45,1.25,2.05,2.85]:
+		_box("StorageRackShelf",p+Vector3(0.0,shelf_y,0.0),Vector3(width,0.10,0.8),Color(0.34,0.42,0.41))
+		_box("StorageBox",p+Vector3(-width*0.24,shelf_y+0.24,0.0),Vector3(0.58,0.42,0.62),Color(0.43,0.38,0.29))
+		_box("StorageCase",p+Vector3(width*0.23,shelf_y+0.28,0.04),Vector3(0.62,0.48,0.58),Color(0.24,0.34,0.35))
+	_box("RackInventoryTag",p+Vector3(0.0,3.08,-0.43),Vector3(0.62,0.20,0.035),Color(0.76,0.66,0.48))
+
+func _place_kenney(scene: PackedScene, node_name: String, at: Vector3, center_offset: Vector3, scale: Vector3, yaw: float) -> void:
+	var root_node := Node3D.new()
+	root_node.name = node_name+"Placement"
+	root_node.position = at
+	root_node.rotation.y = yaw
+	add_child(root_node)
+	var model := scene.instantiate() as Node3D
+	if not model: return
+	model.name = node_name
+	model.scale = scale
+	model.position = -center_offset*scale
+	root_node.add_child(model)
 
 func _build_operations_chamber(center: Vector3) -> void:
 	var x := center.x
@@ -483,22 +658,20 @@ func _box(node_name: String, center: Vector3, size: Vector3, tint: Color, solid:
 		mesh.size = size
 		mesh_cache[key] = mesh
 	mesh_instance.mesh = mesh_cache[key]
-	var finish := "stone"
-	if node_name.contains("Rail") or node_name.contains("Frame") or node_name.contains("Rib") or node_name.contains("Panel") or node_name.contains("Rack") or node_name.contains("Pipe"):
-		finish = "hardware"
-	elif node_name.contains("Light") or node_name.contains("Lamp") or node_name.contains("Luminaire") or node_name.contains("Guide") or node_name.contains("Display") or node_name.contains("Screen"):
+	var finish := "concrete"
+	if node_name.contains("Rail") or node_name.contains("Frame") or node_name.contains("Rib") or node_name.contains("Panel") or node_name.contains("Rack") or node_name.contains("Pipe") or node_name.contains("Conduit") or node_name.contains("Door") or node_name.contains("Vent") or node_name.contains("Skirting"):
+		finish = "brushed_metal"
+	elif node_name.contains("Light") or node_name.contains("Lamp") or node_name.contains("Luminaire") or node_name.contains("Guide") or node_name.contains("Display") or node_name.contains("Screen") or node_name.contains("Status"):
 		finish = "emissive"
-	elif node_name.contains("Floor") or node_name.contains("Ramp") or node_name.contains("Slab"):
-		finish = "floor"
+	elif node_name.contains("Floor") or node_name.contains("Ramp") or node_name.contains("Slab") or node_name.contains("Threshold"):
+		finish = "terrazzo"
+	elif node_name.contains("Desk") or node_name.contains("Worktop") or node_name.contains("Table") or node_name.contains("Drawer"):
+		finish = "wood"
+	elif node_name.contains("Chair") or node_name.contains("Mattress") or node_name.contains("Cover") or node_name.contains("Pillow"):
+		finish = "fabric"
 	var material_key := tint.to_html(true) + ":" + finish
 	if not material_cache.has(material_key):
-		var material := _material(tint,0.86 if finish in ["stone","floor"] else (0.38 if finish == "hardware" else 0.48))
-		if finish == "hardware": material.metallic = 0.42
-		elif finish == "emissive":
-			material.emission_enabled = true
-			material.emission = tint
-			material.emission_energy_multiplier = 0.32
-		material_cache[material_key] = material
+		material_cache[material_key] = StationMaterials.material(tint,finish)
 	mesh_instance.material_override = material_cache[material_key]
 	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if not solid else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	holder.add_child(mesh_instance)

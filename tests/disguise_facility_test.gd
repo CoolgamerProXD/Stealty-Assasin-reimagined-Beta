@@ -107,6 +107,16 @@ func run() -> void:
 	sandbox.queue_free()
 	await process_frame
 
+	var house_map := load("res://scenes/house_mission_map.tscn").instantiate() as Node3D
+	root.add_child(house_map)
+	await process_frame
+	var front_glazing := house_map.find_child("FrontWindowGlazing",true,false) as Node3D
+	var glazing_material := front_glazing.get_child(0).get("material_override") as StandardMaterial3D if front_glazing else null
+	check(glazing_material != null and glazing_material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA and house_map.find_child("LivingRoomSofaPlacement",true,false) != null,"safehouse has framed glazed exterior openings and furnished living space")
+	check(house_map.find_child("SafehousePlanningLaptopPlacement",true,false) != null and house_map.find_child("SafehousePaperworkPlacement",true,false) != null and house_map.find_child("KitchenPostPlacement",true,false) != null,"safehouse has a dedicated operational planning nook and distinct kitchen fitout")
+	house_map.queue_free()
+	await process_frame
+
 	# Final-operation geometry and the concealed interior are checked in the
 	# actual campaign scene. The entry is physically inside the rear Buddha base.
 	campaign.progress.restore({"completed":["initiation","tung_chung","hong_kong_sandbox"],"recovered_keys":["key_01","key_02","key_03","key_04"]})
@@ -127,6 +137,13 @@ func run() -> void:
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
 	check(mountain.find_child("FloorPanelJoint",true,false) != null and mountain.find_child("RecessedWallPanel",true,false) != null and mountain.find_child("RoomStructuralPilaster",true,false) != null and mountain.find_child("CeilingServiceSpine",true,false) != null,"PROMETHEUS rooms use panelized floor inlays, wall modules, structural piers and ceiling service spines")
 	check(mountain.find_child("CeilingLightDiffuser",true,false) != null and mountain.find_child("DoorwayWayfindingStrip",true,false) != null,"facility interiors include practical ceiling fixtures and egress wayfinding")
+	check(mountain.find_child("DoorJamb",true,false) != null and mountain.find_child("SlidingDoorPocket",true,false) != null and mountain.find_child("ReturnAirGrilleSlat",true,false) != null and mountain.find_child("ConduitTrunk",true,false) != null,"facility room entrances, ventilation and electrical routes read as constructed systems")
+	check(mountain.find_child("WalkThroughScannerUpright",true,false) != null and mountain.find_child("BunkFramePost",true,false) != null and mountain.find_child("FumeHoodBack",true,false) != null and mountain.find_child("CameraFeedLabelStrip",true,false) != null,"screening, staff quarters, research and surveillance each have purpose-built fitouts")
+	check(mountain.find_child("AirHandlingUnit",true,false) != null and mountain.find_child("PlantPipeRiser",true,false) != null and mountain.find_child("ArchiveInventoryTable",true,false) != null and mountain.find_child("DirectorateBriefingDisplay",true,false) != null,"plant, archive and directorate spaces have distinct operating equipment")
+	var floor_inset := mountain.find_child("RoomFloorInset",true,false)
+	var inset_mesh := floor_inset.get_child(0) as MeshInstance3D if floor_inset else null
+	var floor_material := inset_mesh.material_override as StandardMaterial3D if inset_mesh else null
+	check(floor_material != null and floor_material.albedo_texture != null and floor_material.roughness > 0.2,"PROMETHEUS concrete and terrazzo use authored surface finish maps")
 	var statue_practicals := 0
 	for candidate: Node in facility.get_children():
 		if candidate is OmniLight3D and candidate.name.begins_with("BuddhaInteriorPractical_") and is_equal_approx((candidate as OmniLight3D).light_energy,0.78): statue_practicals += 1
