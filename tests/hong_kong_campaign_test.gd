@@ -183,11 +183,11 @@ func run() -> void:
  station.call("_interact")
  check(not station.get("operative_complete"), "Constance's operative dialogue cannot complete that objective")
  await tag_live_target(station,operative)
- check(bool(station.get("operative_complete")) and service.progress.completed_targets.get("tung_chung",[]).has("constance_operative"), "Constance's real operative NPC is permanently completed by the playable assessment ray")
+ check(bool(station.get("operative_complete")) and service.progress.completed_targets.get("tung_chung",[]).has("constance_operative"), "Constance's real operative NPC is permanently completed by the playable assessment ray (message=%s; target=%s; operative=%s; guard=%s; charges=%s)" % [str(station.get("message")),str(station.get("target_complete")),str(station.get("operative_complete")),str(operative.state),str(station.get("player").equipment.charges)])
  robber.stunned_time = 0.0
  robber.set_state("idle")
  await tag_live_target(station,robber)
- check(bool(station.get("target_complete")) and service.progress.completed_targets.get("tung_chung",[]).has("usb_robber"), "the USB robber target is permanently completed through the live scene")
+ check(bool(station.get("target_complete")) and service.progress.completed_targets.get("tung_chung",[]).has("usb_robber"), "the USB robber target is permanently completed through the live scene (message=%s; target=%s; operative=%s; robber=%s; charges=%s)" % [str(station.get("message")),str(station.get("target_complete")),str(station.get("operative_complete")),str(robber.state),str(station.get("player").equipment.charges)])
  station.call("_skip_cinematic")
  check(str(station.get("story_phase")).is_empty() and station.get("key_marker").get_parent() == station, "Ruby's pursuit handoff drops Key 01 into the station world")
  check(await recover_live_key(station) and service.progress.recovered_keys.has("key_01"), "Key 01 is physically recovered with the in-game interaction after both target records")
