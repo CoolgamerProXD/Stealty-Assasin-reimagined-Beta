@@ -195,6 +195,15 @@ jobs:
           CC0_RIG_SCREENSHOT_DIR="$GITHUB_WORKSPACE/assignment008-visual-acceptance" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 240 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/cc0_rig_pose_test.gd 2>&1 | tee "$RUNNER_TEMP/cc0-rig.log"
           test_status=${PIPESTATUS[0]}
           set -e
+          python3 - "$RUNNER_TEMP/cc0-rig.log" <<'PYCODE'
+          import pathlib, re, sys
+          lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()
+          important = [line for line in lines if re.search(r"^CC0 RIG (FAIL|RESULT|CAPTURE):|SCRIPT ERROR|ERROR:", line)]
+          if not important:
+              important = lines[-30:] or ["CC0 rig test produced no log output"]
+          text = " | ".join(important[-35:]).replace("%", "%25").replace("\\r", "%0D").replace("\\n", "%0A")
+          print(f"::notice title=CC0 rig runtime diagnostics::{text}")
+          PYCODE
           if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^CC0 RIG FAIL:' "$RUNNER_TEMP/cc0-rig.log"; then exit 1; fi
           grep -E '^CC0 RIG RESULT: [0-9]+ checks, 0 failures; 6 current-build rig views staged$' "$RUNNER_TEMP/cc0-rig.log"
       - name: Verify Assignment 008 full-resolution capture
