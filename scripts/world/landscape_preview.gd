@@ -87,13 +87,14 @@ func _build_city_block_facade(x: float, z: float, height: float, wall: Color) ->
  var frame := wall.darkened(0.42)
  var sill := wall.lightened(0.12)
  var facade_windows := 0
+ var glass: Color = glass_palette[0]
  var levels: Array[float] = [2.05,4.35,6.65,8.95]
  for level_index: int in range(levels.size()):
   var y: float = levels[level_index]
   if y + 0.72 >= height: continue
   for bay_index: int in range(3):
    var offset: float = [-2.85,0.0,2.85][bay_index]
-   var glass: Color = glass_palette[(bay_index+level_index+int(absf(x+z))%4)%glass_palette.size()]
+   glass = glass_palette[(bay_index+level_index+int(absf(x+z))%4)%glass_palette.size()]
    if operation == "the_district" and level_index % 2 == 0:
     glass = Color(0.24,0.43,0.47)
    elif operation == "the_harbour":
