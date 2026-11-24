@@ -379,7 +379,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  var store_label := "JADE LEAF  /  TEA & HERBS" if operation_id == "the_streets" else ("MERIDIAN  /  FINANCE DESK" if operation_id == "the_district" else "QUAY  /  FERRY SERVICES")
  _box(Vector3(facade_x+side*0.18,3.02,z),Vector3(0.16,0.48,4.8),dark)
  var fascia_light := _box(Vector3(facade_x+side*0.275,3.02,z),Vector3(0.035,0.30,4.4),accent)
- fascia_light.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ (fascia_light.get_child(0) as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  var sign := Label3D.new()
  sign.name = "StorefrontTradeSign"
  sign.text = store_label
