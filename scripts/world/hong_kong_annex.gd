@@ -347,6 +347,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  for hinge: float in [-1.0,1.0]:
   var leaf := _box(Vector3(facade_x-side*0.48,1.15,z+hinge*0.50),Vector3(0.08,2.28,0.92),wall.darkened(0.14))
   leaf.name = "StorefrontDoorLeaf"
+  leaf.add_to_group("district_storefront_door_leaf")
   leaf.rotation.y = side*PI*0.5
   _box(Vector3(facade_x-side*0.54,1.18,z+hinge*0.08),Vector3(0.035,0.14,0.035),Color(0.78,0.63,0.36))
  var threshold := _box(Vector3(facade_x,0.06,z),Vector3(0.65,0.12,2.25),paving_color(operation_id),false)
@@ -382,6 +383,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  (fascia_light.get_child(0) as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  var sign := Label3D.new()
  sign.name = "StorefrontTradeSign"
+ sign.add_to_group("district_storefront_sign")
  sign.text = store_label
  sign.position = Vector3(facade_x+side*0.32,3.05,z)
  sign.rotation.y = -side*PI*0.5
@@ -398,6 +400,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
 func _glass(pos: Vector3, size: Vector3, tint: Color) -> void:
  var holder := _box(pos,size,tint)
  holder.name = "StorefrontGlazing"
+ holder.add_to_group("district_storefront_glazing")
  var glass := StandardMaterial3D.new()
  glass.albedo_color = tint
  glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

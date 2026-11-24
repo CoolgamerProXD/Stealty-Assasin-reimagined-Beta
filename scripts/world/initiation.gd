@@ -122,6 +122,7 @@ func _build_environment() -> void:
 func _place_waiting_chair(at: Vector3, yaw: float) -> void:
  var placement := Node3D.new()
  placement.name = "AssessmentWaitingChairPlacement"
+ placement.add_to_group("assessment_waiting_chair")
  placement.position = at
  placement.rotation.y = yaw
  add_child(placement)
@@ -133,6 +134,7 @@ func _place_waiting_chair(at: Vector3, yaw: float) -> void:
 func _wayfinding(text: String, at: Vector3, yaw: float) -> void:
  var sign := Label3D.new()
  sign.name = "AssessmentWayfindingSign"
+ sign.add_to_group("assessment_wayfinding")
  sign.text = text
  sign.position = at
  sign.rotation.y = yaw
