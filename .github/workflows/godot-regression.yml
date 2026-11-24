@@ -186,7 +186,18 @@ jobs:
           set -e
           if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^A008 FAIL:' "$RUNNER_TEMP/assignment008-visual.log"; then exit 1; fi
           grep -E '^A008 RESULT: [0-9]+ checks, 0 failures; 18 current-build views staged$' "$RUNNER_TEMP/assignment008-visual.log"
-      - name: Verify Assignment 008 full-resolution manifest
+      - name: CC0 eight-model rig poses and native-resolution captures
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          CC0_RIG_SCREENSHOT_DIR="$GITHUB_WORKSPACE/assignment008-visual-acceptance" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 240 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/cc0_rig_pose_test.gd 2>&1 | tee "$RUNNER_TEMP/cc0-rig.log"
+          test_status=${PIPESTATUS[0]}
+          set -e
+          if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^CC0 RIG FAIL:' "$RUNNER_TEMP/cc0-rig.log"; then exit 1; fi
+          grep -E '^CC0 RIG RESULT: [0-9]+ checks, 0 failures; 6 current-build rig views staged$' "$RUNNER_TEMP/cc0-rig.log"
+      - name: Verify Assignment 008 full-resolution capture
         if: always()
         shell: bash
         run: |

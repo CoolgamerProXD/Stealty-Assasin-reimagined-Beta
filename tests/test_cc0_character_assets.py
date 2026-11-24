@@ -35,6 +35,56 @@ def read_glb(path: Path):
 
 
 class Cc0CharacterAssetTests(unittest.TestCase):
+    def test_every_skin_uses_the_same_valid_joint_hierarchy_and_normalized_weights(self):
+        baseline = None
+        for name in MODELS:
+            with self.subTest(model=name):
+                document, chunks = read_glb(ASSET_DIR / f"{name}.glb")
+                binary = next(chunk for kind, chunk in chunks if kind == 0x004E4942)
+                parent = {}
+                for node_index, node in enumerate(document["nodes"]):
+                    for child_index in node.get("children", []):
+                        parent[child_index] = node_index
+                skins = document["skins"]
+                reference_joints = skins[0]["joints"]
+                joint_names = tuple(document["nodes"][index]["name"] for index in reference_joints)
+                hierarchy = tuple(
+                    (document["nodes"][index]["name"], document["nodes"][parent[index]]["name"] if index in parent else None)
+                    for index in reference_joints
+                )
+                if baseline is None:
+                    baseline = (joint_names, hierarchy)
+                self.assertEqual((joint_names, hierarchy), baseline, "all playable variants must preserve the same named rig topology")
+                for skin in skins:
+                    self.assertEqual(tuple(document["nodes"][index]["name"] for index in skin["joints"]), joint_names)
+                    accessor = document["accessors"][skin["inverseBindMatrices"]]
+                    self.assertEqual(accessor["count"], len(joint_names))
+                joint_limit = len(joint_names)
+                for node in document["nodes"]:
+                    if "skin" not in node:
+                        continue
+                    primitive = document["meshes"][node["mesh"]]["primitives"][0]
+                    attributes = primitive["attributes"]
+                    self.assertIn("JOINTS_0", attributes)
+                    self.assertIn("WEIGHTS_0", attributes)
+                    joint_accessor = document["accessors"][attributes["JOINTS_0"]]
+                    weight_accessor = document["accessors"][attributes["WEIGHTS_0"]]
+                    self.assertEqual(joint_accessor["count"], weight_accessor["count"])
+                    self.assertEqual(joint_accessor["type"], "VEC4")
+                    self.assertEqual(weight_accessor["type"], "VEC4")
+                    joint_view = document["bufferViews"][joint_accessor["bufferView"]]
+                    weight_view = document["bufferViews"][weight_accessor["bufferView"]]
+                    joint_start = joint_view.get("byteOffset", 0) + joint_accessor.get("byteOffset", 0)
+                    weight_start = weight_view.get("byteOffset", 0) + weight_accessor.get("byteOffset", 0)
+                    joint_stride = joint_view.get("byteStride", 4)
+                    weight_stride = weight_view.get("byteStride", 16)
+                    for vertex in range(joint_accessor["count"]):
+                        indices = struct.unpack_from("<4B", binary, joint_start + vertex * joint_stride)
+                        weights = struct.unpack_from("<4f", binary, weight_start + vertex * weight_stride)
+                        self.assertTrue(all(index < joint_limit for index in indices))
+                        self.assertAlmostEqual(sum(weights), 1.0, delta=0.002)
+                        self.assertTrue(all(weight >= 0.0 for weight in weights))
+
     def test_all_eight_converted_skinned_models_have_png_and_no_optional_compression(self):
         digests = set()
         for name in MODELS:

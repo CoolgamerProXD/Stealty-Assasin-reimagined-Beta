@@ -323,8 +323,10 @@ func _animate_cc0_rig(swing: float, gait: float, blend: float) -> void:
  var seated_pose := seated_blend
  _set_cc0_bone("upperleg01.L", Vector3.RIGHT, swing * 0.52 + crouch_pose + seated_pose * 0.9, blend)
  _set_cc0_bone("upperleg01.R", Vector3.RIGHT, -swing * 0.52 + crouch_pose + seated_pose * 0.9, blend)
- _set_cc0_bone("lowerleg01.L", Vector3.RIGHT, maxf(0.0, -swing) * 0.7 + seated_pose * 0.75, blend)
- _set_cc0_bone("lowerleg01.R", Vector3.RIGHT, maxf(0.0, swing) * 0.7 + seated_pose * 0.75, blend)
+ # Flex the knee as the pelvis lowers. Without this second joint the imported
+ # mesh kept a straight shin while the procedural fallback visibly crouched.
+ _set_cc0_bone("lowerleg01.L", Vector3.RIGHT, maxf(0.0, -swing) * 0.7 + crouch_pose * 0.95 + seated_pose * 0.75, blend)
+ _set_cc0_bone("lowerleg01.R", Vector3.RIGHT, maxf(0.0, swing) * 0.7 + crouch_pose * 0.95 + seated_pose * 0.75, blend)
  var arm_swing := minf(gait * 0.12, 0.42)
  var gesture := 0.0
  if idle_activity == "warning": gesture = 0.75
@@ -335,7 +337,12 @@ func _animate_cc0_rig(swing: float, gait: float, blend: float) -> void:
  _set_cc0_bone("upperarm01.R", Vector3.RIGHT, arm_swing - weapon_aim_blend * 0.85, blend)
  _set_cc0_bone("lowerarm01.L", Vector3.RIGHT, gesture * 0.45, blend)
  _set_cc0_bone("lowerarm01.R", Vector3.RIGHT, weapon_aim_blend * 0.7, blend)
- _set_cc0_bone("spine03", Vector3.RIGHT, -0.05 * clampf(gait / 3.0, 0.0, 1.0) - crouch_pose * 0.22, blend)
+ _set_cc0_bone("spine03", Vector3.RIGHT, -0.05 * clampf(gait / 3.0, 0.0, 1.0) - crouch_pose * 0.22 - seated_pose * 0.10, blend)
+ _set_cc0_bone("spine04", Vector3.RIGHT, -crouch_pose * 0.12 - seated_pose * 0.06, blend)
+ # CC0 meshes are siblings of the procedural fallback, so moving UpperBody
+ # alone never changed their pelvis height. Match the shared stance offsets on
+ # the imported model itself; the articulated knees/shins form the new pose.
+ cc0_model.position.y = -0.30 * crouch_amount - 0.42 * seated_pose
 
 func _build_cc0_neutral_pose() -> void:
  if cc0_skeleton == null: return
@@ -376,7 +383,13 @@ func _align_cc0_segment(parent_name: String, child_name: String, desired_directi
  if current_direction.length_squared() < 0.000001: return
  var target_direction := desired_direction
  if parent_name.begins_with("upperarm01."):
-  target_direction = Vector3(signf(current_direction.x) * 0.32, -0.95, 0.0)
+  # Resolve laterality from the joint name, not the floating-point sign of a
+  # bind-pose vector. This keeps the target shoulder direction consistent even
+  # if a model's imported bind transforms contain tiny per-asset differences.
+  # In these source rigs L is +X and R is -X.
+  var side := parent_name.get_slice(".", 1)
+  var lateral_sign := 1.0 if side == "L" else -1.0
+  target_direction = Vector3(lateral_sign * 0.32, -0.95, 0.0)
  if target_direction.length_squared() < 0.000001: return
  var global_delta := Quaternion(current_direction.normalized(), target_direction.normalized())
  var frame := parent_transform.basis.orthonormalized().get_rotation_quaternion()
@@ -567,10 +580,12 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
- _animate_cc0_rig(swing, gait_speed, blend)
- # A simple seated pose supports passenger idles without changing the player
- # rig or requiring a second skeletal-animation path.
+ # Advance the stance blend before posing the imported skeleton so the first
+ # transition frame is identical for the procedural and CC0 rigs.
  seated_blend = move_toward(seated_blend, 1.0 if seated else 0.0, delta * 4.5)
+ _animate_cc0_rig(swing, gait_speed, blend)
+ # The procedural fallback keeps its own pose path; imported meshes use the
+ # same seated blend above, including a matching pelvis-height offset.
  if seated_blend > 0.001:
   upper_body.position.y = lerpf(upper_body.position.y,-0.42,seated_blend)
   left_leg.position.y = lerpf(left_leg.position.y,0.48,seated_blend)
