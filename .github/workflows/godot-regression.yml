@@ -261,7 +261,7 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual", "assignment008-visual"):
+          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual", "assignment008-visual", "cc0-rig"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
@@ -272,8 +272,8 @@ jobs:
                   selected = failures + errors[:12] + errors[-12:]
                   if len(errors) > 24:
                       selected.append(f"ERROR SUMMARY: {len(errors)} total; only first/last 12 shown")
-              elif name in ("tests", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual", "assignment008-visual"):
-                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^A006 POSE:|^A006 RESULT:|^A006 FAIL:|^A008 POSE:|^A008 RESULT:|^A008 FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
+              elif name in ("tests", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual", "assignment008-visual", "cc0-rig"):
+                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^A006 POSE:|^A006 RESULT:|^A006 FAIL:|^A008 POSE:|^A008 RESULT:|^A008 FAIL:|^CC0 RIG (FAIL|RESULT|CAPTURE):|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -320,6 +320,19 @@ jobs:
               for index in range(0, len(encoded), 3000):
                   title = path.stem.replace("_preview", "")
                   print(f"::notice title=a006_{title}_{index // 3000}::{encoded[index:index + 3000]}")
+          PYCODE
+      - name: Preview CC0 rig review views
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          paths = sorted(pathlib.Path("assignment008-visual-acceptance").glob("cc0_*_preview.jpg"))
+          for path in paths:
+              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+              for index in range(0, len(encoded), 3000):
+                  title = path.stem.replace("_preview", "")
+                  print(f"::notice title={title}_{index // 3000}::{encoded[index:index + 3000]}")
           PYCODE
 
   visual-review:

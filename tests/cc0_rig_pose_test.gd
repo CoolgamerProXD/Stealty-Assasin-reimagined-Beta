@@ -122,6 +122,10 @@ func _capture(name: String) -> void:
 		return
 	var path := output_dir.path_join(name + ".png")
 	check(image.save_png(path) == OK, name + " saved as lossless PNG")
+	var preview := image.duplicate() as Image
+	preview.resize(320, 180, Image.INTERPOLATE_LANCZOS)
+	var preview_path := output_dir.path_join(name + "_preview.jpg")
+	check(preview.save_jpg(preview_path, 0.72) == OK, name + " produced a review thumbnail")
 	print("CC0 RIG CAPTURE: ", path, " [1280x720]")
 
 

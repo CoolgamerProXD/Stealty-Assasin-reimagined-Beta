@@ -34,6 +34,7 @@ var idle_activity: String = "idle"
 var seated: bool = false
 var seated_blend: float = 0.0
 var ground_adjust: float = 0.0
+var cc0_stance_offset: float = 0.0
 var clothing: StandardMaterial3D
 var trousers_material: StandardMaterial3D
 var outfit_id: String = "civilian"
@@ -342,7 +343,8 @@ func _animate_cc0_rig(swing: float, gait: float, blend: float) -> void:
  # CC0 meshes are siblings of the procedural fallback, so moving UpperBody
  # alone never changed their pelvis height. Match the shared stance offsets on
  # the imported model itself; the articulated knees/shins form the new pose.
- cc0_model.position.y = -0.30 * crouch_amount - 0.42 * seated_pose
+ cc0_stance_offset = lerpf(cc0_stance_offset,-0.30*crouch_amount-0.42*seated_pose,blend)
+ cc0_model.position.y = cc0_stance_offset
 
 func _build_cc0_neutral_pose() -> void:
  if cc0_skeleton == null: return

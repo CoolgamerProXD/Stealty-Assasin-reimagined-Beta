@@ -427,6 +427,52 @@ func _city() -> void:
   _attach_city_district("the_streets")
   _attach_city_district("the_district")
   _attach_city_district("the_harbour")
+ if op in ["the_harbour", "hong_kong_sandbox"]:
+  _harbour_waterfront()
+
+# Give the harbour operation a real waterfront horizon: layered water, a
+# working-ferry silhouette, distant tower clusters and low island forms. All
+# added details stay beyond the playable boundary and are batched as accents.
+func _harbour_waterfront() -> void:
+ var first_detail := accents.size()
+ _accent(Vector3(0.0,-0.20,-73.0),Vector3(180.0,0.16,70.0),Color(0.12,0.29,0.35))
+ for row: int in range(7):
+  var z := -54.0-float(row)*7.2
+  var phase := float(row%3)*4.5
+  for segment: int in range(5):
+   var x := -64.0+float(segment)*29.0+phase
+   _accent(Vector3(x,-0.105,z),Vector3(15.0+float((row+segment)%3)*3.0,0.025,0.07),Color(0.25,0.45,0.48) if row%2==0 else Color(0.18,0.37,0.42))
+ # A restrained two-deck ferry anchors scale on the water without adding a
+ # moving obstacle or changing the mission's walkable footprint.
+ _accent(Vector3(16.0,0.25,-68.0),Vector3(11.0,0.85,3.6),Color(0.72,0.71,0.63))
+ _accent(Vector3(16.0,0.87,-68.1),Vector3(5.4,1.05,2.7),Color(0.80,0.78,0.68))
+ _accent(Vector3(16.0,1.0,-66.72),Vector3(4.8,0.48,0.035),Color(0.19,0.39,0.43))
+ _accent(Vector3(16.0,1.0,-69.47),Vector3(4.8,0.48,0.035),Color(0.19,0.39,0.43))
+ _accent(Vector3(16.0,0.12,-68.0),Vector3(8.5,0.10,3.15),Color(0.69,0.18,0.14))
+ for x: float in [13.9,15.3,16.7,18.1]:
+  _accent(Vector3(x,1.12,-66.68),Vector3(0.85,0.43,0.035),Color(0.24,0.44,0.48))
+ # Distant high-rise silhouettes add the dense vertical cadence of a harbour
+ # skyline while keeping their windows broad enough to read at play distance.
+ for tower: int in range(11):
+  var x := -70.0+float(tower)*14.0
+  var height := 18.0+float((tower*13)%8)*4.2
+  var width := 8.5+float(tower%3)*2.0
+  var wall := Color(0.20,0.30,0.34).lightened(float(tower%3)*0.025)
+  _accent(Vector3(x,height*0.5,-103.0),Vector3(width,height,5.0),wall)
+  _accent(Vector3(x,height+0.18,-103.0),Vector3(width+0.5,0.32,5.5),Color(0.25,0.34,0.37))
+  for floor_index: int in range(1,int(height/4.2)):
+   var window_y := 1.8+float(floor_index)*4.2
+   for pane: float in [-width*0.28,0.0,width*0.28]:
+    var warm := (tower+floor_index+int(absf(pane)))%5==0
+    _accent(Vector3(x+pane,window_y,-100.42),Vector3(1.55,1.65,0.07),Color(0.70,0.57,0.38) if warm else Color(0.29,0.47,0.51))
+  if tower%3==1:
+   _accent(Vector3(x,height+1.0,-103.0),Vector3(1.0,1.8,0.8),Color(0.20,0.28,0.31))
+ # The ridgeline is deliberately low and softened so the towers remain the
+ # focal distance; it frames rather than competes with the original city.
+ for index: int in range(5):
+  var x := -72.0+float(index)*36.0
+  _peak(Vector3(x,-1.5,-116.0),18.0+float(index%2)*5.0,18.0+float(index%3)*4.0,Color(0.20,0.31,0.33))
+ set_meta("harbour_waterfront_detail_count",accents.size()-first_detail)
 
 func _attach_city_district(district_id: String) -> void:
  var annex := preload("res://scripts/world/hong_kong_annex.gd").new()

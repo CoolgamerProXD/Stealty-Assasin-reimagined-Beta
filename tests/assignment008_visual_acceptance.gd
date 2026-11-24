@@ -316,6 +316,12 @@ func run() -> void:
 	await _capture("08_hong_kong_commercial_district")
 	_camera(Vector3(0, 10, -54), Vector3(0, 5, -79), 62.0)
 	await _capture("09_hong_kong_harbour_skyline")
+	var harbour_scene := world.get("scene") as Node3D
+	check(
+		harbour_scene != null
+		and int(harbour_scene.get_meta("harbour_waterfront_detail_count", 0)) >= 200,
+		"harbour view builds the water, ferry, skyline and ridgeline detail layer"
+	)
 	var city_player := world.get("player") as HotelPlayer
 	var city_npcs: Array = world.get("npc_list")
 	if city_player and city_npcs.size() > 0:
