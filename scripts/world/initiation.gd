@@ -1,5 +1,6 @@
 extends "res://scripts/world/hotel.gd"
 ## The fictional Civic Evaluation Annex uses the existing player, NPC and interactions.
+const WAITING_CHAIR := preload("res://assets/kenney_furniture/chairCushion.glb")
 var robot: Interactable
 var patrol_clock: float = 0.0
 var robot_alert: bool = false
@@ -43,10 +44,43 @@ func _build_environment() -> void:
   _box(Vector3(boundary, 1.5, -7), Vector3(0.2, 3, 6), Color(0.38, 0.42, 0.42))
   _box(Vector3(boundary, 1.5, 0), Vector3(0.2, 3, 4), Color(0.38, 0.42, 0.42))
   _box(Vector3(boundary, 1.5, 7), Vector3(0.2, 3, 6), Color(0.38, 0.42, 0.42))
+  # Cased portal returns, protected corners and low egress strips make the two
+  # routes legible without reducing the tested 1.3 m clear passage width.
+  for portal_z: float in [-3.65,-2.35,2.35,3.65]: _box(Vector3(boundary,1.48,portal_z),Vector3(0.16,2.96,0.10),Color(0.29,0.37,0.37),false)
+  for portal_center: float in [-3.0,3.0]:
+   _box(Vector3(boundary,2.99,portal_center),Vector3(0.18,0.12,1.36),Color(0.55,0.66,0.61),false)
+   _box(Vector3(boundary,0.07,portal_center),Vector3(0.26,0.025,1.22),Color(0.79,0.57,0.28),false)
  _box(Vector3(-7, 0.01, 0), Vector3(15, 0.02, 19), Color(0.25, 0.29, 0.30), false)
  _box(Vector3(4.5, 0.01, 0), Vector3(4.5, 0.02, 19), Color(0.29, 0.32, 0.29), false)
  _box(Vector3(11, 0.01, 0), Vector3(7.5, 0.02, 19), Color(0.29, 0.27, 0.24), false)
- # Low-cost visual furnishings; marked records remain accessible.
+ # Reception and waiting: a sign-in counter faces two visitor seats, leaving
+ # the evidence desk and the security route open and readable.
+ _box(Vector3(-11.2,0.50,-7.8),Vector3(4.2,1.0,1.05),Color(0.30,0.24,0.18),false)
+ _box(Vector3(-11.2,1.04,-7.8),Vector3(4.0,0.10,0.96),Color(0.58,0.49,0.35),false)
+ for seat_x: float in [-12.0,-9.4]: _place_waiting_chair(Vector3(seat_x,0.0,0.2),PI)
+ _box(Vector3(-10.0,1.45,-9.76),Vector3(5.2,0.65,0.10),Color(0.15,0.25,0.27),false)
+ _box(Vector3(-10.0,1.48,-9.68),Vector3(4.9,0.48,0.035),Color(0.34,0.48,0.47),false)
+ _wayfinding("CIVIC EVALUATION  /  RECEPTION",Vector3(-10.0,2.1,-9.65),0.0)
+ # Observation console: staff have paired screens, cable wells and a shared
+ # worktop aligned to the sensor-log record, not a generic waiting-room block.
+ _box(Vector3(4.5,0.76,0.95),Vector3(3.8,0.14,1.2),Color(0.23,0.26,0.25),false)
+ for monitor_x: float in [3.45,4.5,5.55]:
+  _box(Vector3(monitor_x,1.30,0.52),Vector3(0.78,0.56,0.08),Color(0.12,0.20,0.22),false)
+  _box(Vector3(monitor_x,1.31,0.47),Vector3(0.67,0.40,0.025),Color(0.20,0.58,0.57),false)
+  _box(Vector3(monitor_x,0.99,0.55),Vector3(0.12,0.14,0.10),Color(0.18,0.25,0.27),false)
+ _box(Vector3(5.92,1.12,0.90),Vector3(0.52,0.44,0.72),Color(0.19,0.27,0.29),false)
+ _wayfinding("OBSERVATION  /  SENSOR LOG",Vector3(4.5,2.55,-9.70),0.0)
+ # Controlled practice bay: replace a bare box with floor mats, a padded
+ # target stand, equipment lockers and painted lane marks; dispatch stays clear.
+ _box(Vector3(11.0,0.035,-2.2),Vector3(6.2,0.05,6.0),Color(0.24,0.29,0.29),false)
+ for lane_x: float in [9.0,11.0,13.0]: _box(Vector3(lane_x,0.07,-2.2),Vector3(0.05,0.018,5.2),Color(0.72,0.68,0.52),false)
+ _box(Vector3(13.3,1.2,-7.7),Vector3(1.8,2.4,0.34),Color(0.23,0.29,0.29),false)
+ _box(Vector3(13.3,1.2,-7.48),Vector3(1.54,1.75,0.06),Color(0.72,0.58,0.40),false)
+ for edge: float in [-0.48,0.48]: _box(Vector3(13.3+edge,1.22,-7.40),Vector3(0.045,1.4,0.035),Color(0.84,0.75,0.55),false)
+ _box(Vector3(13.3,0.9,-7.34),Vector3(0.10,0.10,0.03),Color(0.72,0.24,0.16),false)
+ _box(Vector3(8.8,0.65,7.8),Vector3(2.2,1.3,0.75),Color(0.26,0.29,0.27),false)
+ _wayfinding("CONTROLLED PRACTICE  /  DISPATCH",Vector3(11.0,2.5,-9.70),0.0)
+ # Legacy equipment and evidence surfaces remain in their original locations.
  _box(Vector3(-10, 0.45, -7), Vector3(3, 0.9, 1), Color(0.30, 0.27, 0.23), false)
  _box(Vector3(4.5, 0.45, -7), Vector3(2, 0.9, 1), Color(0.28, 0.32, 0.32), false)
  _box(Vector3(10, 0.45, 7), Vector3(3, 0.9, 1), Color(0.32, 0.30, 0.25), false)
@@ -54,6 +88,18 @@ func _build_environment() -> void:
  for x: float in [-10.0, -3.0, 4.5, 10.5]:
   _box(Vector3(x, 2.95, 0), Vector3(1.5, 0.06, 0.22), Color(0.75, 0.88, 0.86), false)
   _box(Vector3(x, 1.6, -9.83), Vector3(1.6, 0.8, 0.04), Color(0.14, 0.25, 0.27), false)
+ # Ceiling service spines and paired luminous diffusers follow the room axes;
+ # vents, access hatches and wall-base protection anchor the scale.
+ for hall_x: float in [-10.0,-3.0,4.5,10.5]:
+  _box(Vector3(hall_x,2.88,0),Vector3(0.16,0.18,17.2),Color(0.19,0.25,0.26),false)
+  for light_z: float in [-5.8,0.0,5.8]:
+   _box(Vector3(hall_x,2.79,light_z),Vector3(1.15,0.07,2.7),Color(0.76,0.83,0.77),false)
+   _box(Vector3(hall_x,2.70,light_z-1.38),Vector3(1.35,0.07,0.08),Color(0.32,0.40,0.39),false)
+  _box(Vector3(hall_x+2.5,2.60,-7.0),Vector3(0.58,0.28,1.25),Color(0.27,0.35,0.35),false)
+  _box(Vector3(hall_x+2.5,2.43,-7.0),Vector3(0.42,0.035,0.82),Color(0.54,0.63,0.58),false)
+ for wall_x: float in [-14.82,-0.12,2.12,6.88,14.82]:
+  _box(Vector3(wall_x,0.16,0),Vector3(0.08,0.25,18.9),Color(0.25,0.34,0.34),false)
+  _box(Vector3(wall_x,2.96,0),Vector3(0.12,0.13,18.9),Color(0.34,0.40,0.39),false)
  for boundary: float in [2.0, 7.0]:
   for z: float in [-3.0, 3.0]:
    _box(Vector3(boundary, 2.85, z), Vector3(0.3, 0.3, 2), Color(0.24, 0.29, 0.30), false)
@@ -72,6 +118,28 @@ func _build_environment() -> void:
    nav.add_polygon(PackedInt32Array([a, a + xs.size(), a + xs.size() + 1, a + 1]))
  region.navigation_mesh = nav
  add_child(region)
+
+func _place_waiting_chair(at: Vector3, yaw: float) -> void:
+ var placement := Node3D.new()
+ placement.name = "AssessmentWaitingChairPlacement"
+ placement.position = at
+ placement.rotation.y = yaw
+ add_child(placement)
+ var chair := WAITING_CHAIR.instantiate() as Node3D
+ chair.scale = Vector3(1.25,1.25,1.25)
+ chair.position = Vector3(-0.10,0.0,0.10)*chair.scale
+ placement.add_child(chair)
+
+func _wayfinding(text: String, at: Vector3, yaw: float) -> void:
+ var sign := Label3D.new()
+ sign.name = "AssessmentWayfindingSign"
+ sign.text = text
+ sign.position = at
+ sign.rotation.y = yaw
+ sign.font_size = 20
+ sign.pixel_size = 0.004
+ sign.modulate = Color(0.83,0.86,0.78)
+ add_child(sign)
 
 func _build_player() -> void:
  super._build_player()

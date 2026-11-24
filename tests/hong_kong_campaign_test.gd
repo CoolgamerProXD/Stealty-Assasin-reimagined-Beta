@@ -166,6 +166,23 @@ func run() -> void:
  check(awareness_guard.state == "warning" and is_equal_approx(awareness_guard.warning_remaining,0.5), "visible sidearm warning uses the short 0.5-second threshold")
  awareness_guard.queue_free()
 
+ # Initiation's rooms are dressed as different civic spaces while the three
+ # clue coordinates and tested player routes remain unchanged.
+ service.active_mission = "initiation"
+ var assessment := load("res://scenes/initiation.tscn").instantiate() as Node3D
+ root.add_child(assessment)
+ await process_frame
+ var assessment_floor := assessment.find_child("AssessmentHallStructuralFloor",true,false)
+ var floor_mesh := assessment_floor.get_child(0) as MeshInstance3D if assessment_floor else null
+ var floor_finish := floor_mesh.material_override as StandardMaterial3D if floor_mesh else null
+ check(floor_finish != null and floor_finish.albedo_texture != null and assessment.find_children("AssessmentWayfindingSign","Label3D",true,false).size() >= 3,"Initiation has textured durable hall flooring and wayfinding for its distinct rooms")
+ var practice_sign_visible := false
+ for sign: Label3D in assessment.find_children("AssessmentWayfindingSign","Label3D",true,false):
+  if sign.text.contains("CONTROLLED PRACTICE"): practice_sign_visible = true
+ check(assessment.find_children("AssessmentWaitingChairPlacement","Node3D",true,false).size() >= 2 and practice_sign_visible,"Initiation's assessment and controlled-practice zones use specific furnishings and operational wayfinding")
+ assessment.queue_free()
+ await process_frame
+
  # Tung Chung has two distinct, explicitly completable targets. Talking to
  # either actor or incapacitating them must not satisfy either objective or
  # award the physically carried key.

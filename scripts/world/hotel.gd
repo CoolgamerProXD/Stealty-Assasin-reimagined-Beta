@@ -107,6 +107,14 @@ func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void
  var visual := MeshInstance3D.new()
  visual.mesh = box_meshes[size]
  visual.material_override = box_materials[color]
+ # Assignment's purpose-built areas use durable, authored surface finishes;
+ # the three inlaid floor zones communicate waiting, observation and training.
+ if mission_id() == "initiation" and is_equal_approx(pos.y,-0.15) and is_equal_approx(size.y,0.3) and is_equal_approx(size.x,30.0):
+  holder.name = "AssessmentHallStructuralFloor"
+  visual.material_override = StationMaterials.material(color,"concrete")
+ elif mission_id() == "initiation" and is_equal_approx(pos.y,0.01) and is_equal_approx(size.y,0.02):
+  var finish := "terrazzo" if pos.x < 0.0 else ("rubber" if pos.x > 8.0 else "tile")
+  visual.material_override = StationMaterials.material(color,finish)
  # Apply the finish only to Meridian's floor slabs, never to Initiation.
  if mission_id() == "meridian" and is_equal_approx(size.y, 0.3) and size.x >= 13.0 and (is_equal_approx(pos.y,-0.15) or is_equal_approx(pos.y,3.45)):
   if floor_finish == null:
