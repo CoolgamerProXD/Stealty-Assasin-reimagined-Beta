@@ -81,29 +81,31 @@ func _flush_canopies() -> void:
 # A compact, four-sided facade system keeps the city readable when the camera
 # turns. Shallow, non-colliding bays sit on the solid building shell; they are
 # architectural openings and framing, not false doors or extra walkable space.
+func _city_facade_glass(operation: String, level_index: int, bay_index: int, x: float, z: float) -> Color:
+ var glass_palette: Array[Color] = [Color(0.14,0.29,0.34),Color(0.20,0.37,0.41),Color(0.28,0.40,0.41),Color(0.34,0.39,0.38)]
+ var tint: Color = glass_palette[(bay_index+level_index+int(absf(x+z))%4)%glass_palette.size()]
+ if operation == "the_district" and level_index % 2 == 0:
+  tint = Color(0.24,0.43,0.47)
+ elif operation == "the_harbour":
+  tint = Color(0.25,0.46,0.49) if level_index % 2 == 0 else Color(0.17,0.34,0.39)
+ return tint
+
 func _build_city_block_facade(x: float, z: float, height: float, wall: Color) -> void:
  var operation := str(get_meta("operation_id", ""))
- var glass_palette: Array[Color] = [Color(0.14,0.29,0.34),Color(0.20,0.37,0.41),Color(0.28,0.40,0.41),Color(0.34,0.39,0.38)]
  var frame := wall.darkened(0.42)
  var sill := wall.lightened(0.12)
  var facade_windows := 0
- var glass: Color = glass_palette[0]
  var levels: Array[float] = [2.05,4.35,6.65,8.95]
  for level_index: int in range(levels.size()):
   var y: float = levels[level_index]
   if y + 0.72 >= height: continue
   for bay_index: int in range(3):
    var offset: float = [-2.85,0.0,2.85][bay_index]
-   glass = glass_palette[(bay_index+level_index+int(absf(x+z))%4)%glass_palette.size()]
-   if operation == "the_district" and level_index % 2 == 0:
-    glass = Color(0.24,0.43,0.47)
-   elif operation == "the_harbour":
-    glass = Color(0.25,0.46,0.49) if level_index % 2 == 0 else Color(0.17,0.34,0.39)
    # Side street facades on both X ends.
    for side: float in [-1.0,1.0]:
     var face_x: float = x + side*5.035
     var pane_z: float = z + offset
-    _accent(Vector3(face_x,y,pane_z),Vector3(0.07,1.38,1.68),glass)
+    _accent(Vector3(face_x,y,pane_z),Vector3(0.07,1.38,1.68),_city_facade_glass(operation,level_index,bay_index,x,z))
     _accent(Vector3(face_x+side*0.055,y,pane_z-0.88),Vector3(0.10,1.50,0.08),frame)
     _accent(Vector3(face_x+side*0.055,y,pane_z+0.88),Vector3(0.10,1.50,0.08),frame)
     _accent(Vector3(face_x+side*0.06,y-0.75,pane_z),Vector3(0.16,0.09,1.82),sill)
@@ -116,7 +118,7 @@ func _build_city_block_facade(x: float, z: float, height: float, wall: Color) ->
     if side > 0.0 and level_index == 0: continue
     var face_z: float = z + side*4.535
     var pane_x: float = x + offset
-    _accent(Vector3(pane_x,y,face_z),Vector3(1.68,1.38,0.07),glass)
+    _accent(Vector3(pane_x,y,face_z),Vector3(1.68,1.38,0.07),_city_facade_glass(operation,level_index,bay_index,x,z))
     _accent(Vector3(pane_x-0.88,y,face_z+side*0.055),Vector3(0.08,1.50,0.10),frame)
     _accent(Vector3(pane_x+0.88,y,face_z+side*0.055),Vector3(0.08,1.50,0.10),frame)
     _accent(Vector3(pane_x,y-0.75,face_z+side*0.06),Vector3(1.82,0.09,0.16),sill)
