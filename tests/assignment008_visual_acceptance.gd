@@ -314,7 +314,7 @@ func run() -> void:
 	await _capture("07_hong_kong_streets")
 	_camera(Vector3(58, 5.0, -3), Vector3(63, 1.0, -17), 62.0)
 	await _capture("08_hong_kong_commercial_district")
-	_camera(Vector3(0, 10, -54), Vector3(0, 5, -79), 62.0)
+	_camera(Vector3(0, 5.2, -54), Vector3(0, 5.2, -110), 62.0)
 	await _capture("09_hong_kong_harbour_skyline")
 	var harbour_scene := world.get("scene") as Node3D
 	check(

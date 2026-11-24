@@ -164,8 +164,8 @@ func build() -> void:
   scene.call("_target", identity, "employee" if i == 1 else "civilian", start, finish)
  _sign("MARKET LANES" if market else ("COMMERCIAL QUARTER" if business else "WATERFRONT PROMENADE"),Vector3(0,4,7),PI)
  if not market and not business:
-  # Distant water is an atmospheric backdrop, not explorable terrain.
-  _box(Vector3(0,-0.1,77),Vector3(100,0.15,13),Color(0.15,0.32,0.40))
+  # The shared world renderer supplies the far-water plane beyond this public
+  # promenade, so this annex only frames the accessible edge with a railing.
   for x: float in [-25.0,-15.0,-5.0,5.0,15.0,25.0]:
    _box(Vector3(x,0.9,67.5),Vector3(0.1,1.8,0.1),Color(0.68,0.72,0.67))
   _box(Vector3(0,1.65,67.5),Vector3(60,0.08,0.08),Color(0.68,0.72,0.67))

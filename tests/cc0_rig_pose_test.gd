@@ -16,6 +16,9 @@ const OUTFITS: Array[String] = [
 	"hotel_staff",
 	"maintenance"
 ]
+const OUTFIT_MODELS: Array[String] = [
+	"dale", "rosa", "brad", "gary", "pickles", "ellie", "vance", "dale"
+]
 var checks := 0
 var failures := 0
 var world: Node3D
@@ -191,10 +194,15 @@ func run() -> void:
 		people[index].set_seated(false)
 		people[index].set_outfit(OUTFITS[index])
 	await _settle_all(1.0 / 30.0, 0.0, 40)
-	for person: StylizedPerson in people:
+	for index: int in range(people.size()):
+		var person := people[index]
 		check(
-			person.cc0_model != null,
-			person.cc0_model_name + " remains loaded after a disguise change"
+			person.cc0_model != null and person.cc0_model_name == OUTFIT_MODELS[index],
+			OUTFITS[index] + " resolves to its intended skinned disguise model"
+		)
+		check(
+			person.cc0_skeleton != null and not person.cc0_clothes.is_empty(),
+			OUTFITS[index] + " retains its articulated body and clothing meshes"
 		)
 	await _capture("cc0_8_models_disguise_outfits")
 	# A separate close framing lets reviewers inspect face, shoulders, sleeves,
