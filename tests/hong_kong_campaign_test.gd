@@ -26,7 +26,13 @@ func tag_live_target(world: Node3D, npc: HotelNpc) -> void:
   other.set_physics_process(false)
  player.set_physics_process(false)
  player.set_process_unhandled_input(false)
- player.global_position = npc.global_position + Vector3(0,0,4.0)
+ var operation_id := str(world.get("operation_id"))
+ if operation_id == "tung_chung":
+  # A lateral concourse angle keeps the live passenger actors off the shot ray;
+  # standing directly down the aisle would correctly hit a bystander first.
+  player.global_position = npc.global_position + Vector3(4.0 if npc.global_position.x > 0.0 else -4.0,0,0)
+ else:
+  player.global_position = npc.global_position + Vector3(0,0,4.0)
  player.velocity = Vector3.ZERO
  player.stance_height = 1.8
  player.aiming = true
