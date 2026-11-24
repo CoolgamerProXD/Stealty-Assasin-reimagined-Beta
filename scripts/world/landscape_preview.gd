@@ -92,7 +92,7 @@ func _build_city_block_facade(x: float, z: float, height: float, wall: Color) ->
   var y: float = levels[level_index]
   if y + 0.72 >= height: continue
   for bay_index: int in range(3):
-   var offset := [-2.85,0.0,2.85][bay_index]
+   var offset: float = [-2.85,0.0,2.85][bay_index]
    var glass: Color = glass_palette[(bay_index+level_index+int(absf(x+z))%4)%glass_palette.size()]
    if operation == "the_district" and level_index % 2 == 0:
     glass = Color(0.24,0.43,0.47)
@@ -100,8 +100,8 @@ func _build_city_block_facade(x: float, z: float, height: float, wall: Color) ->
     glass = Color(0.25,0.46,0.49) if level_index % 2 == 0 else Color(0.17,0.34,0.39)
    # Side street facades on both X ends.
    for side: float in [-1.0,1.0]:
-    var face_x := x + side*5.035
-    var pane_z := z+offset
+    var face_x: float = x + side*5.035
+    var pane_z: float = z + offset
     _accent(Vector3(face_x,y,pane_z),Vector3(0.07,1.38,1.68),glass)
     _accent(Vector3(face_x+side*0.055,y,pane_z-0.88),Vector3(0.10,1.50,0.08),frame)
     _accent(Vector3(face_x+side*0.055,y,pane_z+0.88),Vector3(0.10,1.50,0.08),frame)
@@ -113,8 +113,8 @@ func _build_city_block_facade(x: float, z: float, height: float, wall: Color) ->
    # ground floor open for the authored shopfront/entry while upper floors read.
    for side: float in [-1.0,1.0]:
     if side > 0.0 and level_index == 0: continue
-    var face_z := z + side*4.535
-    var pane_x := x+offset
+    var face_z: float = z + side*4.535
+    var pane_x: float = x + offset
     _accent(Vector3(pane_x,y,face_z),Vector3(1.68,1.38,0.07),glass)
     _accent(Vector3(pane_x-0.88,y,face_z+side*0.055),Vector3(0.08,1.50,0.10),frame)
     _accent(Vector3(pane_x+0.88,y,face_z+side*0.055),Vector3(0.08,1.50,0.10),frame)

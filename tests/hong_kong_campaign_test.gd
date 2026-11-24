@@ -80,7 +80,7 @@ func complete_live_operation(service: Node, operation_id: String, target_id: Str
  persisted.configure(JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json")))
  persisted.restore(SaveStore.read(service.campaign_path))
  check(persisted.completed_targets.get(operation_id,[]).has(target_id) and persisted.recovered_keys.has(str(service.progress.mission(operation_id).get("key_id",""))),operation_id + " campaign save independently preserves target ID and physical key")
- var completed := service.complete(operation_id,0)
+ var completed: bool = service.complete(operation_id,0)
  check(completed and service.progress.completed.has(operation_id),operation_id + " extraction prerequisite accepts completed target and physical key")
  world.queue_free()
  await process_frame
