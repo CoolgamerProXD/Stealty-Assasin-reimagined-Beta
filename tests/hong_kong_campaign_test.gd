@@ -175,11 +175,16 @@ func run() -> void:
  var assessment_floor := assessment.find_child("AssessmentHallStructuralFloor",true,false)
  var floor_mesh := assessment_floor.get_child(0) as MeshInstance3D if assessment_floor else null
  var floor_finish := floor_mesh.material_override as StandardMaterial3D if floor_mesh else null
- check(floor_finish != null and floor_finish.albedo_texture != null and assessment.find_children("AssessmentWayfindingSign","Label3D",true,false).size() >= 3,"Initiation has textured durable hall flooring and wayfinding for its distinct rooms")
+ var wayfinding_count := 0
+ var waiting_chair_count := 0
  var practice_sign_visible := false
- for sign: Label3D in assessment.find_children("AssessmentWayfindingSign","Label3D",true,false):
-  if sign.text.contains("CONTROLLED PRACTICE"): practice_sign_visible = true
- check(assessment.find_children("AssessmentWaitingChairPlacement","Node3D",true,false).size() >= 2 and practice_sign_visible,"Initiation's assessment and controlled-practice zones use specific furnishings and operational wayfinding")
+ for candidate: Node in assessment.find_children("*","Node",true,false):
+  if candidate.name.begins_with("AssessmentWayfindingSign"):
+   wayfinding_count += 1
+   if (candidate as Label3D).text.contains("CONTROLLED PRACTICE"): practice_sign_visible = true
+  if candidate.name.begins_with("AssessmentWaitingChairPlacement"): waiting_chair_count += 1
+ check(floor_finish != null and floor_finish.albedo_texture != null and wayfinding_count >= 3,"Initiation has textured durable hall flooring and wayfinding for its distinct rooms")
+ check(waiting_chair_count >= 2 and practice_sign_visible,"Initiation's assessment and controlled-practice zones use specific furnishings and operational wayfinding")
  assessment.queue_free()
  await process_frame
 
@@ -244,10 +249,14 @@ func run() -> void:
  var city: Node3D = world.get("scene")
  check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) == null and city.find_child("District_the_harbour",true,false) == null, "Streets loads its own distinct district without bundling the later operations")
  check(int(city.get_meta("city_facade_bays",0)) >= 150 and city.find_child("DistrictDetails",true,false) != null, "Hong Kong street blocks have articulated four-sided window bays, frames, sills and roof-edge structure")
- var storefront_signs := city.find_children("StorefrontTradeSign","Label3D",true,false)
- var storefront_glazing := city.find_children("StorefrontGlazing","Node3D",true,false)
- var storefront_leaves := city.find_children("StorefrontDoorLeaf","Node3D",true,false)
- check(storefront_signs.size() >= 6 and storefront_glazing.size() >= 12 and storefront_leaves.size() >= 6, "market and commercial blocks build real glazed shopfronts, open doorways, and individually signed trades")
+ var storefront_sign_count := 0
+ var storefront_glazing_count := 0
+ var storefront_leaf_count := 0
+ for candidate: Node in city.find_children("*","Node",true,false):
+  if candidate.name.begins_with("StorefrontTradeSign"): storefront_sign_count += 1
+  elif candidate.name.begins_with("StorefrontGlazing"): storefront_glazing_count += 1
+  elif candidate.name.begins_with("StorefrontDoorLeaf"): storefront_leaf_count += 1
+ check(storefront_sign_count >= 6 and storefront_glazing_count >= 12 and storefront_leaf_count >= 6, "market and commercial blocks build real glazed shopfronts, open doorways, and individually signed trades")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "connected street navigation is instantiated")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
