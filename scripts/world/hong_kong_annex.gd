@@ -254,10 +254,13 @@ func _harbour_tower() -> void:
  scene.call("_target","Executive assistant","employee",to_global(center+Vector3(-3,12.85,-2)),to_global(center+Vector3(-3,12.85,2)))
 
 func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
+ var storefront_side := -1.0 if x > 0.0 else 1.0
  for side: float in [-1.0,1.0]:
   _box(Vector3(x,1.9,z+side*5.0),Vector3(10,3.8,0.2),wall,true)
-  for other: float in [-1.0,1.0]:
-   _box(Vector3(x+side*5,1.9,z+other*3.3),Vector3(0.2,3.8,3.4),wall,true)
+  if side == storefront_side:
+   _build_storefront_wall(x,z,side,wall,accent,dark)
+  else:
+   _box(Vector3(x+side*5,1.9,z),Vector3(0.2,3.8,10),wall,true)
  _box(Vector3(x,3.85,z),Vector3(10,0.2,10),wall.darkened(0.18),true)
  _box(Vector3(x,0.025,z),Vector3(9.7,0.04,9.7),wall.lightened(0.10))
  _box(Vector3(x,0.5,z-3.5),Vector3(4,1,1),dark,true)
@@ -273,10 +276,6 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   else:
    _box(Vector3(x+dx,1.25,z-3.5),Vector3(0.5,0.32,0.5),Color(0.45,0.32,0.21))
    _box(Vector3(x+dx,2.55,z-4.86),Vector3(1.2,0.9,0.04),Color(0.36,0.49,0.52))
- for side: float in [-1.0,1.0]:
-  _box(Vector3(x+side*4.85,3.1,z),Vector3(0.1,0.5,6),accent)
-  for dz: float in [-3.4,3.4]:
-   _box(Vector3(x+side*5.12,2.0,z+dz),Vector3(0.06,1.4,2.0),Color(0.26,0.41,0.43))
  if x == -17.0 and z == 18.0:
   for side: float in [-1.0,1.0]:
    _box(Vector3(x+side*5,5.55,z),Vector3(0.18,3.2,10),wall,true)
@@ -325,6 +324,92 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
  room_region.navigation_mesh = room_nav
  add_child(room_region)
  _sign("TEA / MARKET" if operation_id == "the_streets" else ("OFFICE / RECORDS" if operation_id == "the_district" else "PIER / SERVICES"),Vector3(x,2.7,z+4.86))
+
+func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent: Color, dark: Color) -> void:
+ var facade_x := x+side*5.0
+ # Solid plinth and transom leave two real glazed shop bays and a clear entry.
+ _box(Vector3(facade_x,0.32,z),Vector3(0.20,0.64,10.0),wall,true)
+ _box(Vector3(facade_x,3.22,z),Vector3(0.20,1.16,10.0),wall,true)
+ for pier_z: float in [-4.4,4.4]: _box(Vector3(facade_x,1.82,z+pier_z),Vector3(0.20,2.36,1.2),wall,true)
+ for pier_z: float in [-1.25,1.25]: _box(Vector3(facade_x,1.82,z+pier_z),Vector3(0.20,2.36,0.50),wall,true)
+ # The windows occupy actual holes in the shell: opaque facades no longer mask
+ # the interior fitout, and the doorway is a continuous walk-through opening.
+ var glass_tint := Color(0.20,0.46,0.50,0.30) if operation_id == "the_streets" else (Color(0.29,0.56,0.61,0.30) if operation_id == "the_district" else Color(0.34,0.60,0.65,0.30))
+ for bay_z: float in [-2.65,2.65]:
+  _glass(Vector3(facade_x-side*0.015,1.82,z+bay_z),Vector3(0.055,2.22,2.20),glass_tint)
+  for jamb: float in [-1.18,1.18]: _box(Vector3(facade_x-side*0.10,1.82,z+bay_z+jamb),Vector3(0.10,2.32,0.08),dark)
+  _box(Vector3(facade_x-side*0.10,0.67,z+bay_z),Vector3(0.14,0.10,2.42),wall.lightened(0.18))
+  _box(Vector3(facade_x-side*0.10,2.98,z+bay_z),Vector3(0.12,0.10,2.42),dark)
+  _box(Vector3(facade_x-side*0.11,1.82,z+bay_z),Vector3(0.10,2.18,0.06),dark)
+ # A deep reveal, header, practical and two non-colliding leaves say “open”.
+ for jamb_z: float in [-1.0,1.0]: _box(Vector3(facade_x-side*0.12,1.28,z+jamb_z),Vector3(0.16,2.56,0.14),accent.lightened(0.12))
+ _box(Vector3(facade_x-side*0.12,2.58,z),Vector3(0.18,0.16,2.12),accent.lightened(0.12))
+ for hinge: float in [-1.0,1.0]:
+  var leaf := _box(Vector3(facade_x-side*0.48,1.15,z+hinge*0.50),Vector3(0.08,2.28,0.92),wall.darkened(0.14))
+  leaf.name = "StorefrontDoorLeaf"
+  leaf.rotation.y = side*PI*0.5
+  _box(Vector3(facade_x-side*0.54,1.18,z+hinge*0.08),Vector3(0.035,0.14,0.035),Color(0.78,0.63,0.36))
+ var threshold := _box(Vector3(facade_x,0.06,z),Vector3(0.65,0.12,2.25),paving_color(operation_id),false)
+ threshold.name = "StorefrontThreshold"
+ # A cantilever canopy, fascia, brackets and evenly spaced supports are tied
+ # back to the building, rather than floating coloured rectangles.
+ var canopy_color := accent if operation_id != "the_district" else Color(0.20,0.35,0.38)
+ _box(Vector3(facade_x+side*0.58,3.56,z),Vector3(1.55,0.18,6.65),canopy_color)
+ _box(Vector3(facade_x+side*1.34,3.31,z),Vector3(0.12,0.42,6.65),dark)
+ for brace_z: float in [-2.9,2.9]:
+  _box(Vector3(facade_x+side*0.50,3.12,z+brace_z),Vector3(0.10,0.74,0.10),dark)
+  _box(Vector3(facade_x+side*0.36,2.96,z+brace_z),Vector3(0.44,0.08,0.10),dark)
+ # Recessed display plinths make the rooms legible from street level.
+ for bay_z: float in [-2.65,2.65]:
+  _box(Vector3(x+side*3.80,0.76,z+bay_z),Vector3(1.50,1.48,1.72),dark.lightened(0.05),true)
+  _box(Vector3(x+side*3.78,1.56,z+bay_z),Vector3(1.40,0.08,1.58),wall.lightened(0.17))
+  if operation_id == "the_streets":
+   for item: float in [-0.46,0.0,0.46]:
+    _box(Vector3(x+side*3.74,1.79,z+bay_z+item),Vector3(0.44,0.30,0.34),Color(0.64,0.43,0.22) if item != 0.0 else Color(0.40,0.55,0.29))
+    _box(Vector3(x+side*3.74,1.96,z+bay_z+item),Vector3(0.42,0.04,0.32),Color(0.76,0.62,0.39))
+  elif operation_id == "the_district":
+   _box(Vector3(x+side*3.74,1.82,z+bay_z),Vector3(0.72,0.42,0.54),Color(0.18,0.29,0.31))
+   _box(Vector3(x+side*3.74,2.06,z+bay_z-0.02),Vector3(0.52,0.22,0.04),Color(0.21,0.70,0.67))
+   _box(Vector3(x+side*3.74,2.23,z+bay_z),Vector3(0.22,0.10,0.20),Color(0.70,0.63,0.47))
+  else:
+   _box(Vector3(x+side*3.74,1.80,z+bay_z),Vector3(0.66,0.46,0.52),Color(0.69,0.57,0.37))
+   _box(Vector3(x+side*3.74,2.10,z+bay_z),Vector3(0.50,0.10,0.10),Color(0.85,0.78,0.58))
+   _box(Vector3(x+side*3.74,2.40,z+bay_z),Vector3(0.18,0.48,0.18),Color(0.76,0.25,0.15))
+ # Differentiated mounted trade signs and an address-level lightbox.
+ var store_label := "JADE LEAF  /  TEA & HERBS" if operation_id == "the_streets" else ("MERIDIAN  /  FINANCE DESK" if operation_id == "the_district" else "QUAY  /  FERRY SERVICES")
+ _box(Vector3(facade_x+side*0.18,3.02,z),Vector3(0.16,0.48,4.8),dark)
+ var fascia_light := _box(Vector3(facade_x+side*0.275,3.02,z),Vector3(0.035,0.30,4.4),accent)
+ fascia_light.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ var sign := Label3D.new()
+ sign.name = "StorefrontTradeSign"
+ sign.text = store_label
+ sign.position = Vector3(facade_x+side*0.32,3.05,z)
+ sign.rotation.y = -side*PI*0.5
+ sign.font_size = 22
+ sign.pixel_size = 0.004
+ sign.modulate = Color(0.96,0.87,0.68)
+ add_child(sign)
+ # A shallow return, downpipe and reachable utility isolator finish the
+ # façade junction and service lane without blocking either pedestrian line.
+ for run_y: float in [0.48,3.0]: _box(Vector3(facade_x-side*0.13,run_y,z+4.9),Vector3(0.22,0.10,0.20),wall.darkened(0.08))
+ _box(Vector3(facade_x+side*0.10,1.75,z+4.72),Vector3(0.10,3.3,0.10),dark)
+ _box(Vector3(facade_x+side*0.23,1.35,z+4.55),Vector3(0.12,0.52,0.28),accent)
+
+func _glass(pos: Vector3, size: Vector3, tint: Color) -> void:
+ var holder := _box(pos,size,tint)
+ holder.name = "StorefrontGlazing"
+ var glass := StandardMaterial3D.new()
+ glass.albedo_color = tint
+ glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ glass.roughness = 0.24
+ glass.metallic = 0.12
+ glass.cull_mode = BaseMaterial3D.CULL_DISABLED
+ (holder.get_child(0) as MeshInstance3D).material_override = glass
+
+func paving_color(operation: String) -> Color:
+ if operation == "the_streets": return Color(0.39,0.37,0.34)
+ if operation == "the_district": return Color(0.36,0.40,0.40)
+ return Color(0.33,0.40,0.41)
 
 func intel_world_position() -> Vector3:
  return to_global(intel_position)
