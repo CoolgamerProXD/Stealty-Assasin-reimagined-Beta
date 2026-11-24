@@ -85,8 +85,8 @@ func _stage() -> void:
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 9.1
 	camera.position = Vector3(0.0, 5.0, 15.0)
-	camera.look_at(Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	world.add_child(camera)
+	camera.look_at(Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	camera.make_current()
 	for index: int in range(MODEL_NAMES.size()):
 		var person := StylizedPerson.new()
