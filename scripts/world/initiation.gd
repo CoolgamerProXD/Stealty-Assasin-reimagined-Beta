@@ -34,7 +34,7 @@ func _build_environment() -> void:
  light.add_to_group("quality_lights")
  light.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])
  add_child(light)
- _box(Vector3(0, -0.15, 0), Vector3(30, 0.3, 20), Color(0.27, 0.30, 0.30))
+ _box(Vector3(0, -0.15, 0), Vector3(30, 0.3, 20), Color(0.46, 0.48, 0.45))
  _box(Vector3(-15, 1.5, 0), Vector3(0.25, 3, 20), Color(0.48, 0.50, 0.47))
  _box(Vector3(15, 1.5, 0), Vector3(0.25, 3, 20), Color(0.48, 0.50, 0.47))
  _box(Vector3(0, 1.5, -10), Vector3(30, 3, 0.25), Color(0.48, 0.50, 0.47))
@@ -50,9 +50,9 @@ func _build_environment() -> void:
   for portal_center: float in [-3.0,3.0]:
    _box(Vector3(boundary,2.99,portal_center),Vector3(0.18,0.12,1.36),Color(0.55,0.66,0.61),false)
    _box(Vector3(boundary,0.07,portal_center),Vector3(0.26,0.025,1.22),Color(0.79,0.57,0.28),false)
- _box(Vector3(-7, 0.01, 0), Vector3(15, 0.02, 19), Color(0.25, 0.29, 0.30), false)
- _box(Vector3(4.5, 0.01, 0), Vector3(4.5, 0.02, 19), Color(0.29, 0.32, 0.29), false)
- _box(Vector3(11, 0.01, 0), Vector3(7.5, 0.02, 19), Color(0.29, 0.27, 0.24), false)
+ _box(Vector3(-7, 0.01, 0), Vector3(15, 0.02, 19), Color(0.48, 0.49, 0.46), false)
+ _box(Vector3(4.5, 0.01, 0), Vector3(4.5, 0.02, 19), Color(0.49, 0.52, 0.48), false)
+ _box(Vector3(11, 0.01, 0), Vector3(7.5, 0.02, 19), Color(0.45, 0.44, 0.40), false)
  # Reception and waiting: a sign-in counter faces two visitor seats, leaving
  # the evidence desk and the security route open and readable.
  _box(Vector3(-11.2,0.50,-7.8),Vector3(4.2,1.0,1.05),Color(0.30,0.24,0.18),false)

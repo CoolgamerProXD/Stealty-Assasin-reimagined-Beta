@@ -397,14 +397,14 @@ func run() -> void:
 		player.global_position = Vector3(0, 0.1, -36.0)
 		_camera(Vector3(0, 2.6, -34.0), Vector3(0, -0.4, -41.0), 66.0)
 		await _capture("12_discovered_facility_entrance")
-		player.global_position = Vector3(0, -2.5, -59)
+		player.global_position = Vector3(0, -3.15, -59)
 		_camera(Vector3(0, -1.3, -56.0), Vector3(0, -1.2, -62.5), 68.0)
 		await _capture("13_facility_monumental_interior")
-		player.global_position = Vector3(0, -7.3, -61)
+		player.global_position = Vector3(0, -7.95, -61)
 		_camera(Vector3(0, -5.8, -58.0), Vector3(0, -6.8, -68.0), 70.0)
 		await _capture("14_facility_central_operations")
-		player.global_position = Vector3(0, 15.0, -29.0)
-		_camera(Vector3(0, 15.1, -25.7), Vector3(0, 15.2, -32.0), 70.0)
+		player.global_position = Vector3(0, 14.0, -29.0)
+		_camera(Vector3(0, 14.8, -25.7), Vector3(0, 14.5, -32.0), 70.0)
 		await _capture("15_facility_vertical_statue_core")
 		# Active mission target (red) and discovered intel (separate yellow overlay).
 		var target := world.get("target") as HotelNpc

@@ -430,15 +430,25 @@ func _build_operations_chamber(center: Vector3) -> void:
 	var x := center.x
 	var y := center.y
 	var z := center.z
-	_box("CentralOperationsFloor",Vector3(x,y+0.03,z),Vector3(35,0.10,21),Color(0.23,0.31,0.34))
-	_box("CommandTableBase",Vector3(x,y+0.85,z),Vector3(9.0,1.55,4.5),Color(0.12,0.20,0.23),true)
-	_box("CommandTableGlowingMap",Vector3(x,y+1.66,z),Vector3(8.4,0.08,4.0),Color(0.19,0.55,0.57))
+	_box("CentralOperationsFloor",Vector3(x,y+0.03,z),Vector3(35,0.10,21),Color(0.31,0.36,0.37))
+	_box("CommandTableBase",Vector3(x,y+0.83,z),Vector3(9.0,1.45,4.5),Color(0.25,0.32,0.33),true)
+	_box("CommandTableTopPanel",Vector3(x,y+1.61,z),Vector3(9.18,0.12,4.68),Color(0.39,0.46,0.43))
+	_box("CommandTableDisplayMap",Vector3(x,y+1.70,z),Vector3(8.4,0.08,4.0),Color(0.24,0.62,0.62))
+	for grid_x: float in [-3.0,-1.5,0.0,1.5,3.0]: _box("CommandMapGridLine",Vector3(x+grid_x,y+1.747,z),Vector3(0.025,0.012,3.72),Color(0.60,0.78,0.68))
+	for grid_z: float in [-1.35,0.0,1.35]: _box("CommandMapGridLine",Vector3(x,y+1.75,z+grid_z),Vector3(8.0,0.012,0.025),Color(0.60,0.78,0.68))
+	for side: float in [-1.0,1.0]:
+		for chair_z: float in [-1.65,1.65]: _place_kenney(OFFICE_CHAIR,"OperationsBriefingChair",Vector3(x+side*5.35,y,z+chair_z),Vector3(0.10,0.0,-0.10),Vector3(1.3,1.3,1.3),PI*0.5 if side < 0.0 else -PI*0.5)
 	for side: float in [-1.0,1.0]:
 		for i: int in range(5):
 			var desk_x := x+side*12.0
 			var desk_z := z-6.2+float(i)*3.0
-			_box("OperationsConsole",Vector3(desk_x,y+0.72,desk_z),Vector3(4.1,1.35,1.5),Color(0.14,0.21,0.24),true)
-			_box("OperationsDisplay",Vector3(desk_x,y+1.56,desk_z-0.38),Vector3(1.75,1.05,0.08),Color(0.11,0.42,0.49))
+			_box("OperationsConsole",Vector3(desk_x,y+0.50,desk_z),Vector3(4.1,0.98,1.5),Color(0.25,0.32,0.33),true)
+			_box("OperationsConsoleTopPanel",Vector3(desk_x,y+1.03,desk_z),Vector3(4.22,0.12,1.62),Color(0.43,0.48,0.44))
+			_box("OperationsDisplay",Vector3(desk_x,y+1.62,desk_z-0.38),Vector3(1.75,1.05,0.08),Color(0.13,0.49,0.55))
+			_box("OperationsDisplayBezel",Vector3(desk_x,y+1.62,desk_z-0.425),Vector3(1.88,1.18,0.05),Color(0.16,0.23,0.25))
+			_box("OperationsKeyboard",Vector3(desk_x,y+1.12,desk_z+0.28),Vector3(1.18,0.045,0.32),Color(0.19,0.27,0.28))
+			_box("OperationsStatusRail",Vector3(desk_x,y+1.11,desk_z-0.55),Vector3(1.25,0.045,0.06),Color(0.26,0.78,0.68))
+			_place_kenney(OFFICE_CHAIR,"OperationsConsoleChair",Vector3(desk_x,y,desk_z+1.62),Vector3(0.10,0.0,-0.10),Vector3(1.25,1.25,1.25),PI)
 	for i: int in range(7):
 		_box("WallOfOperationsScreens",Vector3(x-9.0+float(i)*3.0,y+3.35,z-10.1),Vector3(2.5,1.8,0.12),Color(0.13,0.35,0.41))
 	var label := Label3D.new()
@@ -448,6 +458,19 @@ func _build_operations_chamber(center: Vector3) -> void:
 	label.pixel_size = 0.004
 	label.modulate = Color(0.86,0.78,0.59)
 	add_child(label)
+	# The operational table and occupied console rows each sit beneath real
+	# ceiling fixtures; bounded task pools preserve the dark containment shell.
+	for light_x: float in [-12.0,0.0,12.0]:
+		_box("OperationsCeilingLight",Vector3(x+light_x,y+4.34,z),Vector3(3.4,0.08,0.55),Color(0.73,0.84,0.80))
+		var task_light := OmniLight3D.new()
+		task_light.name = "OperationsTaskLight"
+		task_light.position = Vector3(x+light_x,y+3.75,z)
+		task_light.light_color = Color(0.78,0.91,0.87)
+		task_light.light_energy = 1.10 if is_zero_approx(light_x) else 0.82
+		task_light.omni_range = 12.5 if is_zero_approx(light_x) else 10.0
+		task_light.shadow_enabled = false
+		task_light.add_to_group("quality_practicals")
+		add_child(task_light)
 	_add_facility_zone(Rect2(-17.0,-77.0,34.0,21.0),y-0.2,y+1.0,"facility_ops")
 
 func _build_sublevel_connectors() -> void:
