@@ -38,6 +38,8 @@ func check(condition: bool, label: String) -> void:
 	else:
 		failures += 1
 		printerr("CC0 RIG FAIL: ", label)
+		var safe_label := label.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+		print("::error title=CC0 rig assertion::", safe_label)
 
 
 func _pose_vector(skeleton: Skeleton3D, from_name: String, to_name: String) -> Vector3:
