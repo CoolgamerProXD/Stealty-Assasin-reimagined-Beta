@@ -14,6 +14,12 @@ func check(condition: bool, text: String) -> void:
   failures += 1
   printerr("HK FAIL: ", text)
 
+func collect_named_nodes(root_node: Node, prefix: String) -> Array[Node]:
+ var matches: Array[Node] = []
+ if root_node.name.begins_with(prefix): matches.append(root_node)
+ for child: Node in root_node.get_children(): matches.append_array(collect_named_nodes(child,prefix))
+ return matches
+
 func near_player(world: Node3D, point: Vector3) -> void:
  var player: HotelPlayer = world.get("player")
  player.global_position = point + Vector3(0,0,1.15)
@@ -175,16 +181,14 @@ func run() -> void:
  var assessment_floor := assessment.find_child("AssessmentHallStructuralFloor",true,false)
  var floor_mesh := assessment_floor.get_child(0) as MeshInstance3D if assessment_floor else null
  var floor_finish := floor_mesh.material_override as StandardMaterial3D if floor_mesh else null
- var wayfinding_count := 0
- var waiting_chair_count := 0
+ var wayfinding_nodes := collect_named_nodes(assessment,"AssessmentWayfindingSign")
+ var waiting_chair_nodes := collect_named_nodes(assessment,"AssessmentWaitingChairPlacement")
  var practice_sign_visible := false
- for candidate: Node in assessment.find_children("*","Node",true,false):
-  if candidate.name.begins_with("AssessmentWayfindingSign"):
-   wayfinding_count += 1
-   if (candidate as Label3D).text.contains("CONTROLLED PRACTICE"): practice_sign_visible = true
-  if candidate.name.begins_with("AssessmentWaitingChairPlacement"): waiting_chair_count += 1
- check(floor_finish != null and floor_finish.albedo_texture != null and wayfinding_count >= 3,"Initiation has textured durable hall flooring and wayfinding for its distinct rooms")
- check(waiting_chair_count >= 2 and practice_sign_visible,"Initiation's assessment and controlled-practice zones use specific furnishings and operational wayfinding")
+ for candidate: Node in wayfinding_nodes:
+  if (candidate as Label3D).text.contains("CONTROLLED PRACTICE"): practice_sign_visible = true
+ check(floor_finish != null and floor_finish.albedo_texture != null,"Initiation floors use authored durable surface maps")
+ check(wayfinding_nodes.size() >= 3,"Initiation has signs for its distinct rooms")
+ check(waiting_chair_nodes.size() >= 2 and practice_sign_visible,"Initiation's assessment and controlled-practice zones use specific furnishings and operational wayfinding")
  assessment.queue_free()
  await process_frame
 
@@ -249,13 +253,9 @@ func run() -> void:
  var city: Node3D = world.get("scene")
  check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) == null and city.find_child("District_the_harbour",true,false) == null, "Streets loads its own distinct district without bundling the later operations")
  check(int(city.get_meta("city_facade_bays",0)) >= 150 and city.find_child("DistrictDetails",true,false) != null, "Hong Kong street blocks have articulated four-sided window bays, frames, sills and roof-edge structure")
- var storefront_sign_count := 0
- var storefront_glazing_count := 0
- var storefront_leaf_count := 0
- for candidate: Node in city.find_children("*","Node",true,false):
-  if candidate.name.begins_with("StorefrontTradeSign"): storefront_sign_count += 1
-  elif candidate.name.begins_with("StorefrontGlazing"): storefront_glazing_count += 1
-  elif candidate.name.begins_with("StorefrontDoorLeaf"): storefront_leaf_count += 1
+ var storefront_sign_count := collect_named_nodes(city,"StorefrontTradeSign").size()
+ var storefront_glazing_count := collect_named_nodes(city,"StorefrontGlazing").size()
+ var storefront_leaf_count := collect_named_nodes(city,"StorefrontDoorLeaf").size()
  check(storefront_sign_count >= 6 and storefront_glazing_count >= 12 and storefront_leaf_count >= 6, "market and commercial blocks build real glazed shopfronts, open doorways, and individually signed trades")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "connected street navigation is instantiated")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
