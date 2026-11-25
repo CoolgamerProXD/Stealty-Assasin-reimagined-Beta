@@ -42,7 +42,22 @@ func _build_environment() -> void:
  # Split assessment, observation and controlled training areas; two routes each.
  for boundary: float in [2.0, 7.0]:
   _box(Vector3(boundary, 1.5, -7), Vector3(0.2, 3, 6), Color(0.38, 0.42, 0.42))
-  _box(Vector3(boundary, 1.5, 0), Vector3(0.2, 3, 4), Color(0.38, 0.42, 0.42))
+  if is_equal_approx(boundary,2.0):
+   # The observation office looks into the assessment lane through a reinforced
+   # glazed panel. Low sill and deep head remain collision-backed; clear glass
+   # preserves supervision without turning the partition into an open doorway.
+   _box(Vector3(boundary,0.43,0),Vector3(0.22,0.86,3.72),Color(0.38,0.42,0.42))
+   _box(Vector3(boundary,2.79,0),Vector3(0.22,0.42,3.72),Color(0.38,0.42,0.42))
+   for panel_z: float in [-1.90,1.90]: _box(Vector3(boundary,1.60,panel_z),Vector3(0.22,1.50,0.22),Color(0.32,0.40,0.40))
+   var observation_glass := _box(Vector3(boundary-0.015,1.60,0),Vector3(0.045,1.48,3.58),Color(0.29,0.51,0.53,0.34),true)
+   observation_glass.name = "InitiationObservationGlazing"
+   var glass_mesh := observation_glass.get_child(0) as MeshInstance3D
+   glass_mesh.material_override = StationMaterials.material(Color(0.29,0.51,0.53,0.34),"glass")
+   for center_z: float in [-0.62,0.62]: _box(Vector3(boundary-0.05,1.60,center_z),Vector3(0.09,1.54,0.045),Color(0.55,0.62,0.59),false)
+   _box(Vector3(boundary-0.07,2.38,0),Vector3(0.11,0.07,3.65),Color(0.62,0.70,0.67),false)
+   _box(Vector3(boundary-0.07,0.83,0),Vector3(0.11,0.08,3.65),Color(0.52,0.60,0.57),false)
+  else:
+   _box(Vector3(boundary, 1.5, 0), Vector3(0.2, 3, 4), Color(0.38, 0.42, 0.42))
   _box(Vector3(boundary, 1.5, 7), Vector3(0.2, 3, 6), Color(0.38, 0.42, 0.42))
   # Cased portal returns, protected corners and low egress strips make the two
   # routes legible without reducing the tested 1.3 m clear passage width.

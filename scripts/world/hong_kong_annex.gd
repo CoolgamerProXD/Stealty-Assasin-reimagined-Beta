@@ -1,5 +1,6 @@
 extends Node3D
 ## Original fictional extensions attached to the shared city, one per mission.
+const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
 ## Local +Z points outwards. Collision, lighting and readable passages are authored.
 var operation_id := ""
 var mesh_cache: Dictionary = {}
@@ -316,6 +317,23 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   _box(Vector3(x-4.45,5.0,z-3.0),Vector3(0.72,0.42,0.56),dark)
   for vent: float in [-0.12,0.0,0.12]:
    _box(Vector3(x-4.83,5.0,z-3.0+vent),Vector3(0.04,0.28,0.045),wall.lightened(0.12))
+ # Roof plant and exposed wet services are placed on the building's actual
+ # service elevations. The risers terminate at a lockable street-level access
+ # panel and remain outside storefront openings and the public route.
+ for side: float in [-1.0,1.0]:
+  var service_stack := Node3D.new()
+  service_stack.name = "DistrictFacadeServiceStack"
+  service_stack.position = Vector3(x+side*4.92,0.12,z+4.18)
+  service_stack.rotation.y = PI*0.5 if side > 0.0 else -PI*0.5
+  add_child(service_stack)
+  CONSTRUCTION.service_riser(service_stack,"DistrictWetServiceRiser",Vector3.ZERO,3.58,Color(0.63,0.58,0.46),dark,3)
+  CONSTRUCTION.box(service_stack,"DistrictServiceConduit",Vector3(0.34,3.82,0.14),Vector3(0.12,0.12,8.6),dark.lightened(0.12),0.52)
+  CONSTRUCTION.box(service_stack,"DistrictServiceIsolationValve",Vector3(0.13,0.52,0.30),Vector3(0.26,0.32,0.20),accent,0.52)
+ var roof_plant := _box(Vector3(x-3.65,7.62,z-2.6),Vector3(1.35,0.68,1.4),dark,true)
+ roof_plant.name = "DistrictRooftopAirHandlingUnit"
+ _box(Vector3(x-3.65,7.62,z-3.32),Vector3(0.92,0.36,0.04),Color(0.25,0.35,0.36))
+ for vent: int in range(5):
+  _box(Vector3(x-4.05+float(vent)*0.20,7.62,z-3.35),Vector3(0.035,0.28,0.025),wall.lightened(0.18))
  var room_region := NavigationRegion3D.new()
  room_region.position = Vector3(x,0.05,z)
  var room_nav := NavigationMesh.new()

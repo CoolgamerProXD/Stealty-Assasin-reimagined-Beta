@@ -1,5 +1,6 @@
 extends Node3D
 ## Exploratory, fictional station blockout. This is not a campaign mission.
+const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
 var player: HotelPlayer
 var npcs: Array[HotelNpc] = []
 var robber: HotelNpc
@@ -287,6 +288,32 @@ func _station() -> void:
   _box(Vector3(x,2.9,11.83),Vector3(0.8,0.10,0.035),Color(0.92,0.65,0.27),false,"emissive")
  _station_architecture()
  _station_lighting()
+ _station_service_installations()
+
+func _station_service_installations() -> void:
+ # Back-of-house infrastructure is grouped on the fixed service wall, while
+ # passenger circulation, doors, and the existing navmesh remain untouched.
+ CONSTRUCTION.service_riser(self,"StationElectricalRiser",Vector3(20.45,0.08,-12.95),4.55,Color(0.57,0.61,0.58),Color(0.17,0.24,0.26),4)
+ for service_x: float in [-20.5,20.5]:
+  var cabinet := CONSTRUCTION.box(self,"StationFireEquipmentCabinet",Vector3(service_x,1.22,-13.66),Vector3(0.82,1.48,0.30),Color(0.57,0.20,0.15),0.7)
+  cabinet.set_meta("life_safety",true)
+  CONSTRUCTION.box(self,"StationFireCabinetLabel",Vector3(service_x,1.53,-13.48),Vector3(0.34,0.14,0.035),Color(0.94,0.82,0.63),0.55,0.18)
+  CONSTRUCTION.box(self,"StationFireCabinetHandle",Vector3(service_x+0.29,1.16,-13.46),Vector3(0.055,0.28,0.045),Color(0.76,0.69,0.51),0.45)
+  CONSTRUCTION.box(self,"StationEmergencyLight",Vector3(service_x,2.38,-13.55),Vector3(0.56,0.18,0.12),Color(0.92,0.63,0.31),0.5,0.65)
+ # Twin continuous cable trays run under the vault and terminate at the
+ # station electrical riser, rather than appearing as floating trim.
+ for tray_x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
+  CONSTRUCTION.trim_run(self,"StationCableTray",Vector3(tray_x,4.82,-12.1),Vector3(tray_x,4.82,10.8),0.12,Color(0.16,0.24,0.26))
+  CONSTRUCTION.box(self,"StationTrayHanger",Vector3(tray_x,4.64,-12.0),Vector3(0.10,0.42,0.10),Color(0.33,0.41,0.41),0.5)
+ # Platform drainage and a continuous tactile guidance band distinguish the
+ # public edge from the clean through-route without adding collision hazards.
+ CONSTRUCTION.box(self,"PlatformTactileField",Vector3(-1.0,0.025,9.02),Vector3(34.0,0.05,0.62),Color(0.74,0.55,0.28),0.94)
+ for x: float in range(-17,17,1):
+  CONSTRUCTION.box(self,"PlatformTactileBar",Vector3(float(x),0.058,9.02),Vector3(0.075,0.025,0.50),Color(0.88,0.70,0.39),0.86)
+ for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
+  CONSTRUCTION.box(self,"PlatformDrainGrille",Vector3(x,0.035,10.0),Vector3(1.5,0.04,0.16),Color(0.15,0.21,0.22),0.52)
+  for slot: int in range(6):
+   CONSTRUCTION.box(self,"PlatformDrainSlot",Vector3(x-0.57+float(slot)*0.23,0.058,10.0),Vector3(0.035,0.015,0.13),Color(0.48,0.54,0.50),0.48)
 
 func _station_architecture() -> void:
  # Shallow barrel-vault ribs lift the ceiling rhythm above the concourse. One

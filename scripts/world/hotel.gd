@@ -1,5 +1,6 @@
 extends Node3D
 ## Original greybox: The Meridian Hotel, after a missing archive incident.
+const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
 var save_path: String = "user://meridian_save.json"
 var intro_active: bool = false
 var entry_intro: Node
@@ -310,9 +311,25 @@ func _build_meridian_wing() -> void:
    _box(Vector3(x,5.3,z),Vector3(0.18,3.4,4),walls)
  for x: float in [-9.0,-3.0,3.0,9.0]:
   for side: float in [-1.0,1.0]:
-   for dx: float in [-1.8,1.8]:
-    _box(Vector3(x+dx,5.3,side*4),Vector3(2.4,3.4,0.18),walls)
-   _box(Vector3(x,5.3,side*4),Vector3(1.2,0.45,0.18),dark,false)
+   # Each guest room opens onto the upper gallery through a 2 m clear portal.
+   # The partition stops at the door head; the prior waist-height crossbar that
+   # floated across each entrance is replaced with a proper frame and leaf.
+   for dx: float in [-2.0,2.0]:
+    _box(Vector3(x+dx,5.3,side*4),Vector3(2.0,3.4,0.18),walls)
+   _box(Vector3(x,6.86,side*4),Vector3(2.0,0.28,0.18),walls)
+   CONSTRUCTION.door_portal(self,"MeridianGuestRoomPortal",Vector3(x,3.6,side*4),2.0,2.75,0.22,brass,Color(0.50,0.44,0.34))
+   var open_leaf := CONSTRUCTION.box(self,"MeridianGuestRoomDoorLeaf",Vector3(x-0.62,4.85,side*4+side*0.62),Vector3(0.86,2.48,0.07),dark,0.76)
+   open_leaf.rotation.y = PI*0.5
+   CONSTRUCTION.box(self,"MeridianGuestRoomDoorHardware",Vector3(x-0.72,4.82,side*4+side*0.96),Vector3(0.045,0.14,0.035),brass,0.42)
+   var room_id := Label3D.new()
+   room_id.name = "MeridianGuestRoomNumber"
+   room_id.text = "GUEST ROOM  /  %02d" % (int((x+9.0)/6.0)+1 + (4 if side > 0.0 else 0))
+   room_id.position = Vector3(x,6.38,side*3.84)
+   room_id.rotation.y = PI if side < 0.0 else 0.0
+   room_id.font_size = 16
+   room_id.pixel_size = 0.004
+   room_id.modulate = brass.lightened(0.18)
+   add_child(room_id)
    _collision_box(Vector3(x,4.0,side*6),Vector3(2.8,0.8,2.2))
    _box(Vector3(x+2,3.95,side*6.8),Vector3(0.65,0.7,0.7),dark,false)
   _box(Vector3(x,3.63,0),Vector3(4.8,0.04,5.6),Color(0.35,0.23,0.20),false)

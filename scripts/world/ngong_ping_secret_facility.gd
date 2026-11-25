@@ -9,6 +9,7 @@ const CORE_CENTER := Vector3(0.0,0.0,-29.0)
 const OFFICE_CHAIR := preload("res://assets/kenney_furniture/chairCushion.glb")
 const LAPTOP := preload("res://assets/kenney_furniture/laptop.glb")
 const BOOKS := preload("res://assets/kenney_furniture/books.glb")
+const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
 var world: Node3D
 var player: HotelPlayer
 var landmark: Node3D
@@ -430,9 +431,36 @@ func _build_operations_chamber(center: Vector3) -> void:
 	var x := center.x
 	var y := center.y
 	var z := center.z
-	_box("CentralOperationsFloor",Vector3(x,y+0.03,z),Vector3(35,0.10,21),Color(0.31,0.36,0.37))
-	_box("CommandTableBase",Vector3(x,y+0.83,z),Vector3(9.0,1.45,4.5),Color(0.25,0.32,0.33),true)
-	_box("CommandTableTopPanel",Vector3(x,y+1.61,z),Vector3(9.18,0.12,4.68),Color(0.39,0.46,0.43))
+	var shell_height := 4.45
+	var shell_y := y + shell_height * 0.5
+	var shell_color := Color(0.34,0.40,0.40)
+	var wall_color := Color(0.23,0.31,0.33)
+	# Operations occupies an enclosed, purpose-built room inside the larger
+	# sublevel, with an actual door opening to the transit aisle. This keeps the
+	# room's functions legible instead of leaving its consoles on an empty slab.
+	_box("OperationsWestWall",Vector3(x-17.5,shell_y,z),Vector3(0.28,shell_height,20.8),shell_color,true)
+	_box("OperationsEastWall",Vector3(x+17.5,shell_y,z),Vector3(0.28,shell_height,20.8),shell_color,true)
+	_box("OperationsNorthWall",Vector3(x,shell_y,z-10.4),Vector3(35.0,shell_height,0.28),shell_color,true)
+	for side: float in [-1.0,1.0]:
+		_box("OperationsSouthWall",Vector3(x+side*10.35,shell_y,z+10.4),Vector3(14.3,shell_height,0.28),shell_color,true)
+		_box("OperationsPortalJamb",Vector3(x+side*3.2,y+2.05,z+10.4),Vector3(0.22,4.1,0.34),wall_color)
+	_box("OperationsPortalHeader",Vector3(x,y+4.22,z+10.4),Vector3(6.2,0.18,0.34),wall_color)
+	_box("OperationsPortalTrack",Vector3(x,y+4.34,z+10.18),Vector3(5.7,0.06,0.16),Color(0.73,0.57,0.31))
+	# The heavy structural piers, wall panels, and service risers express load
+	# paths and maintenance access; the clear central axis remains unobstructed.
+	for side: float in [-1.0,1.0]:
+		for bay_z: float in [-8.8,-3.0,3.0,8.8]:
+			_box("OperationsStructuralPier",Vector3(x+side*16.9,y+2.12,z+bay_z),Vector3(0.52,4.22,0.64),wall_color,true)
+			_box("OperationsPierBase",Vector3(x+side*16.78,y+0.30,z+bay_z),Vector3(0.72,0.20,0.78),Color(0.48,0.53,0.48))
+		_box("OperationsServiceRun",Vector3(x+side*16.55,y+3.54,z),Vector3(0.10,0.10,17.5),Color(0.48,0.56,0.54))
+		for service_z: float in [-7.0,4.8]:
+			CONSTRUCTION.service_riser(self,"OperationsServiceRiser",Vector3(x+side*16.72,y+0.1,z+service_z),3.8,Color(0.66,0.57,0.40),wall_color,3)
+	for bay_x: float in [-12.0,-6.0,0.0,6.0,12.0]:
+		_box("OperationsNorthWallRecess",Vector3(x+bay_x,y+2.54,z-10.23),Vector3(4.85,2.55,0.06),wall_color)
+		_box("OperationsWallPanelCap",Vector3(x+bay_x,y+3.86,z-10.17),Vector3(4.85,0.08,0.10),Color(0.51,0.61,0.58))
+	_box("CentralOperationsFloor",Vector3(x,y+0.03,z),Vector3(35,0.10,21),Color(0.40,0.45,0.44))
+	_box("CommandTableBase",Vector3(x,y+0.83,z),Vector3(9.0,1.45,4.5),Color(0.31,0.39,0.39),true)
+	_box("CommandTableTopPanel",Vector3(x,y+1.61,z),Vector3(9.18,0.12,4.68),Color(0.50,0.57,0.52))
 	_box("CommandTableDisplayMap",Vector3(x,y+1.70,z),Vector3(8.4,0.08,4.0),Color(0.24,0.62,0.62))
 	for grid_x: float in [-3.0,-1.5,0.0,1.5,3.0]: _box("CommandMapGridLine",Vector3(x+grid_x,y+1.747,z),Vector3(0.025,0.012,3.72),Color(0.60,0.78,0.68))
 	for grid_z: float in [-1.35,0.0,1.35]: _box("CommandMapGridLine",Vector3(x,y+1.75,z+grid_z),Vector3(8.0,0.012,0.025),Color(0.60,0.78,0.68))
@@ -442,12 +470,17 @@ func _build_operations_chamber(center: Vector3) -> void:
 		for i: int in range(5):
 			var desk_x := x+side*12.0
 			var desk_z := z-6.2+float(i)*3.0
-			_box("OperationsConsole",Vector3(desk_x,y+0.50,desk_z),Vector3(4.1,0.98,1.5),Color(0.25,0.32,0.33),true)
-			_box("OperationsConsoleTopPanel",Vector3(desk_x,y+1.03,desk_z),Vector3(4.22,0.12,1.62),Color(0.43,0.48,0.44))
+			_box("OperationsConsole",Vector3(desk_x,y+0.50,desk_z),Vector3(4.1,0.98,1.5),Color(0.31,0.39,0.39),true)
+			_box("OperationsConsoleTopPanel",Vector3(desk_x,y+1.03,desk_z),Vector3(4.22,0.12,1.62),Color(0.50,0.56,0.51))
 			_box("OperationsDisplay",Vector3(desk_x,y+1.62,desk_z-0.38),Vector3(1.75,1.05,0.08),Color(0.13,0.49,0.55))
 			_box("OperationsDisplayBezel",Vector3(desk_x,y+1.62,desk_z-0.425),Vector3(1.88,1.18,0.05),Color(0.16,0.23,0.25))
 			_box("OperationsKeyboard",Vector3(desk_x,y+1.12,desk_z+0.28),Vector3(1.18,0.045,0.32),Color(0.19,0.27,0.28))
 			_box("OperationsStatusRail",Vector3(desk_x,y+1.11,desk_z-0.55),Vector3(1.25,0.045,0.06),Color(0.26,0.78,0.68))
+			_box("OperationsSecondaryDisplay",Vector3(desk_x+0.88,y+1.43,desk_z-0.35),Vector3(0.72,0.56,0.055),Color(0.17,0.48,0.54))
+			_box("OperationsSecondaryBezel",Vector3(desk_x+0.88,y+1.43,desk_z-0.39),Vector3(0.82,0.66,0.045),Color(0.16,0.23,0.25))
+			_box("OperationsPaperLog",Vector3(desk_x-1.20,y+1.14,desk_z+0.26),Vector3(0.58,0.035,0.42),Color(0.78,0.73,0.61))
+			_box("OperationsDeskPhone",Vector3(desk_x-1.48,y+1.13,desk_z-0.48),Vector3(0.32,0.08,0.28),Color(0.18,0.26,0.27))
+			_box("OperationsRadioStatus",Vector3(desk_x-1.48,y+1.20,desk_z-0.48),Vector3(0.06,0.03,0.18),Color(0.86,0.54,0.22))
 			_place_kenney(OFFICE_CHAIR,"OperationsConsoleChair",Vector3(desk_x,y,desk_z+1.62),Vector3(0.10,0.0,-0.10),Vector3(1.25,1.25,1.25),PI)
 	for i: int in range(7):
 		_box("WallOfOperationsScreens",Vector3(x-9.0+float(i)*3.0,y+3.35,z-10.1),Vector3(2.5,1.8,0.12),Color(0.13,0.35,0.41))
@@ -466,8 +499,8 @@ func _build_operations_chamber(center: Vector3) -> void:
 		task_light.name = "OperationsTaskLight"
 		task_light.position = Vector3(x+light_x,y+3.75,z)
 		task_light.light_color = Color(0.78,0.91,0.87)
-		task_light.light_energy = 1.10 if is_zero_approx(light_x) else 0.82
-		task_light.omni_range = 12.5 if is_zero_approx(light_x) else 10.0
+		task_light.light_energy = 1.75 if is_zero_approx(light_x) else 1.25
+		task_light.omni_range = 14.0 if is_zero_approx(light_x) else 12.0
 		task_light.shadow_enabled = false
 		task_light.add_to_group("quality_practicals")
 		add_child(task_light)

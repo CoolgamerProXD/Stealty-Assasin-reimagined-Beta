@@ -283,6 +283,12 @@ func run() -> void:
 	# 03–04: the hotel mission environment and its separately furnished wing.
 	world = await _open_world("res://scenes/hotel.tscn", "meridian")
 	_freeze_npcs()
+	check(
+		world.find_child("MeridianGuestRoomPortalLeftReveal", true, false) != null
+		and world.find_child("MeridianGuestRoomDoorLeaf", true, false) != null
+		and world.find_child("MeridianGuestRoomNumber", true, false) != null,
+		"Meridian upper gallery now has framed guest-room doors and room-specific wayfinding"
+	)
 	_camera(Vector3(-5.0, 1.7, 6.0), Vector3(-5.0, 1.3, -6.0), 66.0)
 	await _capture("03_meridian_main_environment")
 	# Frame the real restaurant through its built opening at x=-36 rather than

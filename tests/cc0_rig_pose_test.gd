@@ -146,6 +146,16 @@ func _check_each_model() -> void:
 		check(person.cc0_skeleton != null, expected + " has an imported Skeleton3D")
 		if person.cc0_skeleton == null:
 			continue
+		var axes_valid := person.cc0_animation_axes.size() >= 10
+		for bone_name: String in person.cc0_animation_axes:
+			var bone_index := person.cc0_skeleton.find_bone(bone_name)
+			if bone_index < 0:
+				axes_valid = false
+				continue
+			var rest_basis := person.cc0_skeleton.get_bone_global_pose(bone_index).basis.orthonormalized()
+			var mapped_axis: Vector3 = person.cc0_animation_axes[bone_name]
+			axes_valid = axes_valid and (rest_basis * mapped_axis.normalized()).dot(Vector3.RIGHT) > 0.98
+		check(axes_valid, expected + " maps procedural hinges in each source skeleton's anatomical frame")
 		var left_leg := _pose_vector(person.cc0_skeleton, "upperleg01.L", "foot.L")
 		var right_leg := _pose_vector(person.cc0_skeleton, "upperleg01.R", "foot.R")
 		var standing := left_leg.length() > 0.2 and right_leg.length() > 0.2
@@ -157,6 +167,50 @@ func _check_each_model() -> void:
 		var arms_down := left_arm.length() > 0.12 and right_arm.length() > 0.12
 		arms_down = arms_down and left_arm.y < -0.10 and right_arm.y < -0.10
 		check(arms_down, expected + " keeps both arms below the shoulder line")
+
+
+func _joint_origin(skeleton: Skeleton3D, bone_name: String) -> Vector3:
+	var index := skeleton.find_bone(bone_name)
+	if index < 0:
+		return Vector3.ZERO
+	return skeleton.get_bone_global_pose(index).origin
+
+
+func _check_joint_chain_integrity(pose_name: String) -> void:
+	for person: StylizedPerson in people:
+		var skeleton := person.cc0_skeleton
+		if skeleton == null:
+			continue
+		var left_hip := _joint_origin(skeleton, "upperleg01.L")
+		var left_knee := _joint_origin(skeleton, "lowerleg01.L")
+		var left_ankle := _joint_origin(skeleton, "foot.L")
+		var right_hip := _joint_origin(skeleton, "upperleg01.R")
+		var right_knee := _joint_origin(skeleton, "lowerleg01.R")
+		var right_ankle := _joint_origin(skeleton, "foot.R")
+		var leg_lengths_valid := (
+			left_hip.distance_to(left_knee) > 0.16
+			and left_hip.distance_to(left_knee) < 0.70
+			and left_knee.distance_to(left_ankle) > 0.16
+			and left_knee.distance_to(left_ankle) < 0.70
+			and right_hip.distance_to(right_knee) > 0.16
+			and right_hip.distance_to(right_knee) < 0.70
+			and right_knee.distance_to(right_ankle) > 0.16
+			and right_knee.distance_to(right_ankle) < 0.70
+		)
+		check(leg_lengths_valid, person.cc0_model_name + " keeps knee and ankle joints connected during " + pose_name)
+		var left_shoulder := _joint_origin(skeleton, "upperarm01.L")
+		var left_wrist := _joint_origin(skeleton, "wrist.L")
+		var right_shoulder := _joint_origin(skeleton, "upperarm01.R")
+		var right_wrist := _joint_origin(skeleton, "wrist.R")
+		var limbs_on_own_side := (
+			left_shoulder.x > 0.04
+			and left_wrist.x > 0.015
+			and right_shoulder.x < -0.04
+			and right_wrist.x < -0.015
+			and left_shoulder.distance_to(left_wrist) > 0.14
+			and right_shoulder.distance_to(right_wrist) > 0.14
+		)
+		check(limbs_on_own_side, person.cc0_model_name + " keeps each wrist attached to its shoulder side during " + pose_name)
 
 
 func run() -> void:
@@ -171,12 +225,18 @@ func run() -> void:
 		await process_frame
 	await _settle_all(1.0 / 30.0, 0.0, 32)
 	_check_each_model()
+	_check_joint_chain_integrity("standing")
 	await _capture("cc0_8_models_standing")
 	await _settle_all(1.0 / 30.0, 1.45, 44)
+	_check_joint_chain_integrity("walking")
 	await _capture("cc0_8_models_walking")
+	await _settle_all(1.0 / 30.0, 3.35, 38)
+	_check_joint_chain_integrity("running")
+	await _capture("cc0_8_models_running")
 	for person: StylizedPerson in people:
 		person.crouch_amount = 1.0
 	await _settle_all(1.0 / 30.0, 0.0, 32)
+	_check_joint_chain_integrity("crouching")
 	for person: StylizedPerson in people:
 		check(
 			person.cc0_model.position.y <= -0.29,
@@ -187,6 +247,7 @@ func run() -> void:
 		person.crouch_amount = 0.0
 		person.set_seated(true)
 	await _settle_all(1.0 / 30.0, 0.0, 32)
+	_check_joint_chain_integrity("seated")
 	for person: StylizedPerson in people:
 		check(
 			absf(person.cc0_model.position.y + 0.42) < 0.02,
@@ -197,6 +258,7 @@ func run() -> void:
 		people[index].set_seated(false)
 		people[index].set_outfit(OUTFITS[index])
 	await _settle_all(1.0 / 30.0, 0.0, 40)
+	_check_joint_chain_integrity("disguise outfits")
 	for index: int in range(people.size()):
 		var person := people[index]
 		check(
@@ -219,6 +281,6 @@ func run() -> void:
 		checks,
 		" checks, ",
 		failures,
-		" failures; 6 current-build rig views staged"
+		" failures; 7 current-build rig views staged"
 	)
 	quit(0 if failures == 0 else 1)

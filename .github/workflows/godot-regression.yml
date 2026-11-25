@@ -205,7 +205,7 @@ jobs:
           print(f"::notice title=CC0 rig runtime diagnostics::{text}")
           PYCODE
           if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^CC0 RIG FAIL:' "$RUNNER_TEMP/cc0-rig.log"; then exit 1; fi
-          grep -E '^CC0 RIG RESULT: [0-9]+ checks, 0 failures; 6 current-build rig views staged$' "$RUNNER_TEMP/cc0-rig.log"
+          grep -E '^CC0 RIG RESULT: [0-9]+ checks, 0 failures; 7 current-build rig views staged$' "$RUNNER_TEMP/cc0-rig.log"
       - name: Verify Assignment 008 full-resolution capture
         if: always()
         shell: bash

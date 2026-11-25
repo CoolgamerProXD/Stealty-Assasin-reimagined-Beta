@@ -1,5 +1,6 @@
 extends "res://scripts/world/tung_chung_preview.gd"
 ## Original explorable landscape studies, separate from campaign progression.
+const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
 @export_enum("city", "mountain") var preview_kind: String = "city"
 var accents: Array[Transform3D] = []
 var accent_colors: Array[Color] = []
@@ -353,6 +354,7 @@ func _city() -> void:
    for dx: float in [-2.3,0.0,2.3]:
     _accent(Vector3(x+dx,h+extra_height*0.55,z+3.43),Vector3(1.2,extra_height*0.6,0.04),glass)
  _city_walkway()
+ _city_street_infrastructure()
  # Parked cars, a double-decker and crossings make the public street legible.
  # Their bodies are solid and lie beyond the short central visitor routes.
  _parked_car(-8.9,20,Color(0.67,0.18,0.15))
@@ -429,6 +431,61 @@ func _city() -> void:
   _attach_city_district("the_harbour")
  if op in ["the_harbour", "hong_kong_sandbox"]:
   _harbour_waterfront()
+
+# Street furniture and drainage follow the curb line as a coherent municipal
+# system. The service items sit at block edges, leaving the existing traversal
+# lanes and the mission's collision/nav polygons untouched.
+func _city_street_infrastructure() -> void:
+ var curb := Color(0.46,0.48,0.45)
+ var pavement := Color(0.39,0.41,0.39)
+ var dark_metal := Color(0.12,0.18,0.19)
+ var tactile := Color(0.78,0.64,0.39)
+ for side: float in [-1.0,1.0]:
+  var street_x := side*5.78
+  CONSTRUCTION.box(self,"RaisedNorthSouthFootpath",Vector3(side*7.15,0.045,0),Vector3(2.6,0.09,86),pavement,0.9)
+  for segment: int in range(8):
+   var z0 := -42.0+float(segment)*10.5
+   CONSTRUCTION.box(self,"NorthSouthKerb",Vector3(street_x,0.12,z0+5.0),Vector3(0.22,0.24,9.8),curb,0.72)
+   CONSTRUCTION.box(self,"StormDrainFrame",Vector3(side*5.46,0.075,z0+5.0),Vector3(0.44,0.035,1.1),dark_metal,0.58)
+   for slot: int in range(5):
+    CONSTRUCTION.box(self,"StormDrainSlot",Vector3(side*5.46,0.096,z0+4.58+float(slot)*0.19),Vector3(0.34,0.012,0.035),Color(0.43,0.49,0.47),0.5)
+  for z: float in [-30.0,-12.0,12.0,30.0]:
+   var pole_x := side*7.05
+   CONSTRUCTION.box(self,"StreetLampPlinth",Vector3(pole_x,0.19,z),Vector3(0.48,0.38,0.48),dark_metal,0.62)
+   CONSTRUCTION.box(self,"StreetLampPost",Vector3(pole_x,2.75,z),Vector3(0.12,5.2,0.12),Color(0.23,0.29,0.28),0.48)
+   CONSTRUCTION.box(self,"StreetLampArm",Vector3(pole_x-side*0.38,5.20,z),Vector3(0.82,0.10,0.12),Color(0.23,0.29,0.28),0.45)
+   CONSTRUCTION.box(self,"StreetLampHead",Vector3(pole_x-side*0.78,5.12,z),Vector3(0.68,0.14,0.34),Color(0.94,0.76,0.48),0.4,1.3)
+   if z in [-12.0,12.0]:
+    var cabinet := CONSTRUCTION.box(self,"TelecomServiceCabinet",Vector3(pole_x-side*0.55,0.70,z+1.2),Vector3(0.72,1.36,0.62),Color(0.31,0.38,0.36),0.7)
+    cabinet.set_meta("service_access",true)
+    for vent: int in range(4):
+     CONSTRUCTION.box(self,"CabinetVent",Vector3(pole_x-side*0.55,0.90+float(vent)*0.12,z+0.88),Vector3(0.40,0.025,0.025),dark_metal,0.5)
+  # Distinct paired overhead service cables connect the poles rather than
+  # floating as isolated decorative wires.
+  CONSTRUCTION.trim_run(self,"TelecomSpan",Vector3(side*7.05,5.08,-30.0),Vector3(side*7.05,5.08,-12.0),0.045,dark_metal)
+  CONSTRUCTION.trim_run(self,"TelecomSpan",Vector3(side*7.05,5.08,12.0),Vector3(side*7.05,5.08,30.0),0.045,dark_metal)
+ for side: float in [-1.0,1.0]:
+  var street_z := side*5.25
+  CONSTRUCTION.box(self,"EastWestFootpath",Vector3(0,0.045,side*6.75),Vector3(86,0.09,2.7),pavement,0.9)
+  for segment: int in range(8):
+   var x0 := -42.0+float(segment)*10.5
+   CONSTRUCTION.box(self,"EastWestKerb",Vector3(x0+5.0,0.12,street_z),Vector3(9.8,0.24,0.22),curb,0.72)
+  # Tactile paving is set only at the existing crossing approaches.
+  for crossing_x: float in [-4.8,4.8]:
+   CONSTRUCTION.box(self,"TactileCrossingPad",Vector3(crossing_x,0.085,side*6.32),Vector3(0.72,0.04,0.72),tactile,0.9)
+ # One practical bus shelter on the public route: roof, wind screens, bench,
+ # timetable case and a clear standing bay. It stays outside the car path.
+ var shelter := Vector3(8.0,0.0,22.0)
+ CONSTRUCTION.box(self,"BusShelterFooting",shelter+Vector3(0.0,0.07,0.0),Vector3(4.4,0.14,2.3),Color(0.35,0.39,0.37),0.9)
+ CONSTRUCTION.box(self,"BusShelterRoof",shelter+Vector3(0.0,2.55,0.0),Vector3(4.6,0.18,2.5),Color(0.17,0.27,0.29),0.55)
+ for x_offset: float in [-2.1,2.1]:
+  CONSTRUCTION.box(self,"BusShelterPost",shelter+Vector3(x_offset,1.28,0.0),Vector3(0.10,2.55,0.10),Color(0.20,0.29,0.30),0.48)
+ for x_offset: float in [-1.12,1.12]:
+  CONSTRUCTION.glazed_bay(self,"ShelterWindScreen",shelter+Vector3(x_offset,1.30,-0.88),1.95,2.25,0.06,Color(0.26,0.35,0.34),Color(0.31,0.50,0.51,0.42),1)
+ CONSTRUCTION.box(self,"ShelterBenchSeat",shelter+Vector3(0.0,0.52,0.50),Vector3(3.5,0.13,0.45),Color(0.34,0.29,0.22),0.7)
+ CONSTRUCTION.box(self,"ShelterBenchBack",shelter+Vector3(0.0,0.94,0.72),Vector3(3.5,0.68,0.11),Color(0.24,0.34,0.34),0.74)
+ CONSTRUCTION.box(self,"TimetableCase",shelter+Vector3(2.35,1.58,-0.88),Vector3(0.58,1.18,0.12),Color(0.74,0.66,0.48),0.6)
+ CONSTRUCTION.box(self,"TimetableGlazing",shelter+Vector3(2.35,1.58,-0.95),Vector3(0.46,0.95,0.025),Color(0.22,0.41,0.44),0.22)
 
 # Give the harbour operation a real waterfront horizon: layered water, a
 # working-ferry silhouette, distant tower clusters and low island forms. All

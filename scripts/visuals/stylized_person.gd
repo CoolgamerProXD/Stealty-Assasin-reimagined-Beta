@@ -50,7 +50,7 @@ var cc0_skeleton: Skeleton3D
 var left_hand_attachment: BoneAttachment3D
 var right_hand_attachment: BoneAttachment3D
 var cc0_bones: Dictionary = {}
-var cc0_neutral_rotations: Dictionary = {}
+var cc0_animation_axes: Dictionary = {}
 var cc0_clothes: Array[MeshInstance3D] = []
 var cc0_shoes: Array[MeshInstance3D] = []
 var underwear_straps: Array[MeshInstance3D] = []
@@ -202,7 +202,7 @@ func _load_cc0_model(model_name: String) -> void:
  cc0_model = null
  cc0_skeleton = null
  cc0_bones.clear()
- cc0_neutral_rotations.clear()
+ cc0_animation_axes.clear()
  cc0_clothes.clear()
  cc0_shoes.clear()
  left_hand_attachment = null
@@ -314,7 +314,10 @@ func _update_cc0_outfit_visuals() -> void:
    var source_material := mesh.get_active_material(surface)
    if source_material is StandardMaterial3D:
     var material := (source_material as StandardMaterial3D).duplicate() as StandardMaterial3D
-    material.albedo_color = tint
+    # Multiply the authored garment colour instead of replacing it. The old
+    # solid uniform tint erased the source weave/trim palette across every
+    # clothing mesh, making disguises read as a single plastic skin.
+    material.albedo_color *= tint
     material.roughness = maxf(material.roughness, 0.65)
     mesh.set_surface_override_material(surface, material)
 
@@ -348,63 +351,27 @@ func _animate_cc0_rig(swing: float, gait: float, blend: float) -> void:
 
 func _build_cc0_neutral_pose() -> void:
  if cc0_skeleton == null: return
- cc0_neutral_rotations.clear()
+ # Keep the licensed source bind/rest pose intact. The previous imported-rig
+ # workaround rotated every short twist/helper bone toward a guessed world
+ # direction; on asymmetric source skeletons those corrections accumulated
+ # down the chain and could pull elbows/knees off their anatomical joints.
+ # Procedural motion is instead expressed around each mapped joint's own axis.
+ cc0_animation_axes.clear()
  cc0_skeleton.reset_bone_poses()
  cc0_skeleton.force_update_all_bone_transforms()
- # Make the exported bind-pose limbs usable as standing idle poses. The CC0
- # source rigs store limb chains in a wide spread; align each joint segment in
- # global space, then retain its model-specific local correction for animation.
- for side: String in ["L", "R"]:
-  var leg_chain: Array[String] = [
-   "upperleg01." + side,
-   "upperleg02." + side,
-   "lowerleg01." + side,
-   "lowerleg02." + side,
-   "foot." + side
-  ]
-  for index: int in range(leg_chain.size() - 1):
-   _align_cc0_segment(leg_chain[index], leg_chain[index + 1], Vector3.DOWN)
-  var arm_chain: Array[String] = [
-   "upperarm01." + side,
-   "upperarm02." + side,
-   "lowerarm01." + side,
-   "lowerarm02." + side,
-   "wrist." + side
-  ]
-  for index: int in range(arm_chain.size() - 1):
-   _align_cc0_segment(arm_chain[index], arm_chain[index + 1], Vector3.DOWN if index > 0 else Vector3.ZERO)
- cc0_skeleton.force_update_all_bone_transforms()
+ for bone_name: String in cc0_bones.keys():
+  var bone_index: int = cc0_bones[bone_name]
+  var rest_frame := cc0_skeleton.get_bone_global_pose(bone_index).basis.orthonormalized()
+  var anatomical_hinge := rest_frame.inverse() * Vector3.RIGHT
+  if anatomical_hinge.length_squared() > 0.000001:
+   cc0_animation_axes[bone_name] = anatomical_hinge.normalized()
 
-func _align_cc0_segment(parent_name: String, child_name: String, desired_direction: Vector3) -> void:
- var parent_index := cc0_skeleton.find_bone(parent_name)
- var child_index := cc0_skeleton.find_bone(child_name)
- if parent_index < 0 or child_index < 0: return
- var parent_transform := cc0_skeleton.get_bone_global_pose(parent_index)
- var child_transform := cc0_skeleton.get_bone_global_pose(child_index)
- var current_direction := child_transform.origin - parent_transform.origin
- if current_direction.length_squared() < 0.000001: return
- var target_direction := desired_direction
- if parent_name.begins_with("upperarm01."):
-  # Resolve laterality from the joint name, not the floating-point sign of a
-  # bind-pose vector. This keeps the target shoulder direction consistent even
-  # if a model's imported bind transforms contain tiny per-asset differences.
-  # In these source rigs L is +X and R is -X.
-  var side := parent_name.get_slice(".", 1)
-  var lateral_sign := 1.0 if side == "L" else -1.0
-  target_direction = Vector3(lateral_sign * 0.32, -0.95, 0.0)
- if target_direction.length_squared() < 0.000001: return
- var global_delta := Quaternion(current_direction.normalized(), target_direction.normalized())
- var frame := parent_transform.basis.orthonormalized().get_rotation_quaternion()
- var correction := frame.inverse() * global_delta * frame
- cc0_skeleton.set_bone_pose_rotation(parent_index, correction)
- cc0_neutral_rotations[parent_name] = correction
- cc0_skeleton.force_update_all_bone_transforms()
 
 func _set_cc0_bone(bone_name: String, axis: Vector3, angle: float, weight: float) -> void:
  if not cc0_bones.has(bone_name): return
  var index: int = cc0_bones[bone_name]
- var neutral: Quaternion = cc0_neutral_rotations.get(bone_name, Quaternion.IDENTITY)
- var target := neutral * Quaternion(axis, angle)
+ var anatomical_axis: Vector3 = cc0_animation_axes.get(bone_name, axis)
+ var target := Quaternion(anatomical_axis, angle)
  cc0_skeleton.set_bone_pose_rotation(index, cc0_skeleton.get_bone_pose_rotation(index).slerp(target, weight))
 
 # Original stylized assessment sidearm, attached to the animated hand joint.

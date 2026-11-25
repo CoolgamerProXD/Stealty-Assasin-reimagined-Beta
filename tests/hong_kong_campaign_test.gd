@@ -192,6 +192,10 @@ func run() -> void:
  check(floor_finish != null and floor_finish.albedo_texture != null,"Initiation floors use authored durable surface maps")
  check(wayfinding_count >= 3,"Initiation has signs for its distinct rooms (found=%d)" % wayfinding_count)
  check(waiting_chair_count >= 2 and practice_sign_visible,"Initiation's assessment and controlled-practice zones use specific furnishings and operational wayfinding (chairs=%d, signs=%d, practice=%s)" % [waiting_chair_count,wayfinding_count,str(practice_sign_visible)])
+ var observation_glass := assessment.find_child("InitiationObservationGlazing",true,false) as StaticBody3D
+ var observation_surface := observation_glass.get_child(0) as MeshInstance3D if observation_glass else null
+ var observation_material := observation_surface.material_override as StandardMaterial3D if observation_surface else null
+ check(observation_glass != null and observation_material != null and observation_material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA,"Initiation supervision uses reinforced clear glazing rather than a blind solid partition")
  assessment.queue_free()
  await process_frame
 
@@ -204,6 +208,8 @@ func run() -> void:
  root.add_child(station)
  await process_frame
  await process_frame
+ check(station.find_child("VaultRibs",true,false) != null and station.find_child("PlatformTactileField",true,false) != null and station.find_child("StationFireEquipmentCabinet",true,false) != null,"Tung Chung has a vaulted concourse, platform guidance and installed life-safety equipment")
+ check(station.find_child("StationElectricalRiserPipe_0",true,false) != null and station.find_child("StationCableTray",true,false) != null and station.find_child("StationDrainGrille",true,false) != null,"station power services, overhead containment and platform drainage connect as infrastructure")
  for npc: HotelNpc in station.get("npc_list"): npc.set_physics_process(false)
  station.call("_skip_cinematic")
  var robber: HotelNpc = station.get("target")
@@ -260,6 +266,8 @@ func run() -> void:
  var storefront_glazing_count := count_group_under(city,"district_storefront_glazing")
  var storefront_leaf_count := count_group_under(city,"district_storefront_door_leaf")
  check(storefront_sign_count >= 6 and storefront_glazing_count >= 12 and storefront_leaf_count >= 6, "market and commercial blocks build real glazed shopfronts, open doorways, and individually signed trades (signs=%d glass=%d leaves=%d)" % [storefront_sign_count,storefront_glazing_count,storefront_leaf_count])
+ check(city.find_child("BusShelterRoof",true,false) != null and city.find_child("TelecomServiceCabinet",true,false) != null and city.find_child("StormDrainSlot",true,false) != null and city.find_child("StreetLampHead",true,false) != null,"Hong Kong streets now have connected transit shelter, utilities, rain drainage, curb and street-light systems")
+ check(city.find_child("DistrictWetServiceRiserPipe_0",true,false) != null and city.find_child("DistrictRooftopAirHandlingUnit",true,false) != null,"shop-house elevations carry wet risers and accessible rooftop air-handling plant")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "connected street navigation is instantiated")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
  check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null and city.find_children("*","DestructibleGlass",true,false).is_empty(), "Streets retains walkable public routes without preloading Harbour's tower")
