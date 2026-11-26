@@ -1,6 +1,8 @@
 extends "res://scripts/world/tung_chung_preview.gd"
 ## Original explorable landscape studies, separate from campaign progression.
 @export_enum("city", "mountain") var preview_kind: String = "city"
+const CITY_FACADE_SHADER := preload("res://shaders/city_facade.gdshader")
+const CITY_PAVING_SHADER := preload("res://shaders/city_paving.gdshader")
 var accents: Array[Transform3D] = []
 var accent_colors: Array[Color] = []
 var canopy_transforms: Array[Transform3D] = []
@@ -77,6 +79,34 @@ func _flush_canopies() -> void:
  trees.multimesh = multi
  trees.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  add_child(trees)
+
+# Ground-floor retail signage is deliberately sparse and attached flush to the
+# established shell: no pseudo-doorway or new collision/navigation is implied.
+func _city_storefront(x: float, z: float, wall: Color, operation: String) -> void:
+ if int(absf(x+z)) % 3 != 0: return
+ var sign_names: Array[String] = ["JADE TEA", "CANTON CAFE", "HARBOUR GOODS", "NIGHT MARKET", "GOLDEN LOTUS"]
+ var sign_index := int(absf(x*3.0+z*5.0)) % sign_names.size()
+ var awning_color := Color(0.65,0.22,0.16) if operation == "the_streets" else (Color(0.18,0.34,0.38) if operation == "the_district" else Color(0.22,0.40,0.43))
+ var board := wall.darkened(0.56).lerp(awning_color,0.38)
+ _accent(Vector3(x,3.27,z+4.67),Vector3(4.15,0.54,0.16),board)
+ _accent(Vector3(x,2.91,z+5.02),Vector3(4.45,0.13,0.86),awning_color)
+ # Canvas valance stripes provide scale and depth at street level.
+ for stripe: int in range(7):
+  var stripe_x := x-1.8+float(stripe)*0.6
+  var stripe_color := Color(0.84,0.75,0.57) if stripe%2==0 else awning_color.lightened(0.12)
+  _accent(Vector3(stripe_x,2.90,z+5.02),Vector3(0.30,0.14,0.88),stripe_color)
+ for side: float in [-1.0,1.0]:
+  _accent(Vector3(x+side*1.88,2.55,z+4.96),Vector3(0.075,0.68,0.075),wall.darkened(0.48))
+ var label := Label3D.new()
+ label.name = "OriginalShopfrontSign"
+ label.text = sign_names[sign_index]
+ label.position = Vector3(x,3.29,z+4.77)
+ label.font_size = 24
+ label.pixel_size = 0.004
+ label.modulate = Color(0.94,0.83,0.62)
+ label.outline_size = 3
+ label.outline_modulate = Color(0.12,0.17,0.17)
+ add_child(label)
 
 # A compact, four-sided facade system keeps the city readable when the camera
 # turns. Shallow, non-colliding bays sit on the solid building shell; they are
@@ -327,6 +357,20 @@ func _parked_bus(x: float, z: float) -> void:
 
 func _city() -> void:
  _ground(Color(0.34,0.36,0.36))
+ # The authored road markings sit above this tile finish; the ground body and
+ # all traversal/collision surfaces remain unchanged.
+ var paving_mesh := PlaneMesh.new()
+ paving_mesh.size = Vector2(90.0,90.0)
+ var paving_visual := MeshInstance3D.new()
+ paving_visual.name = "WorldSpaceCitySidewalkFinish"
+ paving_visual.mesh = paving_mesh
+ paving_visual.position.y = 0.006
+ var paving_finish := ShaderMaterial.new()
+ paving_finish.shader = CITY_PAVING_SHADER
+ paving_finish.set_shader_parameter("paving_tint",Color(0.48,0.49,0.45))
+ paving_visual.material_override = paving_finish
+ paving_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ add_child(paving_visual)
  var road := Color(0.20,0.23,0.25)
  var pale := Color(0.76,0.68,0.52)
  var dark := Color(0.18,0.25,0.27)
@@ -343,9 +387,16 @@ func _city() -> void:
     _operation_interior(x, z)
     continue
    var building := Color(0.42+absf(x)*0.002,0.44,0.42+absf(z)*0.002)
-   _box(Vector3(x,h/2,z),Vector3(10,h,9),building,true)
+   var building_shell := _box(Vector3(x,h/2,z),Vector3(10,h,9),building,true)
+   var shell_visual := building_shell.get_child(0) as MeshInstance3D
+   var facade_finish := ShaderMaterial.new()
+   facade_finish.shader = CITY_FACADE_SHADER
+   facade_finish.set_shader_parameter("facade_tint",building)
+   facade_finish.set_shader_parameter("facade_seed",absf(x*13.0+z*7.0))
+   shell_visual.material_override = facade_finish
    _box(Vector3(x,0.3,z+4.9),Vector3(10,0.6,0.8),dark)
    _build_city_block_facade(x,z,h,building)
+   _city_storefront(x,z,building,operation)
    # Setback roof volumes vary the silhouette without creating fake interiors.
    var extra_height := 2.5 + float(int(absf(x+z)) % 4) * 0.8
    _accent(Vector3(x,h+extra_height*0.5,z),Vector3(7.8,extra_height,6.8),building.darkened(0.1))

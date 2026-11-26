@@ -262,6 +262,8 @@ func run() -> void:
  var city: Node3D = world.get("scene")
  check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) == null and city.find_child("District_the_harbour",true,false) == null, "Streets loads its own distinct district without bundling the later operations")
  check(int(city.get_meta("city_facade_bays",0)) >= 150 and city.find_child("DistrictDetails",true,false) != null, "Hong Kong street blocks have articulated four-sided window bays, frames, sills and roof-edge structure")
+ var city_paving := city.find_child("WorldSpaceCitySidewalkFinish",true,false) as MeshInstance3D
+ check(city_paving != null and city_paving.material_override is ShaderMaterial and city.find_child("OriginalShopfrontSign",true,false) != null, "city streets add original procedural sidewalk/facade finishes and attached retail identity")
  var storefront_sign_count := count_group_under(city,"district_storefront_sign")
  var storefront_glazing_count := count_group_under(city,"district_storefront_glazing")
  var storefront_leaf_count := count_group_under(city,"district_storefront_door_leaf")
