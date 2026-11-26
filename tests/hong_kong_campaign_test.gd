@@ -209,7 +209,7 @@ func run() -> void:
  await process_frame
  await process_frame
  check(station.find_child("VaultRibs",true,false) != null and station.find_child("PlatformTactileField",true,false) != null and station.find_child("StationFireEquipmentCabinet",true,false) != null,"Tung Chung has a vaulted concourse, platform guidance and installed life-safety equipment")
- check(station.find_child("StationElectricalRiserPipe_0",true,false) != null and station.find_child("StationCableTray",true,false) != null and station.find_child("StationDrainGrille",true,false) != null,"station power services, overhead containment and platform drainage connect as infrastructure")
+ check(station.find_child("StationElectricalRiserPipe_0",true,false) != null and station.find_child("StationCableTray",true,false) != null and station.find_child("PlatformDrainGrille",true,false) != null,"station power services, overhead containment and platform drainage connect as infrastructure")
  for npc: HotelNpc in station.get("npc_list"): npc.set_physics_process(false)
  station.call("_skip_cinematic")
  var robber: HotelNpc = station.get("target")

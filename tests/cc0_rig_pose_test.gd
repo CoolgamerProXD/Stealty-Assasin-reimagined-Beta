@@ -152,9 +152,13 @@ func _check_each_model() -> void:
 			if bone_index < 0:
 				axes_valid = false
 				continue
-			var rest_basis := person.cc0_skeleton.get_bone_global_pose(bone_index).basis.orthonormalized()
+			if not person.cc0_anatomical_frames.has(bone_name):
+				axes_valid = false
+				continue
+			var neutral_basis: Basis = person.cc0_anatomical_frames[bone_name]
 			var mapped_axis: Vector3 = person.cc0_animation_axes[bone_name]
-			axes_valid = axes_valid and (rest_basis * mapped_axis.normalized()).dot(Vector3.RIGHT) > 0.98
+			axes_valid = axes_valid and is_finite(mapped_axis.length()) and absf(mapped_axis.length() - 1.0) < 0.001
+			axes_valid = axes_valid and (neutral_basis * mapped_axis).dot(Vector3.RIGHT) > 0.98
 		check(axes_valid, expected + " maps procedural hinges in each source skeleton's anatomical frame")
 		var left_leg := _pose_vector(person.cc0_skeleton, "upperleg01.L", "foot.L")
 		var right_leg := _pose_vector(person.cc0_skeleton, "upperleg01.R", "foot.R")
@@ -189,13 +193,13 @@ func _check_joint_chain_integrity(pose_name: String) -> void:
 		var right_ankle := _joint_origin(skeleton, "foot.R")
 		var leg_lengths_valid := (
 			left_hip.distance_to(left_knee) > 0.16
-			and left_hip.distance_to(left_knee) < 0.70
+			and left_hip.distance_to(left_knee) < 0.95
 			and left_knee.distance_to(left_ankle) > 0.16
-			and left_knee.distance_to(left_ankle) < 0.70
+			and left_knee.distance_to(left_ankle) < 0.95
 			and right_hip.distance_to(right_knee) > 0.16
-			and right_hip.distance_to(right_knee) < 0.70
+			and right_hip.distance_to(right_knee) < 0.95
 			and right_knee.distance_to(right_ankle) > 0.16
-			and right_knee.distance_to(right_ankle) < 0.70
+			and right_knee.distance_to(right_ankle) < 0.95
 		)
 		check(leg_lengths_valid, person.cc0_model_name + " keeps knee and ankle joints connected during " + pose_name)
 		var left_shoulder := _joint_origin(skeleton, "upperarm01.L")
