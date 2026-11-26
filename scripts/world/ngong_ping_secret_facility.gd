@@ -133,8 +133,8 @@ func _build_hidden_entry() -> void:
 	light.name = "HiddenAccessGuideLight"
 	light.position = Vector3(0,1.6,-42.0)
 	light.light_color = Color(0.94,0.62,0.31)
-	light.light_energy = 4.0
-	light.omni_range = 15.5
+	light.light_energy = 8.0
+	light.omni_range = 20.0
 	light.shadow_enabled = false
 	light.visible = false
 	add_child(light)
@@ -144,8 +144,8 @@ func _build_hidden_entry() -> void:
 		sconce.name = "HiddenEntrySconce_%s" % ("Left" if side < 0.0 else "Right")
 		sconce.position = Vector3(side*1.55,0.55,-40.5)
 		sconce.light_color = Color(1.0,0.68,0.36)
-		sconce.light_energy = 2.8
-		sconce.omni_range = 9.0
+		sconce.light_energy = 4.5
+		sconce.omni_range = 12.5
 		sconce.shadow_enabled = false
 		sconce.visible = false
 		add_child(sconce)
@@ -250,8 +250,8 @@ func _build_access_hall_wayfinding(center: Vector3) -> void:
 	title.name = "AccessHallDirectoryTitle"
 	title.text = "MONUMENT ACCESS  /  LEVEL 01"
 	title.position = Vector3(x,y+3.20,wall_z+0.20)
-	title.font_size = 26
-	title.pixel_size = 0.0045
+	title.font_size = 34
+	title.pixel_size = 0.007
 	title.modulate = Color(0.91,0.87,0.74)
 	add_child(title)
 

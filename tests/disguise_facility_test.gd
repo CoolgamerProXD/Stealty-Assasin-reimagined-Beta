@@ -145,7 +145,7 @@ func run() -> void:
 	var entry_guide: OmniLight3D = mountain.find_child("HiddenAccessGuideLight",true,false) as OmniLight3D
 	var entry_sconce: OmniLight3D = mountain.find_child("HiddenEntrySconce_Left",true,false) as OmniLight3D
 	var hall_fill: OmniLight3D = mountain.find_child("AccessHallFocalLight",true,false) as OmniLight3D
-	check(entry_guide != null and entry_guide.light_energy >= 3.99 and entry_sconce != null and entry_sconce.light_energy >= 2.79 and hall_fill != null and hall_fill.light_energy >= 4.49,"concealed entry and monumental access hall have dedicated shadowless readability fills")
+	check(entry_guide != null and entry_guide.light_energy >= 7.99 and entry_sconce != null and entry_sconce.light_energy >= 4.49 and hall_fill != null and hall_fill.light_energy >= 4.49,"concealed entry and monumental access hall have dedicated shadowless readability fills")
 	var ngong_environment: Environment = mountain.get_viewport().world_3d.environment
 	check(ngong_environment != null and ngong_environment.ambient_light_energy >= 1.24,"Ngong Ping uses a warm ambient floor to preserve matte interior readability between practical lights")
 	var level_practical_count := 0
