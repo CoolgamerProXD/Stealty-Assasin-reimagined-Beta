@@ -23,6 +23,9 @@ var discovered: bool = false
 var mesh_cache: Dictionary = {}
 var material_cache: Dictionary = {}
 var statue_interior_nodes: Array[Node3D] = []
+var facility_environment: Environment
+var exterior_ambient_energy: float = 1.25
+const INTERIOR_AMBIENT_ENERGY := 1.75
 
 func build(parent_world: Node3D) -> void:
 	world = parent_world
@@ -36,6 +39,10 @@ func build(parent_world: Node3D) -> void:
 func set_player_actor(actor: HotelPlayer, statue: Node3D) -> void:
 	player = actor
 	landmark = statue
+	if world and world.get_viewport() and world.get_viewport().world_3d:
+		facility_environment = world.get_viewport().world_3d.environment
+		if facility_environment:
+			exterior_ambient_energy = facility_environment.ambient_light_energy
 
 func open_hidden_entry() -> bool:
 	if entry_open: return false
@@ -62,6 +69,11 @@ func is_inside_statue(point: Vector3) -> bool:
 func _process(_delta: float) -> void:
 	if not landmark or not player: return
 	var concealed_interior := is_inside_statue(player.global_position)
+	var underground_scene := concealed_interior or (player.global_position.y < -1.0 and player.global_position.z < -34.0)
+	if facility_environment:
+		var ambient_target := INTERIOR_AMBIENT_ENERGY if underground_scene else exterior_ambient_energy
+		if not is_equal_approx(facility_environment.ambient_light_energy,ambient_target):
+			facility_environment.ambient_light_energy = ambient_target
 	landmark.visible = not concealed_interior
 	# The inner floors, consoles and ribs are built in world space for play, but
 	# must not cut through the public landmark silhouette from exterior views.
