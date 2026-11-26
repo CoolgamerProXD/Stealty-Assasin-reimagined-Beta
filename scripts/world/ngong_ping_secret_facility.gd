@@ -499,8 +499,8 @@ func _build_operations_chamber(center: Vector3) -> void:
 		task_light.name = "OperationsTaskLight"
 		task_light.position = Vector3(x+light_x,y+3.75,z)
 		task_light.light_color = Color(0.78,0.91,0.87)
-		task_light.light_energy = 3.0 if is_zero_approx(light_x) else 2.2
-		task_light.omni_range = 18.0 if is_zero_approx(light_x) else 16.0
+		task_light.light_energy = 4.5 if is_zero_approx(light_x) else 3.5
+		task_light.omni_range = 20.0 if is_zero_approx(light_x) else 18.0
 		task_light.shadow_enabled = false
 		task_light.add_to_group("quality_practicals")
 		add_child(task_light)
@@ -660,8 +660,8 @@ func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void
 			lamp.name = "FacilityCeilingPractical_%03d_%02d_%02d" % [int(absf(floor_y)*10.0),int(x+25.0),int(z-center_z+18.0)]
 			lamp.position = Vector3(x,floor_y+3.85,z)
 			lamp.light_color = Color(0.68,0.80,0.82) if floor_y > -10.0 else Color(0.98,0.72,0.48)
-			lamp.light_energy = 1.8
-			lamp.omni_range = 14.5
+			lamp.light_energy = 3.2
+			lamp.omni_range = 17.0
 			lamp.shadow_enabled = false
 			lamp.add_to_group("quality_practicals")
 			var graphics_quality := "MEDIUM"

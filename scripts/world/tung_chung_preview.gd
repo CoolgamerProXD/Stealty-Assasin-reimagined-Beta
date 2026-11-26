@@ -107,6 +107,11 @@ func _environment() -> void:
   sun.light_energy = 0.92
  elif operation == "ngong_ping":
   sun.light_color = Color(1.0,0.91,0.75)
+  # The fictional buried facility has no directional daylight; give the
+  # Ngong Ping scene a restrained warm ambient floor so matte interiors remain
+  # readable between ceiling practical pools.
+  data.ambient_light_color = Color(0.80,0.82,0.78)
+  data.ambient_light_energy = 1.25
  sun.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])
  sun.add_to_group("quality_lights")
  add_child(sun)

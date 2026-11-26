@@ -139,6 +139,9 @@ func run() -> void:
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
 	check(mountain.find_child("FloorPanelJoint",true,false) != null and mountain.find_child("RecessedWallPanel",true,false) != null and mountain.find_child("RoomStructuralPilaster",true,false) != null and mountain.find_child("CeilingServiceSpine",true,false) != null,"PROMETHEUS rooms use panelized floor inlays, wall modules, structural piers and ceiling service spines")
 	check(mountain.find_child("CeilingLightDiffuser",true,false) != null and mountain.find_child("DoorwayWayfindingStrip",true,false) != null,"facility interiors include practical ceiling fixtures and egress wayfinding")
+	var ngong_environment_node := mountain.find_child("WorldEnvironment",true,false) as WorldEnvironment
+	var ngong_environment := ngong_environment_node.environment if ngong_environment_node else null
+	check(ngong_environment != null and ngong_environment.ambient_light_energy >= 1.24,"Ngong Ping uses a warm ambient floor to preserve matte interior readability between practical lights")
 	var level_practical_count := 0
 	var level_practicals_are_lit := true
 	var practical_sample := "none"
@@ -148,7 +151,7 @@ func run() -> void:
 			var practical := candidate as OmniLight3D
 			if level_practical_count == 1:
 				practical_sample = "energy=%s range=%s shadows=%s" % [practical.light_energy,practical.omni_range,practical.shadow_enabled]
-			level_practicals_are_lit = level_practicals_are_lit and practical.light_energy >= 1.79 and practical.omni_range >= 14.4 and not practical.shadow_enabled
+			level_practicals_are_lit = level_practicals_are_lit and practical.light_energy >= 3.19 and practical.omni_range >= 16.9 and not practical.shadow_enabled
 	check(level_practical_count == 36 and level_practicals_are_lit,"three sublevels use overlapping, shadowless cross-aisle practicals with a central fill gap closed (count=%d, lit=%s, sample=%s)" % [level_practical_count,level_practicals_are_lit,practical_sample])
 	check(mountain.find_child("DoorJamb",true,false) != null and mountain.find_child("SlidingDoorPocket",true,false) != null and mountain.find_child("ReturnAirGrilleSlat",true,false) != null and mountain.find_child("ConduitTrunk",true,false) != null,"facility room entrances, ventilation and electrical routes read as constructed systems")
 	check(mountain.find_child("WalkThroughScannerUpright",true,false) != null and mountain.find_child("BunkFramePost",true,false) != null and mountain.find_child("FumeHoodBack",true,false) != null and mountain.find_child("CameraFeedLabelStrip",true,false) != null,"screening, staff quarters, research and surveillance each have purpose-built fitouts")
