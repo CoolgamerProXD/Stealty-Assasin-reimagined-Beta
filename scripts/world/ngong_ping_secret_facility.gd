@@ -168,7 +168,9 @@ func _build_underground_levels() -> void:
 		_add_navigation("SublevelNavigation_%d" % (floor_index+1),y+0.04,-80.0,-34.0,-28.0,28.0)
 		_add_facility_zone(Rect2(-28.0,-80.0,56.0,46.0),y-0.3,y+1.0,["facility_staff","facility_research","facility_ops"][floor_index])
 		_build_level_lighting(y,-57,palette)
-	_build_room("SUBLEVEL 01  /  MONUMENTAL ACCESS HALL",Vector3(0,-3.0,-59),Vector2(25,12),Color(0.43,0.39,0.31),"ACCESS CONTROL",0)
+	var access_hall_center := Vector3(0,-3.0,-59)
+	_build_room("SUBLEVEL 01  /  MONUMENTAL ACCESS HALL",access_hall_center,Vector2(25,12),Color(0.43,0.39,0.31),"ACCESS CONTROL",0)
+	_build_access_hall_wayfinding(access_hall_center)
 	var hall_fill := OmniLight3D.new()
 	hall_fill.name = "AccessHallFocalLight"
 	hall_fill.position = Vector3(0,0.8,-59)
@@ -225,6 +227,33 @@ func _build_level_shell(floor_y: float, center_z: float, width: float, depth: fl
 				_box("SublevelStructuralRib",Vector3(side*(rib_doorway_width*0.5+rib_side_width*0.5),floor_y+height*0.5,z),Vector3(rib_side_width,height-0.2,0.38),tint.lightened(0.09),true)
 		else:
 			_box("SublevelStructuralRib",Vector3(0,floor_y+height*0.5,z),Vector3(width-0.5,height-0.2,0.38),tint.lightened(0.09),true)
+
+func _build_access_hall_wayfinding(center: Vector3) -> void:
+	# Give the monumental entry hall a deliberate arrival focal point, visible
+	# from the access ramp, without placing anything in its traversal aisle.
+	var x := center.x
+	var y := center.y
+	var wall_z := center.z - 5.72
+	_box("AccessHallDirectoryHousing",Vector3(x,y+2.62,wall_z),Vector3(8.6,2.45,0.24),Color(0.13,0.20,0.22))
+	_box("AccessHallDirectoryScreen",Vector3(x,y+2.72,wall_z+0.14),Vector3(7.8,1.62,0.035),Color(0.13,0.34,0.37))
+	_box("AccessHallDirectoryHeader",Vector3(x,y+3.52,wall_z+0.18),Vector3(7.35,0.055,0.025),Color(0.91,0.63,0.30))
+	# A simplified route diagram supplies scale, hierarchy and a readable
+	# amber/teal focal motif instead of another blank dark rectangle.
+	for route_y: float in [-0.42,-0.12,0.18,0.48]:
+		_box("AccessHallRouteLine",Vector3(x-0.55,y+2.37+route_y,wall_z+0.18),Vector3(4.85,0.035,0.025),Color(0.47,0.74,0.70))
+	for marker_x: float in [-2.5,-1.25,0.0,1.25,2.5]:
+		_box("AccessHallRouteMarker",Vector3(x+marker_x,y+2.37,wall_z+0.20),Vector3(0.14,0.14,0.035),Color(0.96,0.66,0.31))
+	_box("AccessHallDirectoryBeacon",Vector3(x+3.30,y+2.37,wall_z+0.19),Vector3(0.30,0.65,0.035),Color(0.33,0.81,0.71))
+	for side: float in [-1.0,1.0]:
+		_box("AccessHallDirectorySconce",Vector3(x+side*4.48,y+2.62,wall_z+0.03),Vector3(0.10,1.9,0.12),Color(0.83,0.56,0.29))
+	var title := Label3D.new()
+	title.name = "AccessHallDirectoryTitle"
+	title.text = "MONUMENT ACCESS  /  LEVEL 01"
+	title.position = Vector3(x,y+3.20,wall_z+0.20)
+	title.font_size = 26
+	title.pixel_size = 0.0045
+	title.modulate = Color(0.91,0.87,0.74)
+	add_child(title)
 
 func _build_room(label: String, center: Vector3, span: Vector2, tint: Color, subtitle: String, style: int) -> void:
 	var x := center.x
