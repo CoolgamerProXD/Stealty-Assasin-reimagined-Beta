@@ -270,7 +270,14 @@ func run() -> void:
  var annex_ground := annex_ground_node.get_child(0) as MeshInstance3D if annex_ground_node else null
  var annex_facade := annex_facade_node.get_child(0) as MeshInstance3D if annex_facade_node else null
  var storefront_transom := storefront_transom_node.get_child(0) as MeshInstance3D if storefront_transom_node else null
+ var trade_sign := street_annex.find_child("StorefrontTradeSign",true,false) as Label3D if street_annex else null
+ var outward_sign_dot := -1.0
+ if street_annex and trade_sign:
+  var sign_local_position := street_annex.to_local(trade_sign.global_position)
+  var expected_outward := street_annex.global_transform.basis * Vector3(-signf(sign_local_position.x),0,0)
+  outward_sign_dot = trade_sign.global_transform.basis.z.normalized().dot(expected_outward.normalized())
  check(city_paving != null and city_paving.material_override is ShaderMaterial and city.find_child("OriginalShopfrontSign",true,false) != null and annex_ground != null and annex_ground.material_override is ShaderMaterial and annex_facade != null and annex_facade.material_override is ShaderMaterial and storefront_transom != null and storefront_transom.material_override is ShaderMaterial, "playable city and annex streets use original paving/facade finishes with attached retail identity")
+ check(trade_sign != null and outward_sign_dot > 0.99, "market trade signs face the pedestrian street instead of the shop interior")
  var storefront_sign_count := count_group_under(city,"district_storefront_sign")
  var storefront_glazing_count := count_group_under(city,"district_storefront_glazing")
  var storefront_leaf_count := count_group_under(city,"district_storefront_door_leaf")

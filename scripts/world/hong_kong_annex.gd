@@ -391,7 +391,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  for stripe: int in range(9):
   var stripe_z := z-2.80+float(stripe)*0.70
   var stripe_color := Color(0.84,0.75,0.57) if stripe%2==0 else canopy_color.lightened(0.18)
-  _box(Vector3(facade_x+side*1.405,3.31,stripe_z),Vector3(0.025,0.28,0.37),stripe_color)
+  _box(Vector3(facade_x+side*1.405,3.31,stripe_z),Vector3(0.025,0.28,0.61),stripe_color)
  for brace_z: float in [-2.9,2.9]:
   _box(Vector3(facade_x+side*0.50,3.12,z+brace_z),Vector3(0.10,0.74,0.10),dark)
   _box(Vector3(facade_x+side*0.36,2.96,z+brace_z),Vector3(0.44,0.08,0.10),dark)
@@ -421,7 +421,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  sign.add_to_group("district_storefront_sign")
  sign.text = store_label
  sign.position = Vector3(facade_x+side*0.32,3.05,z)
- sign.rotation.y = -side*PI*0.5
+ sign.rotation.y = side*PI*0.5
  sign.font_size = 34
  sign.pixel_size = 0.005
  sign.modulate = Color(0.98,0.89,0.70)
