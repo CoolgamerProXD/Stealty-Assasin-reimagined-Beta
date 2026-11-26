@@ -290,15 +290,15 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   _sign("UPPER SERVICE / STAFF",Vector3(x,6.8,z-4.86),PI)
  else:
   for dx: float in [-3.0,0.0,3.0]:
-  var upper_shell := _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
-  upper_shell.name = "DistrictUpperFacadeShell"
-  var upper_visual := upper_shell.get_child(0) as MeshInstance3D
-  var facade_material := ShaderMaterial.new()
-  facade_material.shader = CITY_FACADE_SHADER
-  facade_material.set_shader_parameter("facade_tint",wall.darkened(0.08))
-  facade_material.set_shader_parameter("facade_seed",absf(x*13.0+z*7.0+dx))
-  upper_visual.material_override = facade_material
-  _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
+   var upper_shell := _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
+   upper_shell.name = "DistrictUpperFacadeShell"
+   var upper_visual := upper_shell.get_child(0) as MeshInstance3D
+   var facade_material := ShaderMaterial.new()
+   facade_material.shader = CITY_FACADE_SHADER
+   facade_material.set_shader_parameter("facade_tint",wall.darkened(0.08))
+   facade_material.set_shader_parameter("facade_seed",absf(x*13.0+z*7.0+dx))
+   upper_visual.material_override = facade_material
+   _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
  # The upper storey is a real, visible volume rather than one blank silhouette:
  # framed glazing wraps the side and rear elevations, with a continuous slab
  # edge and a restrained service-level air-conditioning unit.
