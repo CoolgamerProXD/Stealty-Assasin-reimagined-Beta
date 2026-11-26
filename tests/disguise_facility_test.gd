@@ -188,7 +188,7 @@ func run() -> void:
 	Input.action_release("move_forward")
 	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
 	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
-	check(ngong_environment != null and ngong_environment.ambient_light_energy >= 1.74,"facility locally lifts ambient exposure underground without over-brightening the public plaza")
+	check(ngong_environment != null and ngong_environment.ambient_light_energy >= 2.59,"facility locally lifts ambient exposure underground without over-brightening the public plaza")
 	Input.action_press("move_back")
 	await create_timer(7.8).timeout
 	Input.action_release("move_back")

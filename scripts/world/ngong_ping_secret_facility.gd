@@ -25,7 +25,7 @@ var material_cache: Dictionary = {}
 var statue_interior_nodes: Array[Node3D] = []
 var facility_environment: Environment
 var exterior_ambient_energy: float = 1.25
-const INTERIOR_AMBIENT_ENERGY := 1.75
+const INTERIOR_AMBIENT_ENERGY := 2.6
 
 func build(parent_world: Node3D) -> void:
 	world = parent_world
