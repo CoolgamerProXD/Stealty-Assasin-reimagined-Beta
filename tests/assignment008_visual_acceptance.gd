@@ -316,7 +316,7 @@ func run() -> void:
 	# 07–10: all three connected city districts and an actual wardrobe interaction.
 	world = await _open_world("res://scenes/mission_hong_kong_sandbox.tscn", "hong_kong_sandbox")
 	_freeze_npcs()
-	_camera(Vector3(-58, 5.0, -3), Vector3(-63, 1.0, -17), 62.0)
+	_camera(Vector3(-66, 5.0, -3), Vector3(-61, 1.0, -17), 62.0)
 	await _capture("07_hong_kong_streets")
 	_camera(Vector3(58, 5.0, -3), Vector3(63, 1.0, -17), 62.0)
 	await _capture("08_hong_kong_commercial_district")
