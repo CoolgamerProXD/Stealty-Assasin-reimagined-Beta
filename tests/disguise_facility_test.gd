@@ -133,7 +133,8 @@ func run() -> void:
 	var landmark := mountain.find_child("ScenicBuddhaLandmark",true,false) as Node3D
 	check(facility != null and landmark != null and landmark.visible,"Ngong Ping contains the public Buddha landmark and attached hidden installation")
 	var concealed_entry_guide: Node3D = mountain.find_child("EntryPortalGuide_Left",true,false) as Node3D
-	check(concealed_entry_guide != null and not concealed_entry_guide.visible,"concealed discovery guidance stays hidden from the public approach")
+	var concealed_floor_guide: Node3D = mountain.find_child("EntryRampFloorGuide_Left",true,false) as Node3D
+	check(concealed_entry_guide != null and not concealed_entry_guide.visible and concealed_floor_guide != null and not concealed_floor_guide.visible,"concealed portal and ramp-edge guidance stay hidden from the public approach")
 	var hidden_chamber_floor := mountain.find_child("CrownOculusFloorSide",true,false) as Node3D
 	check(hidden_chamber_floor != null and not hidden_chamber_floor.visible,"public exterior keeps world-space statue chambers out of the Buddha silhouette")
 	check(mountain.find_child("FacilitySlab_Sublevel_1",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_2",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_3",true,false) != null,"facility has three physically separate interconnected underground floors")
@@ -183,7 +184,7 @@ func run() -> void:
 	facility_player.set_physics_process(false)
 	facility_player.global_position = facility.entry_point + Vector3(0,-0.45,1.2)
 	final_world.call("_interact")
-	check(bool(final_world.get("facility_discovered")) and facility.entry_open and concealed_entry_guide != null and concealed_entry_guide.visible,"interacting with the real rear pedestal panel reveals the entrance and its amber guide strips")
+	check(bool(final_world.get("facility_discovered")) and facility.entry_open and concealed_entry_guide != null and concealed_entry_guide.visible and concealed_floor_guide.visible,"interacting with the real rear pedestal panel reveals the entrance and both portal and ramp-edge guide strips")
 	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
 	facility_player.global_position = Vector3(0,0.75,-36.5)
 	facility_player.rotation.y = 0.0

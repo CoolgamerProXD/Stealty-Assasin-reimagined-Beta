@@ -125,6 +125,12 @@ func _build_hidden_entry() -> void:
 		var portal_guide := _box("EntryPortalGuide_Left" if side < 0.0 else "EntryPortalGuide_Right",Vector3(side*1.88,-0.45,-40.4),Vector3(0.10,2.3,0.08),Color(0.96,0.62,0.30))
 		portal_guide.visible = false
 		entry_guide_meshes.append(portal_guide)
+		# Self-lit continuous floor-edge guides remain readable even where the
+		# tunnel's physical lighting falls off; reveal them only after discovery.
+		var floor_guide := _box("EntryRampFloorGuide_Left" if side < 0.0 else "EntryRampFloorGuide_Right",Vector3(side*1.46,-1.6,-44.0),Vector3(0.065,0.045,11.6),Color(1.0,0.58,0.25))
+		floor_guide.rotation.x = -entry_angle
+		floor_guide.visible = false
+		entry_guide_meshes.append(floor_guide)
 	var roof := _box("ConcealedRampCeiling",Vector3(0,2.5,-44.0),Vector3(4.5,0.24,12.0),Color(0.30,0.30,0.27),true)
 	roof.rotation.x = -entry_angle
 	for z: float in [-40.5,-43.0,-45.5,-48.0]:
