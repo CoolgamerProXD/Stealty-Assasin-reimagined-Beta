@@ -499,8 +499,8 @@ func _build_operations_chamber(center: Vector3) -> void:
 		task_light.name = "OperationsTaskLight"
 		task_light.position = Vector3(x+light_x,y+3.75,z)
 		task_light.light_color = Color(0.78,0.91,0.87)
-		task_light.light_energy = 1.75 if is_zero_approx(light_x) else 1.25
-		task_light.omni_range = 14.0 if is_zero_approx(light_x) else 12.0
+		task_light.light_energy = 3.0 if is_zero_approx(light_x) else 2.2
+		task_light.omni_range = 18.0 if is_zero_approx(light_x) else 16.0
 		task_light.shadow_enabled = false
 		task_light.add_to_group("quality_practicals")
 		add_child(task_light)
@@ -651,14 +651,17 @@ func _build_access_zones() -> void:
 	_add_facility_zone(Rect2(-28,-54,56,18),-14.0,-12.0,"facility_maintenance")
 
 func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void:
-	for x: float in [-20.0,-8.0,8.0,20.0]:
+	# Four cross-aisle rows keep the central circulation and occupied rooms lit;
+	# twelve-metre lateral spacing closes the previous sixteen-metre centre gap.
+	for x: float in [-18.0,-6.0,6.0,18.0]:
 		for z: float in [center_z-17.0,center_z,center_z+17.0]:
 			_box("RecessedFacilityLuminaire",Vector3(x,floor_y+4.62,z),Vector3(2.2,0.08,0.32),tint.lightened(0.48))
 			var lamp := OmniLight3D.new()
+			lamp.name = "FacilityCeilingPractical"
 			lamp.position = Vector3(x,floor_y+3.85,z)
-			lamp.light_color = Color(0.52,0.72,0.76) if floor_y > -10.0 else Color(0.98,0.68,0.38)
-			lamp.light_energy = 0.52
-			lamp.omni_range = 9.0
+			lamp.light_color = Color(0.68,0.80,0.82) if floor_y > -10.0 else Color(0.98,0.72,0.48)
+			lamp.light_energy = 1.8
+			lamp.omni_range = 14.5
 			lamp.shadow_enabled = false
 			lamp.add_to_group("quality_practicals")
 			var graphics_quality := "MEDIUM"
@@ -668,7 +671,8 @@ func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void
 				var quality_settings: Dictionary = campaign_service.get("settings")
 				graphics_quality = str(quality_settings.get("graphics","MEDIUM"))
 				practicals_enabled = bool(quality_settings.get("practicals",true))
-			lamp.visible = graphics_quality != "LOW" and practicals_enabled
+			var central_fallback := is_equal_approx(absf(x),6.0) and is_equal_approx(z,center_z)
+			lamp.visible = practicals_enabled and (graphics_quality != "LOW" or central_fallback)
 			add_child(lamp)
 
 func _build_staff_routes() -> void:

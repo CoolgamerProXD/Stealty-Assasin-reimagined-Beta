@@ -413,7 +413,7 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
    _box(Vector3(x+side*3.74,2.10,z+bay_z),Vector3(0.50,0.10,0.10),Color(0.85,0.78,0.58))
    _box(Vector3(x+side*3.74,2.40,z+bay_z),Vector3(0.18,0.48,0.18),Color(0.76,0.25,0.15))
  # Differentiated mounted trade signs and an address-level lightbox.
- var store_label := "JADE LEAF  /  TEA & HERBS" if operation_id == "the_streets" else ("MERIDIAN  /  FINANCE DESK" if operation_id == "the_district" else "QUAY  /  FERRY SERVICES")
+ var store_label := "JADE LEAF TEA" if operation_id == "the_streets" else ("MERIDIAN" if operation_id == "the_district" else "QUAY FERRY")
  _box(Vector3(facade_x+side*0.18,3.02,z),Vector3(0.16,0.48,4.8),dark)
  var fascia_light := _box(Vector3(facade_x+side*0.275,3.02,z),Vector3(0.035,0.30,4.4),accent)
  (fascia_light.get_child(0) as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -423,8 +423,8 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  sign.text = store_label
  sign.position = Vector3(facade_x+side*1.47,3.31,z)
  sign.rotation.y = side*PI*0.5
- sign.font_size = 30
- sign.pixel_size = 0.0045
+ sign.font_size = 42
+ sign.pixel_size = 0.006
  sign.modulate = Color(0.98,0.89,0.70)
  sign.outline_size = 4
  sign.outline_modulate = Color(0.12,0.17,0.17)

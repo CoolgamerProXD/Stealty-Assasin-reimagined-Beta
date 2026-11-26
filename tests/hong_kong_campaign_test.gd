@@ -277,7 +277,7 @@ func run() -> void:
   var expected_outward := street_annex.global_transform.basis * Vector3(-signf(sign_local_position.x),0,0)
   outward_sign_dot = trade_sign.global_transform.basis.z.normalized().dot(expected_outward.normalized())
  check(city_paving != null and city_paving.material_override is ShaderMaterial and city.find_child("OriginalShopfrontSign",true,false) != null and annex_ground != null and annex_ground.material_override is ShaderMaterial and annex_facade != null and annex_facade.material_override is ShaderMaterial and storefront_transom != null and storefront_transom.material_override is ShaderMaterial, "playable city and annex streets use original paving/facade finishes with attached retail identity")
- check(trade_sign != null and outward_sign_dot > 0.99, "market trade signs face the pedestrian street instead of the shop interior")
+ check(trade_sign != null and outward_sign_dot > 0.99 and trade_sign.font_size >= 42 and trade_sign.pixel_size >= 0.006 and trade_sign.text == "JADE LEAF TEA", "market trade sign faces the street and uses a short, enlarged shop identity for legibility")
  var storefront_sign_count := count_group_under(city,"district_storefront_sign")
  var storefront_glazing_count := count_group_under(city,"district_storefront_glazing")
  var storefront_leaf_count := count_group_under(city,"district_storefront_door_leaf")

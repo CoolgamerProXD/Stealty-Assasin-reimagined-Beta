@@ -139,6 +139,14 @@ func run() -> void:
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
 	check(mountain.find_child("FloorPanelJoint",true,false) != null and mountain.find_child("RecessedWallPanel",true,false) != null and mountain.find_child("RoomStructuralPilaster",true,false) != null and mountain.find_child("CeilingServiceSpine",true,false) != null,"PROMETHEUS rooms use panelized floor inlays, wall modules, structural piers and ceiling service spines")
 	check(mountain.find_child("CeilingLightDiffuser",true,false) != null and mountain.find_child("DoorwayWayfindingStrip",true,false) != null,"facility interiors include practical ceiling fixtures and egress wayfinding")
+	var level_practical_count := 0
+	var level_practicals_are_lit := true
+	for candidate: Node in facility.get_children():
+		if candidate is OmniLight3D and candidate.name == "FacilityCeilingPractical":
+			level_practical_count += 1
+			var practical := candidate as OmniLight3D
+			level_practicals_are_lit = level_practicals_are_lit and practical.light_energy >= 1.8 and practical.omni_range >= 14.4 and not practical.shadow_enabled
+	check(level_practical_count == 36 and level_practicals_are_lit,"three sublevels use overlapping, shadowless cross-aisle practicals with a central fill gap closed")
 	check(mountain.find_child("DoorJamb",true,false) != null and mountain.find_child("SlidingDoorPocket",true,false) != null and mountain.find_child("ReturnAirGrilleSlat",true,false) != null and mountain.find_child("ConduitTrunk",true,false) != null,"facility room entrances, ventilation and electrical routes read as constructed systems")
 	check(mountain.find_child("WalkThroughScannerUpright",true,false) != null and mountain.find_child("BunkFramePost",true,false) != null and mountain.find_child("FumeHoodBack",true,false) != null and mountain.find_child("CameraFeedLabelStrip",true,false) != null,"screening, staff quarters, research and surveillance each have purpose-built fitouts")
 	check(mountain.find_child("AirHandlingUnit",true,false) != null and mountain.find_child("PlantPipeRiser",true,false) != null and mountain.find_child("ArchiveInventoryTable",true,false) != null and mountain.find_child("DirectorateBriefingDisplay",true,false) != null,"plant, archive and directorate spaces have distinct operating equipment")
