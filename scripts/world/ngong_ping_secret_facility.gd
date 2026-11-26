@@ -127,8 +127,8 @@ func _build_hidden_entry() -> void:
 	light.name = "HiddenAccessGuideLight"
 	light.position = Vector3(0,1.6,-42.0)
 	light.light_color = Color(0.94,0.62,0.31)
-	light.light_energy = 0.8
-	light.omni_range = 10.0
+	light.light_energy = 1.8
+	light.omni_range = 13.0
 	light.shadow_enabled = false
 	light.visible = false
 	add_child(light)
@@ -597,6 +597,24 @@ func _build_buddha_interior() -> void:
 			for side: float in [-1.0,1.0]:
 				_box("CrownOculusGuardRail",Vector3(side*(oculus_width*0.5),floor_y+0.56,-29),Vector3(0.10,1.12,oculus_depth),Color(0.56,0.44,0.28),true)
 				_box("CrownOculusGuardRail",Vector3(0,floor_y+0.56,-29+side*(oculus_depth*0.5)),Vector3(oculus_width,1.12,0.10),Color(0.56,0.44,0.28),true)
+			# Close the crown chamber above the shaft: the warm central rooflight
+			# gives the upward view a designed endpoint instead of a hole to sky.
+			var rooflight_size := 2.8
+			var roof_side_width := (width-rooflight_size)*0.5
+			var roof_side_depth := (depth-rooflight_size)*0.5
+			for side: float in [-1.0,1.0]:
+				_box("CrownChamberRoofSide",Vector3(side*(rooflight_size*0.5+roof_side_width*0.5),floor_y+3.42,-29),Vector3(roof_side_width,0.26,depth),tint.darkened(0.08),true)
+				_box("CrownChamberRoofEnd",Vector3(0,floor_y+3.42,-29+side*(rooflight_size*0.5+roof_side_depth*0.5)),Vector3(rooflight_size,0.26,roof_side_depth),tint.darkened(0.08),true)
+			_box("CrownOculusRoofLight",Vector3(0,floor_y+3.42,-29),Vector3(rooflight_size,0.12,rooflight_size),Color(0.79,0.70,0.48))
+			var oculus_lamp := OmniLight3D.new()
+			oculus_lamp.name = "CrownOculusPractical"
+			oculus_lamp.position = Vector3(0,floor_y+2.9,-29)
+			oculus_lamp.light_color = Color(1.0,0.76,0.48)
+			oculus_lamp.light_energy = 2.8
+			oculus_lamp.omni_range = 11.0
+			oculus_lamp.shadow_enabled = false
+			oculus_lamp.add_to_group("quality_practicals")
+			add_child(oculus_lamp)
 		else:
 			_box("ConcealedBuddhaInteriorFloor_%d" % (i+1),Vector3(0,floor_y-0.18,-29),Vector3(width,0.36,depth),tint,true)
 		for side: float in [-1.0,1.0]:
