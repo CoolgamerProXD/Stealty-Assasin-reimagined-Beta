@@ -19,6 +19,7 @@ var door_body: StaticBody3D
 var door_collision: CollisionShape3D
 var door_visual: MeshInstance3D
 var elevator_lights: Array[OmniLight3D] = []
+var entry_guide_meshes: Array[Node3D] = []
 var discovered: bool = false
 var mesh_cache: Dictionary = {}
 var material_cache: Dictionary = {}
@@ -53,6 +54,7 @@ func open_hidden_entry() -> bool:
 		tween.tween_property(door_visual,"position:y",door_visual.position.y + 2.7,0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	if door_collision: door_collision.set_deferred("disabled",true)
 	for lamp: OmniLight3D in elevator_lights: lamp.visible = true
+	for guide: Node3D in entry_guide_meshes: guide.visible = true
 	return true
 
 func set_discovered(value: bool) -> void:
@@ -62,6 +64,7 @@ func set_discovered(value: bool) -> void:
 		if door_visual: door_visual.visible = false
 		if door_collision: door_collision.disabled = true
 		for lamp: OmniLight3D in elevator_lights: lamp.visible = true
+		for guide: Node3D in entry_guide_meshes: guide.visible = true
 
 func is_inside_statue(point: Vector3) -> bool:
 	return point.y > 1.0 and point.y < 22.5 and absf(point.x) < 8.5 and point.z > -36.0 and point.z < -22.0
@@ -119,6 +122,9 @@ func _build_hidden_entry() -> void:
 	for side: float in [-1.0,1.0]:
 		var wall := _box("EntranceRampRetainingWall",Vector3(side*2.05,-1.6,-44.0),Vector3(0.24,3.2,12.0),Color(0.31,0.31,0.28),true)
 		wall.rotation.x = -entry_angle
+		var portal_guide := _box("EntryPortalGuide_Left" if side < 0.0 else "EntryPortalGuide_Right",Vector3(side*1.88,-0.45,-40.4),Vector3(0.10,2.3,0.08),Color(0.96,0.62,0.30))
+		portal_guide.visible = false
+		entry_guide_meshes.append(portal_guide)
 	var roof := _box("ConcealedRampCeiling",Vector3(0,2.5,-44.0),Vector3(4.5,0.24,12.0),Color(0.30,0.30,0.27),true)
 	roof.rotation.x = -entry_angle
 	for z: float in [-40.5,-43.0,-45.5,-48.0]:
