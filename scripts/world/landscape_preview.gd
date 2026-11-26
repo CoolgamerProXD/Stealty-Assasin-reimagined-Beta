@@ -1,6 +1,5 @@
 extends "res://scripts/world/tung_chung_preview.gd"
 ## Original explorable landscape studies, separate from campaign progression.
-const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
 @export_enum("city", "mountain") var preview_kind: String = "city"
 var accents: Array[Transform3D] = []
 var accent_colors: Array[Color] = []
