@@ -139,6 +139,10 @@ func run() -> void:
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
 	check(mountain.find_child("FloorPanelJoint",true,false) != null and mountain.find_child("RecessedWallPanel",true,false) != null and mountain.find_child("RoomStructuralPilaster",true,false) != null and mountain.find_child("CeilingServiceSpine",true,false) != null,"PROMETHEUS rooms use panelized floor inlays, wall modules, structural piers and ceiling service spines")
 	check(mountain.find_child("CeilingLightDiffuser",true,false) != null and mountain.find_child("DoorwayWayfindingStrip",true,false) != null,"facility interiors include practical ceiling fixtures and egress wayfinding")
+	var entry_guide: OmniLight3D = mountain.find_child("HiddenAccessGuideLight",true,false) as OmniLight3D
+	var entry_sconce: OmniLight3D = mountain.find_child("HiddenEntrySconce_Left",true,false) as OmniLight3D
+	var hall_fill: OmniLight3D = mountain.find_child("AccessHallFocalLight",true,false) as OmniLight3D
+	check(entry_guide != null and entry_guide.light_energy >= 3.99 and entry_sconce != null and entry_sconce.light_energy >= 2.79 and hall_fill != null and hall_fill.light_energy >= 4.49,"concealed entry and monumental access hall have dedicated shadowless readability fills")
 	var ngong_environment: Environment = mountain.get_viewport().world_3d.environment
 	check(ngong_environment != null and ngong_environment.ambient_light_energy >= 1.24,"Ngong Ping uses a warm ambient floor to preserve matte interior readability between practical lights")
 	var level_practical_count := 0

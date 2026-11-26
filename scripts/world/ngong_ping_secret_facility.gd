@@ -127,12 +127,23 @@ func _build_hidden_entry() -> void:
 	light.name = "HiddenAccessGuideLight"
 	light.position = Vector3(0,1.6,-42.0)
 	light.light_color = Color(0.94,0.62,0.31)
-	light.light_energy = 1.8
-	light.omni_range = 13.0
+	light.light_energy = 4.0
+	light.omni_range = 15.5
 	light.shadow_enabled = false
 	light.visible = false
 	add_child(light)
 	elevator_lights.append(light)
+	for side: float in [-1.0,1.0]:
+		var sconce := OmniLight3D.new()
+		sconce.name = "HiddenEntrySconce_%s" % ("Left" if side < 0.0 else "Right")
+		sconce.position = Vector3(side*1.55,0.55,-40.5)
+		sconce.light_color = Color(1.0,0.68,0.36)
+		sconce.light_energy = 2.8
+		sconce.omni_range = 9.0
+		sconce.shadow_enabled = false
+		sconce.visible = false
+		add_child(sconce)
+		elevator_lights.append(sconce)
 	var door_hint := Label3D.new()
 	door_hint.name = "ConcealedDoorHint"
 	door_hint.text = "CARVED SEAM  /  EXAMINE"
@@ -152,6 +163,15 @@ func _build_underground_levels() -> void:
 		_add_facility_zone(Rect2(-28.0,-80.0,56.0,46.0),y-0.3,y+1.0,["facility_staff","facility_research","facility_ops"][floor_index])
 		_build_level_lighting(y,-57,palette)
 	_build_room("SUBLEVEL 01  /  MONUMENTAL ACCESS HALL",Vector3(0,-3.0,-59),Vector2(25,12),Color(0.43,0.39,0.31),"ACCESS CONTROL",0)
+	var hall_fill := OmniLight3D.new()
+	hall_fill.name = "AccessHallFocalLight"
+	hall_fill.position = Vector3(0,0.8,-59)
+	hall_fill.light_color = Color(1.0,0.82,0.62)
+	hall_fill.light_energy = 4.5
+	hall_fill.omni_range = 15.0
+	hall_fill.shadow_enabled = false
+	hall_fill.add_to_group("quality_practicals")
+	add_child(hall_fill)
 	_build_room("SECURITY CHECKPOINT",Vector3(0,-3.0,-47),Vector2(18,8),Color(0.25,0.34,0.38),"IDENTITY / SCREENING",1)
 	_build_room("ADMINISTRATIVE OFFICES",Vector3(-18,-3.0,-48),Vector2(17,11),Color(0.37,0.39,0.36),"ARCHIVE ADMIN",2)
 	_build_room("STAFF QUARTERS",Vector3(18,-3.0,-69),Vector2(17,11),Color(0.38,0.34,0.29),"REST / ROTATION",3)
