@@ -374,7 +374,8 @@ func _city() -> void:
  var road := Color(0.20,0.23,0.25)
  var pale := Color(0.76,0.68,0.52)
  var dark := Color(0.18,0.25,0.27)
- var glass: Color = _city_facade_glass(str(get_meta("operation_id", "")),1,1,0.0,0.0)
+ var operation := str(get_meta("operation_id", ""))
+ var glass: Color = _city_facade_glass(operation,1,1,0.0,0.0)
  _box(Vector3(0,0.02,0),Vector3(11,0.04,88),road)
  _box(Vector3(0,0.025,0),Vector3(88,0.04,10),road)
  for z: float in [-36.0,-24.0,-12.0,0.0,12.0,24.0,36.0]:
