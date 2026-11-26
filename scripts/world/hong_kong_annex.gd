@@ -388,6 +388,10 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  var canopy_color := accent if operation_id != "the_district" else Color(0.20,0.35,0.38)
  _box(Vector3(facade_x+side*0.58,3.56,z),Vector3(1.55,0.18,6.65),canopy_color)
  _box(Vector3(facade_x+side*1.34,3.31,z),Vector3(0.12,0.42,6.65),dark)
+ for stripe: int in range(9):
+  var stripe_z := z-2.80+float(stripe)*0.70
+  var stripe_color := Color(0.84,0.75,0.57) if stripe%2==0 else canopy_color.lightened(0.18)
+  _box(Vector3(facade_x+side*1.405,3.31,stripe_z),Vector3(0.025,0.28,0.37),stripe_color)
  for brace_z: float in [-2.9,2.9]:
   _box(Vector3(facade_x+side*0.50,3.12,z+brace_z),Vector3(0.10,0.74,0.10),dark)
   _box(Vector3(facade_x+side*0.36,2.96,z+brace_z),Vector3(0.44,0.08,0.10),dark)
@@ -418,9 +422,9 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  sign.text = store_label
  sign.position = Vector3(facade_x+side*0.32,3.05,z)
  sign.rotation.y = -side*PI*0.5
- sign.font_size = 22
- sign.pixel_size = 0.004
- sign.modulate = Color(0.96,0.87,0.68)
+ sign.font_size = 34
+ sign.pixel_size = 0.005
+ sign.modulate = Color(0.98,0.89,0.70)
  add_child(sign)
  # A shallow return, downpipe and reachable utility isolator finish the
  # façade junction and service lane without blocking either pedestrian line.
