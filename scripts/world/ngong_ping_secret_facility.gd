@@ -583,38 +583,41 @@ func _build_buddha_interior() -> void:
 			for side: float in [-1.0,1.0]:
 				_box("ConcealedBuddhaInteriorFloor_1_Side",Vector3(side*(1.6+side_width*0.5),floor_y-0.18,-29),Vector3(side_width,0.36,depth),tint,true)
 			_box("ConcealedBuddhaInteriorFloor_1_Front",Vector3(0,floor_y-0.18,-24.5),Vector3(3.2,0.36,5.0),tint,true)
-		elif i == FLOORS_INSIDE.size()-1:
-			# The crown level has a protected central oculus instead of another
-			# low, solid lid. The opening aligns over the lower chamber and its
-			# continuous ramp, making the monument read as a tall inner core.
-			var oculus_width := 5.8
-			var oculus_depth := 5.4
+		elif i > 0:
+			# Aligned, guarded apertures form a true multi-storey core rather than
+			# a single ceiling hole. Their tapered sizes preserve a safe perimeter
+			# walk while keeping clear of the switchback stair at x=2.
+			var oculus_width: float = [0.0,4.6,4.2,3.7,3.0][i]
+			var oculus_depth: float = [0.0,4.8,4.4,3.9,3.4][i]
+			var oculus_x := -2.4
 			var side_width := (width-oculus_width)*0.5
 			var side_depth := (depth-oculus_depth)*0.5
+			var oculus_prefix := "CrownOculus" if i == FLOORS_INSIDE.size()-1 else "CoreAtrium_%d" % (i+1)
 			for side: float in [-1.0,1.0]:
-				_box("CrownOculusFloorSide",Vector3(side*(oculus_width*0.5+side_width*0.5),floor_y-0.18,-29),Vector3(side_width,0.36,depth),tint,true)
-				_box("CrownOculusFloorEnd",Vector3(0,floor_y-0.18,-29+side*(oculus_depth*0.5+side_depth*0.5)),Vector3(oculus_width,0.36,side_depth),tint,true)
+				_box(oculus_prefix+"FloorSide",Vector3(oculus_x+side*(oculus_width*0.5+side_width*0.5),floor_y-0.18,-29),Vector3(side_width,0.36,depth),tint,true)
+				_box(oculus_prefix+"FloorEnd",Vector3(oculus_x,floor_y-0.18,-29+side*(oculus_depth*0.5+side_depth*0.5)),Vector3(oculus_width,0.36,side_depth),tint,true)
 			for side: float in [-1.0,1.0]:
-				_box("CrownOculusGuardRail",Vector3(side*(oculus_width*0.5),floor_y+0.56,-29),Vector3(0.10,1.12,oculus_depth),Color(0.56,0.44,0.28),true)
-				_box("CrownOculusGuardRail",Vector3(0,floor_y+0.56,-29+side*(oculus_depth*0.5)),Vector3(oculus_width,1.12,0.10),Color(0.56,0.44,0.28),true)
-			# Close the crown chamber above the shaft: the warm central rooflight
-			# gives the upward view a designed endpoint instead of a hole to sky.
-			var rooflight_size := 2.8
-			var roof_side_width := (width-rooflight_size)*0.5
-			var roof_side_depth := (depth-rooflight_size)*0.5
-			for side: float in [-1.0,1.0]:
-				_box("CrownChamberRoofSide",Vector3(side*(rooflight_size*0.5+roof_side_width*0.5),floor_y+3.42,-29),Vector3(roof_side_width,0.26,depth),tint.darkened(0.08),true)
-				_box("CrownChamberRoofEnd",Vector3(0,floor_y+3.42,-29+side*(rooflight_size*0.5+roof_side_depth*0.5)),Vector3(rooflight_size,0.26,roof_side_depth),tint.darkened(0.08),true)
-			_box("CrownOculusRoofLight",Vector3(0,floor_y+3.42,-29),Vector3(rooflight_size,0.12,rooflight_size),Color(0.79,0.70,0.48))
-			var oculus_lamp := OmniLight3D.new()
-			oculus_lamp.name = "CrownOculusPractical"
-			oculus_lamp.position = Vector3(0,floor_y+2.9,-29)
-			oculus_lamp.light_color = Color(1.0,0.76,0.48)
-			oculus_lamp.light_energy = 2.8
-			oculus_lamp.omni_range = 11.0
-			oculus_lamp.shadow_enabled = false
-			oculus_lamp.add_to_group("quality_practicals")
-			add_child(oculus_lamp)
+				_box(oculus_prefix+"GuardRail",Vector3(oculus_x+side*(oculus_width*0.5),floor_y+0.56,-29),Vector3(0.10,1.12,oculus_depth),Color(0.56,0.44,0.28),true)
+				_box(oculus_prefix+"GuardRail",Vector3(oculus_x,floor_y+0.56,-29+side*(oculus_depth*0.5)),Vector3(oculus_width,1.12,0.10),Color(0.56,0.44,0.28),true)
+			if i == FLOORS_INSIDE.size()-1:
+				# Close the crown chamber above the shaft: the warm central rooflight
+				# gives the upward view a designed endpoint instead of a hole to sky.
+				var rooflight_size := 2.5
+				var roof_side_width := (width-rooflight_size)*0.5
+				var roof_side_depth := (depth-rooflight_size)*0.5
+				for side: float in [-1.0,1.0]:
+					_box("CrownChamberRoofSide",Vector3(oculus_x+side*(rooflight_size*0.5+roof_side_width*0.5),floor_y+3.42,-29),Vector3(roof_side_width,0.26,depth),tint.darkened(0.08),true)
+					_box("CrownChamberRoofEnd",Vector3(oculus_x,floor_y+3.42,-29+side*(rooflight_size*0.5+roof_side_depth*0.5)),Vector3(rooflight_size,0.26,roof_side_depth),tint.darkened(0.08),true)
+				_box("CrownOculusRoofLight",Vector3(oculus_x,floor_y+3.42,-29),Vector3(rooflight_size,0.12,rooflight_size),Color(0.79,0.70,0.48))
+				var oculus_lamp := OmniLight3D.new()
+				oculus_lamp.name = "CrownOculusPractical"
+				oculus_lamp.position = Vector3(oculus_x,floor_y+2.9,-29)
+				oculus_lamp.light_color = Color(1.0,0.76,0.48)
+				oculus_lamp.light_energy = 2.8
+				oculus_lamp.omni_range = 11.0
+				oculus_lamp.shadow_enabled = false
+				oculus_lamp.add_to_group("quality_practicals")
+				add_child(oculus_lamp)
 		else:
 			_box("ConcealedBuddhaInteriorFloor_%d" % (i+1),Vector3(0,floor_y-0.18,-29),Vector3(width,0.36,depth),tint,true)
 		for side: float in [-1.0,1.0]:
@@ -733,7 +736,7 @@ func _build_staff_routes() -> void:
 	_add_staff("Vault security officer","security",Vector3(-15,-13.15,-67),Vector3(-22,-13.15,-67),"facility_security")
 	_add_staff("Plant room specialist","facility_technician",Vector3(18,-13.15,-67),Vector3(12,-13.15,-67),"facility_technician")
 	_add_staff("Inner-structure archivist","facility_research",Vector3(-3,1.85,-29),Vector3(3,1.85,-29),"facility_research")
-	_add_staff("Crown chamber attendant","facility_director",Vector3(3.15,17.85,-29),Vector3(3.35,17.85,-28),"facility_director")
+	_add_staff("Crown chamber attendant","facility_director",Vector3(3.3,17.85,-32.1),Vector3(3.25,17.85,-32.0),"facility_director")
 
 func _add_staff(identity: String, occupation: String, start: Vector3, finish: Vector3, outfit: String) -> void:
 	var npc_variant: Variant = world.call("_target",identity,occupation,start,finish)
