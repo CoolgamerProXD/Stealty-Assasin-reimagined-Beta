@@ -180,28 +180,49 @@ func _joint_origin(skeleton: Skeleton3D, bone_name: String) -> Vector3:
 	return skeleton.get_bone_global_pose(index).origin
 
 
+func _chain_lengths_preserved(skeleton: Skeleton3D, chain: Array[String]) -> bool:
+	for segment: int in range(chain.size() - 1):
+		var parent_index := skeleton.find_bone(chain[segment])
+		var child_index := skeleton.find_bone(chain[segment + 1])
+		if parent_index < 0 or child_index < 0:
+			return false
+		var expected := skeleton.get_bone_global_rest(parent_index).origin.distance_to(
+			skeleton.get_bone_global_rest(child_index).origin
+		)
+		if expected < 0.012:
+			continue # Zero-length MakeHuman twist helpers do not define a segment.
+		var observed := skeleton.get_bone_global_pose(parent_index).origin.distance_to(
+			skeleton.get_bone_global_pose(child_index).origin
+		)
+		if absf(observed - expected) > maxf(0.015, expected * 0.08):
+			return false
+	return true
+
+
 func _check_joint_chain_integrity(pose_name: String) -> void:
 	for person: StylizedPerson in people:
 		var skeleton := person.cc0_skeleton
 		if skeleton == null:
 			continue
-		var left_hip := _joint_origin(skeleton, "upperleg01.L")
-		var left_knee := _joint_origin(skeleton, "lowerleg01.L")
-		var left_ankle := _joint_origin(skeleton, "foot.L")
-		var right_hip := _joint_origin(skeleton, "upperleg01.R")
-		var right_knee := _joint_origin(skeleton, "lowerleg01.R")
-		var right_ankle := _joint_origin(skeleton, "foot.R")
-		var leg_lengths_valid := (
-			left_hip.distance_to(left_knee) > 0.16
-			and left_hip.distance_to(left_knee) < 0.95
-			and left_knee.distance_to(left_ankle) > 0.16
-			and left_knee.distance_to(left_ankle) < 0.95
-			and right_hip.distance_to(right_knee) > 0.16
-			and right_hip.distance_to(right_knee) < 0.95
-			and right_knee.distance_to(right_ankle) > 0.16
-			and right_knee.distance_to(right_ankle) < 0.95
-		)
-		check(leg_lengths_valid, person.cc0_model_name + " keeps knee and ankle joints connected during " + pose_name)
+		var limbs_connected := true
+		for side: String in ["L", "R"]:
+			var leg_chain: Array[String] = [
+				"upperleg01." + side,
+				"upperleg02." + side,
+				"lowerleg01." + side,
+				"lowerleg02." + side,
+				"foot." + side,
+			]
+			var arm_chain: Array[String] = [
+				"upperarm01." + side,
+				"upperarm02." + side,
+				"lowerarm01." + side,
+				"lowerarm02." + side,
+				"wrist." + side,
+			]
+			limbs_connected = limbs_connected and _chain_lengths_preserved(skeleton, leg_chain)
+			limbs_connected = limbs_connected and _chain_lengths_preserved(skeleton, arm_chain)
+		check(limbs_connected, person.cc0_model_name + " preserves each limb segment's imported length during " + pose_name)
 		var left_shoulder := _joint_origin(skeleton, "upperarm01.L")
 		var left_wrist := _joint_origin(skeleton, "wrist.L")
 		var right_shoulder := _joint_origin(skeleton, "upperarm01.R")
