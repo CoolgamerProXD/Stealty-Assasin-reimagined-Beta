@@ -587,8 +587,8 @@ func _build_buddha_interior() -> void:
 			# The crown level has a protected central oculus instead of another
 			# low, solid lid. The opening aligns over the lower chamber and its
 			# continuous ramp, making the monument read as a tall inner core.
-			var oculus_width := 3.8
-			var oculus_depth := 4.2
+			var oculus_width := 5.8
+			var oculus_depth := 5.4
 			var side_width := (width-oculus_width)*0.5
 			var side_depth := (depth-oculus_depth)*0.5
 			for side: float in [-1.0,1.0]:
@@ -733,7 +733,7 @@ func _build_staff_routes() -> void:
 	_add_staff("Vault security officer","security",Vector3(-15,-13.15,-67),Vector3(-22,-13.15,-67),"facility_security")
 	_add_staff("Plant room specialist","facility_technician",Vector3(18,-13.15,-67),Vector3(12,-13.15,-67),"facility_technician")
 	_add_staff("Inner-structure archivist","facility_research",Vector3(-3,1.85,-29),Vector3(3,1.85,-29),"facility_research")
-	_add_staff("Crown chamber attendant","facility_director",Vector3(0,17.85,-29),Vector3(1,17.85,-28),"facility_director")
+	_add_staff("Crown chamber attendant","facility_director",Vector3(3.15,17.85,-29),Vector3(3.35,17.85,-28),"facility_director")
 
 func _add_staff(identity: String, occupation: String, start: Vector3, finish: Vector3, outfit: String) -> void:
 	var npc_variant: Variant = world.call("_target",identity,occupation,start,finish)
