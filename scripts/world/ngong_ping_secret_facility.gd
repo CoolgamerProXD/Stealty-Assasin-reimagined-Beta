@@ -583,6 +583,20 @@ func _build_buddha_interior() -> void:
 			for side: float in [-1.0,1.0]:
 				_box("ConcealedBuddhaInteriorFloor_1_Side",Vector3(side*(1.6+side_width*0.5),floor_y-0.18,-29),Vector3(side_width,0.36,depth),tint,true)
 			_box("ConcealedBuddhaInteriorFloor_1_Front",Vector3(0,floor_y-0.18,-24.5),Vector3(3.2,0.36,5.0),tint,true)
+		elif i == FLOORS_INSIDE.size()-1:
+			# The crown level has a protected central oculus instead of another
+			# low, solid lid. The opening aligns over the lower chamber and its
+			# continuous ramp, making the monument read as a tall inner core.
+			var oculus_width := 3.8
+			var oculus_depth := 4.2
+			var side_width := (width-oculus_width)*0.5
+			var side_depth := (depth-oculus_depth)*0.5
+			for side: float in [-1.0,1.0]:
+				_box("CrownOculusFloorSide",Vector3(side*(oculus_width*0.5+side_width*0.5),floor_y-0.18,-29),Vector3(side_width,0.36,depth),tint,true)
+				_box("CrownOculusFloorEnd",Vector3(0,floor_y-0.18,-29+side*(oculus_depth*0.5+side_depth*0.5)),Vector3(oculus_width,0.36,side_depth),tint,true)
+			for side: float in [-1.0,1.0]:
+				_box("CrownOculusGuardRail",Vector3(side*(oculus_width*0.5),floor_y+0.56,-29),Vector3(0.10,1.12,oculus_depth),Color(0.56,0.44,0.28),true)
+				_box("CrownOculusGuardRail",Vector3(0,floor_y+0.56,-29+side*(oculus_depth*0.5)),Vector3(oculus_width,1.12,0.10),Color(0.56,0.44,0.28),true)
 		else:
 			_box("ConcealedBuddhaInteriorFloor_%d" % (i+1),Vector3(0,floor_y-0.18,-29),Vector3(width,0.36,depth),tint,true)
 		for side: float in [-1.0,1.0]:
