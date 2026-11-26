@@ -1,6 +1,8 @@
 extends Node3D
 ## Original fictional extensions attached to the shared city, one per mission.
 const CONSTRUCTION := preload("res://scripts/world/construction_kit.gd")
+const CITY_FACADE_SHADER := preload("res://shaders/city_facade.gdshader")
+const CITY_PAVING_SHADER := preload("res://shaders/city_paving.gdshader")
 ## Local +Z points outwards. Collision, lighting and readable passages are authored.
 var operation_id := ""
 var mesh_cache: Dictionary = {}
@@ -54,9 +56,10 @@ func build() -> void:
  var accent := Color(0.73,0.27,0.18) if market else (Color(0.24,0.48,0.49) if business else Color(0.18,0.40,0.49))
  var dark := Color(0.19,0.25,0.26)
  var ground := _box(Vector3(0,-0.2,35),Vector3(70,0.4,70),paving,true)
+ ground.name = "NeighbourhoodGround"
  var paving_material := ShaderMaterial.new()
- paving_material.shader = preload("res://shaders/neighbourhood_paving.gdshader")
- paving_material.set_shader_parameter("paving_color", paving)
+ paving_material.shader = CITY_PAVING_SHADER
+ paving_material.set_shader_parameter("paving_tint",paving)
  (ground.get_child(0) as MeshInstance3D).material_override = paving_material
  # Solid boundaries and a 12m gateway back to the existing city.
  for x: float in [-35.0,35.0]: _box(Vector3(x,2,35),Vector3(0.3,4,70),dark,true)
@@ -287,8 +290,15 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   _sign("UPPER SERVICE / STAFF",Vector3(x,6.8,z-4.86),PI)
  else:
   for dx: float in [-3.0,0.0,3.0]:
-   _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
-   _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
+  var upper_shell := _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
+  upper_shell.name = "DistrictUpperFacadeShell"
+  var upper_visual := upper_shell.get_child(0) as MeshInstance3D
+  var facade_material := ShaderMaterial.new()
+  facade_material.shader = CITY_FACADE_SHADER
+  facade_material.set_shader_parameter("facade_tint",wall.darkened(0.08))
+  facade_material.set_shader_parameter("facade_seed",absf(x*13.0+z*7.0+dx))
+  upper_visual.material_override = facade_material
+  _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
  # The upper storey is a real, visible volume rather than one blank silhouette:
  # framed glazing wraps the side and rear elevations, with a continuous slab
  # edge and a restrained service-level air-conditioning unit.
