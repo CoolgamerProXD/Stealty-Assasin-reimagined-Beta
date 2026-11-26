@@ -266,9 +266,11 @@ func run() -> void:
  var street_annex := city.find_child("District_the_streets",true,false) as Node3D
  var annex_ground_node := street_annex.find_child("NeighbourhoodGround",true,false) if street_annex else null
  var annex_facade_node := street_annex.find_child("DistrictUpperFacadeShell",true,false) if street_annex else null
+ var storefront_transom_node := street_annex.find_child("DistrictStorefrontFacadeTransom",true,false) if street_annex else null
  var annex_ground := annex_ground_node.get_child(0) as MeshInstance3D if annex_ground_node else null
  var annex_facade := annex_facade_node.get_child(0) as MeshInstance3D if annex_facade_node else null
- check(city_paving != null and city_paving.material_override is ShaderMaterial and city.find_child("OriginalShopfrontSign",true,false) != null and annex_ground != null and annex_ground.material_override is ShaderMaterial and annex_facade != null and annex_facade.material_override is ShaderMaterial, "playable city and annex streets use original paving/facade finishes with attached retail identity")
+ var storefront_transom := storefront_transom_node.get_child(0) as MeshInstance3D if storefront_transom_node else null
+ check(city_paving != null and city_paving.material_override is ShaderMaterial and city.find_child("OriginalShopfrontSign",true,false) != null and annex_ground != null and annex_ground.material_override is ShaderMaterial and annex_facade != null and annex_facade.material_override is ShaderMaterial and storefront_transom != null and storefront_transom.material_override is ShaderMaterial, "playable city and annex streets use original paving/facade finishes with attached retail identity")
  var storefront_sign_count := count_group_under(city,"district_storefront_sign")
  var storefront_glazing_count := count_group_under(city,"district_storefront_glazing")
  var storefront_leaf_count := count_group_under(city,"district_storefront_door_leaf")

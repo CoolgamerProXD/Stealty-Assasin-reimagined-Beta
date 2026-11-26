@@ -292,12 +292,7 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   for dx: float in [-3.0,0.0,3.0]:
    var upper_shell := _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
    upper_shell.name = "DistrictUpperFacadeShell"
-   var upper_visual := upper_shell.get_child(0) as MeshInstance3D
-   var facade_material := ShaderMaterial.new()
-   facade_material.shader = CITY_FACADE_SHADER
-   facade_material.set_shader_parameter("facade_tint",wall.darkened(0.08))
-   facade_material.set_shader_parameter("facade_seed",absf(x*13.0+z*7.0+dx))
-   upper_visual.material_override = facade_material
+   _finish_facade(upper_shell,wall.darkened(0.08),absf(x*13.0+z*7.0+dx),0.0)
    _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
  # The upper storey is a real, visible volume rather than one blank silhouette:
  # framed glazing wraps the side and rear elevations, with a continuous slab
@@ -356,10 +351,18 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
 func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent: Color, dark: Color) -> void:
  var facade_x := x+side*5.0
  # Solid plinth and transom leave two real glazed shop bays and a clear entry.
- _box(Vector3(facade_x,0.32,z),Vector3(0.20,0.64,10.0),wall,true)
- _box(Vector3(facade_x,3.22,z),Vector3(0.20,1.16,10.0),wall,true)
- for pier_z: float in [-4.4,4.4]: _box(Vector3(facade_x,1.82,z+pier_z),Vector3(0.20,2.36,1.2),wall,true)
- for pier_z: float in [-1.25,1.25]: _box(Vector3(facade_x,1.82,z+pier_z),Vector3(0.20,2.36,0.50),wall,true)
+ var shop_plinth := _box(Vector3(facade_x,0.32,z),Vector3(0.20,0.64,10.0),wall,true)
+ shop_plinth.name = "DistrictStorefrontFacadePlinth"
+ _finish_facade(shop_plinth,wall,absf(x*13.0+z*7.0),0.0)
+ var shop_transom := _box(Vector3(facade_x,3.22,z),Vector3(0.20,1.16,10.0),wall,true)
+ shop_transom.name = "DistrictStorefrontFacadeTransom"
+ _finish_facade(shop_transom,wall,absf(x*11.0+z*5.0),0.0)
+ for pier_z: float in [-4.4,4.4]:
+  var edge_pier := _box(Vector3(facade_x,1.82,z+pier_z),Vector3(0.20,2.36,1.2),wall,true)
+  _finish_facade(edge_pier,wall,absf(x*7.0+z*13.0+pier_z),0.0)
+ for pier_z: float in [-1.25,1.25]:
+  var entry_pier := _box(Vector3(facade_x,1.82,z+pier_z),Vector3(0.20,2.36,0.50),wall,true)
+  _finish_facade(entry_pier,wall,absf(x*5.0+z*11.0+pier_z),0.0)
  # The windows occupy actual holes in the shell: opaque facades no longer mask
  # the interior fitout, and the doorway is a continuous walk-through opening.
  var glass_tint := Color(0.20,0.46,0.50,0.30) if operation_id == "the_streets" else (Color(0.29,0.56,0.61,0.30) if operation_id == "the_district" else Color(0.34,0.60,0.65,0.30))
@@ -424,6 +427,15 @@ func _build_storefront_wall(x: float, z: float, side: float, wall: Color, accent
  for run_y: float in [0.48,3.0]: _box(Vector3(facade_x-side*0.13,run_y,z+4.9),Vector3(0.22,0.10,0.20),wall.darkened(0.08))
  _box(Vector3(facade_x+side*0.10,1.75,z+4.72),Vector3(0.10,3.3,0.10),dark)
  _box(Vector3(facade_x+side*0.23,1.35,z+4.55),Vector3(0.12,0.52,0.28),accent)
+
+func _finish_facade(holder: Node3D, tint: Color, seed: float, windows: float = 0.0) -> void:
+ var visual := holder.get_child(0) as MeshInstance3D
+ var material := ShaderMaterial.new()
+ material.shader = CITY_FACADE_SHADER
+ material.set_shader_parameter("facade_tint",tint)
+ material.set_shader_parameter("facade_seed",seed)
+ material.set_shader_parameter("window_strength",windows)
+ visual.material_override = material
 
 func _glass(pos: Vector3, size: Vector3, tint: Color) -> void:
  var holder := _box(pos,size,tint)
