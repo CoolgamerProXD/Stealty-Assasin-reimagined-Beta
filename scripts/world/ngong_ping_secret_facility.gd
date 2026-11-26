@@ -657,7 +657,7 @@ func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void
 		for z: float in [center_z-17.0,center_z,center_z+17.0]:
 			_box("RecessedFacilityLuminaire",Vector3(x,floor_y+4.62,z),Vector3(2.2,0.08,0.32),tint.lightened(0.48))
 			var lamp := OmniLight3D.new()
-			lamp.name = "FacilityCeilingPractical"
+			lamp.name = "FacilityCeilingPractical_%03d_%02d_%02d" % [int(absf(floor_y)*10.0),int(x+25.0),int(z-center_z+18.0)]
 			lamp.position = Vector3(x,floor_y+3.85,z)
 			lamp.light_color = Color(0.68,0.80,0.82) if floor_y > -10.0 else Color(0.98,0.72,0.48)
 			lamp.light_energy = 1.8
