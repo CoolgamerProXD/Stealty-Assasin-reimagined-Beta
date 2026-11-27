@@ -1,0 +1,23 @@
+{
+  "source": "GitHub Actions current-build visual acceptance run",
+  "run_id": "45393382841",
+  "run_url": "https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/45393382841",
+  "commit": "983127c76dc89f7d9a2323af21968abb01f15dfd",
+  "note": "Current-build captures extracted from GitHub Actions check annotations. These are separate from historical review screenshots.",
+  "native_resolution_captures": [
+    "07_hong_kong_streets.jpg",
+    "08_hong_kong_commercial_district.jpg",
+    "09_hong_kong_harbour_skyline.jpg",
+    "10_hong_kong_characters_disguise.jpg",
+    "11_ngong_ping_exterior_statue.jpg",
+    "13_facility_monumental_interior.jpg",
+    "15_facility_vertical_statue_core.jpg"
+  ],
+  "cc0_review_previews_320x180": [
+    "cc0_8_models_standing.jpg",
+    "cc0_8_models_walking.jpg",
+    "cc0_8_models_crouching.jpg",
+    "cc0_8_models_seated.jpg",
+    "cc0_8_models_disguise_outfits.jpg"
+  ]
+}

@@ -162,6 +162,9 @@ func run() -> void:
  settings_service.settings["graphics"] = old_quality
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
+ var suite_labels := 0
+ for label_node: Node in world.find_children("MeridianSuiteInteriorNumber_*","Label3D",true,false): suite_labels += 1
+ check(suite_labels == 8 and world.find_child("MeridianEnsuitePortal_01Head",true,false) != null and world.find_child("MeridianShowerScreen_01",true,false) != null, "Meridian upper guest rooms now include eight furnished suites with enclosed, equipped ensuites")
  check(player != null and npcs.size() == 7, "hotel preserves existing NPCs and adds three wing visitors")
  var first_leg_mesh: Mesh = (npcs[0].person.left_leg.get_child(0) as MeshInstance3D).mesh
  var second_leg_mesh: Mesh = (npcs[1].person.left_leg.get_child(0) as MeshInstance3D).mesh
@@ -1095,6 +1098,7 @@ func run() -> void:
     Input.action_release("move_forward")
     check(preview_player.global_position.distance_to(before_preview) > 0.2, preview_name + " preview supports player movement")
     if preview_name == "TUNG CHUNG":
+     check(preview.find_child("RetailArcadePractical_00",true,false) != null and preview.find_child("RetailArcadePractical_01",true,false) != null and preview.find_child("RetailArcadePractical_02",true,false) != null, "Tung Chung concourse extends into three lit, purpose-furnished walk-in retail rooms")
      var station_npcs: Array[HotelNpc] = preview.get("npcs")
      var exclusions: Array[RID] = [preview_player.get_rid()]
      for person: HotelNpc in station_npcs: exclusions.append(person.get_rid())

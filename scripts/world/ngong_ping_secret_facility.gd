@@ -171,12 +171,16 @@ func _build_underground_levels() -> void:
 	for floor_index: int in range(FLOORS_UNDER.size()):
 		var y: float = FLOORS_UNDER[floor_index]
 		var palette: Color = [Color(0.30,0.34,0.34),Color(0.23,0.31,0.34),Color(0.27,0.30,0.32)][floor_index]
-		_box("FacilitySlab_Sublevel_%d" % (floor_index+1),Vector3(0,y-0.18,-57),Vector3(60,0.36,50),palette,true)
-		_build_level_shell(y,-57,60,50,5.0,palette)
-		_add_navigation("SublevelNavigation_%d" % (floor_index+1),y+0.04,-80.0,-34.0,-28.0,28.0)
-		_add_facility_zone(Rect2(-28.0,-80.0,56.0,46.0),y-0.3,y+1.0,["facility_staff","facility_research","facility_ops"][floor_index])
+		# A 72-by-60 m continuous substructure gives the department wings real
+		# circulation and transfer space around the central ramps and lift shafts.
+		_box("FacilitySlab_Sublevel_%d" % (floor_index+1),Vector3(0,y-0.18,-57),Vector3(72,0.36,60),palette,true)
+		_build_level_shell(y,-57,72,60,5.0,palette)
+		_add_navigation("SublevelNavigation_%d" % (floor_index+1),y+0.04,-86.0,-28.0,-34.0,34.0)
+		_add_facility_zone(Rect2(-34.0,-86.0,68.0,58.0),y-0.3,y+1.0,["facility_staff","facility_research","facility_ops"][floor_index])
 		_build_level_lighting(y,-57,palette)
 	var access_hall_center := Vector3(0,-3.0,-59)
+	_build_room("LOGISTICS  /  RECEIVING & CARGO TRANSFER",Vector3(0,-3.0,-81),Vector2(28,10),Color(0.34,0.39,0.37),"INTERNAL FREIGHT ONLY",11)
+	_add_facility_zone(Rect2(-14.0,-86.0,28.0,10.0),-3.3,-2.0,"facility_maintenance")
 	_build_room("SUBLEVEL 01  /  MONUMENTAL ACCESS HALL",access_hall_center,Vector2(25,12),Color(0.43,0.39,0.31),"ACCESS CONTROL",0)
 	_build_access_hall_wayfinding(access_hall_center)
 	var hall_fill := OmniLight3D.new()
@@ -194,11 +198,15 @@ func _build_underground_levels() -> void:
 	_build_room("MAINTENANCE & STORAGE",Vector3(-18,-3.0,-69),Vector2(17,11),Color(0.34,0.36,0.34),"PLANT / STORAGE",4)
 	_build_room("RESEARCH LABORATORIES",Vector3(-18,-8.0,-49),Vector2(18,12),Color(0.30,0.41,0.43),"RESEARCH / ANALYSIS",5)
 	_build_room("SURVEILLANCE GALLERY",Vector3(18,-8.0,-49),Vector2(18,12),Color(0.24,0.34,0.40),"MONITOR / OBSERVE",6)
+	_build_room("MEDICAL  /  RECOVERY WARD",Vector3(0,-8.0,-36),Vector2(22,14),Color(0.38,0.45,0.44),"TRIAGE / STAFF CARE",12)
+	_add_facility_zone(Rect2(-11.0,-43.0,22.0,14.0),-8.3,-7.0,"facility_staff")
 	_build_operations_chamber(Vector3(0,-8.0,-66))
 	_build_room("SECRET MEETING SUITE",Vector3(18,-8.0,-70),Vector2(18,12),Color(0.38,0.34,0.30),"DIRECTORATE",7)
 	_build_room("UNDERGROUND TRANSIT CONCOURSE",Vector3(0,-13.0,-47),Vector2(26,10),Color(0.25,0.35,0.38),"RESTRICTED TRANSIT",8)
 	_build_room("ARCHIVE VAULT & STORAGE",Vector3(-18,-13.0,-67),Vector2(18,12),Color(0.32,0.34,0.35),"SEALED RECORDS",9)
 	_build_room("PLANT / SERVICE BAY",Vector3(18,-13.0,-67),Vector2(18,12),Color(0.32,0.37,0.34),"POWER / AIR / SERVICE",10)
+	_build_room("UNDERGROUND TRANSIT  /  SERVICE DEPOT",Vector3(0,-13.0,-81),Vector2(28,10),Color(0.29,0.37,0.40),"STAFF & CARGO TRANSFER",13)
+	_add_facility_zone(Rect2(-14.0,-86.0,28.0,10.0),-13.3,-12.0,"facility_maintenance")
 	_build_sublevel_connectors()
 
 func _build_level_shell(floor_y: float, center_z: float, width: float, depth: float, height: float, tint: Color) -> void:
@@ -447,6 +455,71 @@ func _build_room_fitout(center: Vector3, span: Vector2, style: int, tint: Color)
 			for pipe_y: float in [1.3,1.65,2.0]:
 				_box("PlantPipeRiser",Vector3(x+width*0.5-0.48,y+2.25,z+depth*0.5-0.85),Vector3(0.16,2.0,0.16),Color(0.52,0.58,0.55))
 				_box("IsolationValve",Vector3(x+width*0.5-0.48,y+pipe_y,z+depth*0.5-0.85),Vector3(0.52,0.08,0.08),Color(0.73,0.49,0.26))
+		11:
+			# Freight receiving: a clear central pallet aisle, paired high-bay
+			# racks, dispatch desk and a service shutter with visible lifting gear.
+			for dx: float in [-9.5,9.5]:
+				_build_storage_rack(center,dx,-0.1,4.4)
+				_build_storage_rack(center,dx,3.4,4.4)
+				_box("CargoPalletBase",Vector3(x+dx,y+0.12,z+1.0),Vector3(2.1,0.24,1.6),Color(0.36,0.26,0.17),true)
+				for crate_x: float in [-0.52,0.52]:
+					_box("CargoTransferCrate",Vector3(x+dx+crate_x,y+0.68,z+1.0),Vector3(0.9,0.88,1.2),Color(0.42,0.37,0.29),true)
+			_box("CargoSortationTable",Vector3(x,y+0.88,z+2.2),Vector3(6.0,0.14,1.35),Color(0.30,0.24,0.18),true)
+			for dx: float in [-2.65,2.65]: _box("CargoSortationTableLeg",Vector3(x+dx,y+0.43,z+2.2),Vector3(0.12,0.86,0.12),Color(0.19,0.27,0.29))
+			_box("CargoManifestTerminal",Vector3(x,y+1.62,z+1.72),Vector3(0.86,0.54,0.08),Color(0.13,0.42,0.47))
+			_box("CargoNorthShutter",Vector3(x,y+2.22,z-depth*0.5+0.18),Vector3(8.4,3.85,0.18),Color(0.20,0.29,0.31))
+			for shutter_y: float in [0.42,0.70,0.98,1.26,1.54,1.82,2.10,2.38,2.66,2.94,3.22,3.50]:
+				_box("CargoShutterSlat",Vector3(x,y+shutter_y,z-depth*0.5+0.30),Vector3(8.0,0.045,0.055),Color(0.48,0.55,0.53))
+			for side: float in [-1.0,1.0]:
+				_box("CargoShutterGuideRail",Vector3(x+side*4.25,y+2.0,z-depth*0.5+0.30),Vector3(0.12,4.0,0.14),Color(0.62,0.53,0.36))
+			_box("CargoOverheadHoistBeam",Vector3(x,y+3.95,z-0.5),Vector3(25.0,0.20,0.34),Color(0.22,0.31,0.32),true)
+			for dx: float in [-7.0,0.0,7.0]:
+				_box("CargoHoistDrop",Vector3(x+dx,y+3.48,z-0.5),Vector3(0.08,0.74,0.08),Color(0.60,0.52,0.37))
+				_box("CargoHoistHook",Vector3(x+dx,y+3.08,z-0.5),Vector3(0.34,0.08,0.24),Color(0.76,0.57,0.31))
+			_box("CargoFloorLane",Vector3(x,y+0.055,z),Vector3(3.8,0.035,depth-1.2),Color(0.73,0.56,0.28))
+		12:
+			# Staff clinic: two curtained assessment beds, a cleanable sink bay,
+			# medicine storage and a staffed triage point with a clear route through.
+			for dx: float in [-6.2,6.2]:
+				_box("MedicalBedFrame",Vector3(x+dx,y+0.34,z-1.4),Vector3(2.65,0.54,4.4),Color(0.21,0.31,0.33),true)
+				_box("MedicalMattress",Vector3(x+dx,y+0.66,z-1.4),Vector3(2.42,0.16,4.12),Color(0.73,0.76,0.69))
+				_box("MedicalPillow",Vector3(x+dx,y+0.79,z-2.88),Vector3(1.05,0.16,0.56),Color(0.84,0.82,0.72))
+				for side: float in [-1.0,1.0]: _box("MedicalBedGuard",Vector3(x+dx+side*1.27,y+0.92,z-1.4),Vector3(0.07,0.55,3.95),Color(0.56,0.65,0.63))
+				_box("MedicalCurtainTrack",Vector3(x+dx,y+3.68,z-1.4),Vector3(3.8,0.06,4.9),Color(0.72,0.78,0.73))
+				for panel_z: float in [-3.65,-1.4,0.85]:
+					_box("MedicalPrivacyCurtain",Vector3(x+dx+1.82,y+2.15,z+panel_z),Vector3(0.055,2.95,2.12),Color(0.35,0.57,0.55))
+				_box("MedicalMonitor",Vector3(x+dx,y+1.72,z-3.55),Vector3(0.85,0.62,0.10),Color(0.14,0.42,0.46))
+				_box("MedicalMonitorStand",Vector3(x+dx,y+1.25,z-3.4),Vector3(0.08,0.88,0.08),Color(0.26,0.35,0.36))
+				_box("MedicalBedsideCabinet",Vector3(x+dx+1.85,y+0.72,z+1.25),Vector3(0.74,1.12,0.72),Color(0.66,0.69,0.63),true)
+			_build_workstation(center,Vector3(0.0,0.0,3.7),Color(0.38,0.45,0.44))
+			_box("MedicalSupplyCabinet",Vector3(x-9.2,y+1.4,z-1.2),Vector3(1.3,2.8,4.6),Color(0.24,0.34,0.35),true)
+			for shelf_y: float in [0.65,1.25,1.85,2.45]: _box("MedicalSupplyShelf",Vector3(x-8.48,y+shelf_y,z-1.2),Vector3(0.06,0.04,4.1),Color(0.72,0.74,0.68))
+			_box("ClinicalWashBasin",Vector3(x+9.0,y+0.92,z+3.0),Vector3(1.7,0.14,0.76),Color(0.73,0.75,0.68),true)
+			_box("ClinicalSinkSplashback",Vector3(x+9.0,y+1.55,z+2.64),Vector3(1.9,1.25,0.08),Color(0.45,0.62,0.61))
+			_box("ClinicalSinkBowl",Vector3(x+9.0,y+0.99,z+3.0),Vector3(0.72,0.07,0.40),Color(0.24,0.34,0.35))
+			_box("MedicalWallCabinet",Vector3(x,y+3.25,z-depth*0.5+0.46),Vector3(6.6,1.1,0.45),Color(0.27,0.38,0.39),true)
+			for door_x: float in [-2.0,0.0,2.0]: _box("MedicalCabinetDoor",Vector3(x+door_x,y+3.25,z-depth*0.5+0.18),Vector3(1.85,0.88,0.05),Color(0.58,0.66,0.63))
+		13:
+			# A small, quiet staff depot provides a genuine hand-off point between
+			# the transit concourse, maintenance teams, and the loaded freight wings.
+			for rail_x: float in [-5.5,5.5]:
+				_box("DepotGuideRail",Vector3(x+rail_x,y+0.09,z),Vector3(0.10,0.18,depth-1.2),Color(0.21,0.29,0.30),true)
+				_box("DepotRailWear",Vector3(x+rail_x,y+0.19,z),Vector3(0.035,0.035,depth-1.4),Color(0.73,0.54,0.27))
+			for sleeper_z: float in [-3.7,-2.6,-1.5,-0.4,0.7,1.8,2.9,4.0]:
+				_box("DepotTrackSleeper",Vector3(x,y+0.075,z+sleeper_z),Vector3(12.2,0.13,0.20),Color(0.29,0.32,0.30))
+			_box("ServiceTrolleyChassis",Vector3(x,y+0.58,z-0.3),Vector3(3.6,0.42,2.1),Color(0.18,0.27,0.29),true)
+			_box("ServiceTrolleyDeck",Vector3(x,y+0.86,z-0.3),Vector3(3.8,0.12,2.25),Color(0.57,0.60,0.54))
+			for dx: float in [-1.4,1.4]:
+				for dz: float in [-0.82,0.82]:
+					var wheel := _box("ServiceTrolleyWheel",Vector3(x+dx,y+0.30,z-0.3+dz),Vector3(0.42,0.50,0.18),Color(0.11,0.16,0.17))
+					wheel.rotation.y = PI*0.5
+			_box("DepotDispatchDesk",Vector3(x-9.0,y+0.82,z-3.4),Vector3(4.4,0.14,1.2),Color(0.32,0.24,0.18),true)
+			_box("DepotDispatchMonitor",Vector3(x-9.0,y+1.58,z-3.82),Vector3(1.25,0.82,0.10),Color(0.14,0.42,0.48))
+			for side: float in [-1.0,1.0]:
+				_box("DepotServiceCabinet",Vector3(x+side*10.5,y+1.45,z+2.2),Vector3(1.2,2.9,1.1),Color(0.25,0.34,0.35),true)
+				for vent: float in [-0.65,-0.32,0.0,0.32,0.65]: _box("DepotCabinetVent",Vector3(x+side*10.5+vent,y+1.52,z+1.62),Vector3(0.08,1.55,0.035),Color(0.53,0.60,0.57))
+			_box("DepotOverheadConduit",Vector3(x,y+3.92,z),Vector3(width-1.0,0.16,0.24),Color(0.20,0.29,0.30))
+			for marker_x: float in [-8.0,0.0,8.0]: _box("DepotRouteMarker",Vector3(x+marker_x,y+0.055,z+4.25),Vector3(1.2,0.035,0.08),Color(0.85,0.58,0.27))
 
 func _build_workstation(center: Vector3, offset: Vector3, tint: Color) -> void:
 	var desk := center+offset
@@ -752,19 +825,19 @@ func _add_facility_zone(rect: Rect2, floor_min: float, floor_max: float, area: S
 	world.set("access_zones",zones)
 
 func _build_access_zones() -> void:
-	_add_facility_zone(Rect2(-28,-80,56,46),-4.0,1.0,"facility_staff")
+	_add_facility_zone(Rect2(-34,-86,68,58),-4.0,1.0,"facility_staff")
 	_add_facility_zone(Rect2(-10,-53,20,7),-4.0,0.2,"facility_checkpoint")
 	_add_facility_zone(Rect2(-28,-77,18,16),-4.0,-2.0,"facility_maintenance")
-	_add_facility_zone(Rect2(-28,-80,56,46),-9.0,-7.0,"facility_research")
+	_add_facility_zone(Rect2(-34,-86,68,58),-9.0,-7.0,"facility_research")
 	_add_facility_zone(Rect2(-17,-77,34,21),-9.0,-7.0,"facility_ops")
-	_add_facility_zone(Rect2(-28,-80,56,46),-14.0,-12.0,"facility_ops")
+	_add_facility_zone(Rect2(-34,-86,68,58),-14.0,-12.0,"facility_ops")
 	_add_facility_zone(Rect2(-28,-54,56,18),-14.0,-12.0,"facility_maintenance")
 
 func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void:
-	# Four cross-aisle rows keep the central circulation and occupied rooms lit;
-	# twelve-metre lateral spacing closes the previous sixteen-metre centre gap.
-	for x: float in [-18.0,-6.0,6.0,18.0]:
-		for z: float in [center_z-17.0,center_z,center_z+17.0]:
+	# Four cross-aisle rows light the expanded departmental footprint, with a
+	# dedicated northern row feeding the new cargo and transit service wings.
+	for x: float in [-24.0,-8.0,8.0,24.0]:
+		for z: float in [center_z-23.0,center_z-8.0,center_z+8.0,center_z+23.0]:
 			_box("RecessedFacilityLuminaire",Vector3(x,floor_y+4.62,z),Vector3(2.2,0.08,0.32),tint.lightened(0.48))
 			var lamp := OmniLight3D.new()
 			lamp.name = "FacilityCeilingPractical_%03d_%02d_%02d" % [int(absf(floor_y)*10.0),int(x+25.0),int(z-center_z+18.0)]
@@ -781,7 +854,7 @@ func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void
 				var quality_settings: Dictionary = campaign_service.get("settings")
 				graphics_quality = str(quality_settings.get("graphics","MEDIUM"))
 				practicals_enabled = bool(quality_settings.get("practicals",true))
-			var central_fallback := is_equal_approx(absf(x),6.0) and is_equal_approx(z,center_z)
+			var central_fallback := is_equal_approx(absf(x),8.0) and is_equal_approx(z,center_z-8.0)
 			lamp.visible = practicals_enabled and (graphics_quality != "LOW" or central_fallback)
 			add_child(lamp)
 

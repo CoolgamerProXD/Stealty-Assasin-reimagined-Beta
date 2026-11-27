@@ -331,7 +331,7 @@ func _build_meridian_wing() -> void:
    room_id.modulate = brass.lightened(0.18)
    add_child(room_id)
    _collision_box(Vector3(x,4.0,side*6),Vector3(2.8,0.8,2.2))
-   _box(Vector3(x+2,3.95,side*6.8),Vector3(0.65,0.7,0.7),dark,false)
+   _build_meridian_guest_room(x,side,int((x+9.0)/6.0)+1+(4 if side>0.0 else 0),walls,dark,brass)
   _box(Vector3(x,3.63,0),Vector3(4.8,0.04,5.6),Color(0.35,0.23,0.20),false)
  # Warm shadowless pools of light, controlled by the existing quality preset.
  for floor_y: float in [2.6,6.4]:
@@ -385,6 +385,81 @@ func _build_meridian_wing() -> void:
  nav.add_polygon(PackedInt32Array([0,3,2,1]))
  region.navigation_mesh = nav
  add_child(region)
+
+func _build_meridian_guest_room(x: float, side: float, room_number: int, walls: Color, dark: Color, brass: Color) -> void:
+ # Every guest suite now has a complete sleep/work/wardrobe layout and a
+ # physically partitioned ensuite; the original bed collision envelope stays.
+ var room_z := side*6.0
+ _box(Vector3(x,3.625,room_z),Vector3(4.2,0.035,3.45),Color(0.35,0.23,0.20),false)
+ # Upholstered bed, layered linen, headboard and two bedside cabinets.
+ _box(Vector3(x,3.82,room_z),Vector3(2.72,0.42,2.12),Color(0.22,0.25,0.25),false)
+ _box(Vector3(x,4.07,room_z),Vector3(2.60,0.20,2.02),Color(0.77,0.74,0.66),false)
+ _box(Vector3(x,4.19,room_z+side*0.10),Vector3(2.53,0.09,1.48),Color(0.52,0.39,0.31),false)
+ _box(Vector3(x,4.25,room_z-side*0.66),Vector3(2.48,0.08,0.58),Color(0.68,0.59,0.47),false)
+ _box(Vector3(x-0.62,4.25,room_z-side*0.70),Vector3(0.66,0.10,0.40),Color(0.89,0.84,0.73),false)
+ _box(Vector3(x+0.62,4.25,room_z-side*0.70),Vector3(0.66,0.10,0.40),Color(0.89,0.84,0.73),false)
+ _box(Vector3(x,4.68,room_z-side*1.12),Vector3(2.92,1.18,0.16),dark,false)
+ _box(Vector3(x,4.42,room_z-side*1.025),Vector3(2.65,0.38,0.035),Color(0.45,0.34,0.29),false)
+ for dx: float in [-1.72,1.72]:
+  _box(Vector3(x+dx,3.98,room_z-side*0.80),Vector3(0.72,0.72,0.72),dark,false)
+  _box(Vector3(x+dx,4.37,room_z-side*0.80),Vector3(0.80,0.08,0.78),brass,false)
+  _box(Vector3(x+dx,4.69,room_z-side*0.80),Vector3(0.12,0.48,0.12),Color(0.26,0.30,0.29),false)
+  _box(Vector3(x+dx,4.96,room_z-side*0.80),Vector3(0.40,0.22,0.36),Color(0.91,0.79,0.57),false)
+  _box(Vector3(x+dx,4.98,room_z-side*0.80),Vector3(0.44,0.055,0.40),Color(1.0,0.84,0.59),false)
+ # Writing desk, chair, luggage bench and integrated wardrobe/minibar wall.
+ _box(Vector3(x-1.82,4.08,side*8.95),Vector3(1.95,0.14,0.78),Color(0.42,0.29,0.20),false)
+ for dx: float in [-0.78,0.78]: _box(Vector3(x-1.82+dx,3.86,side*8.95),Vector3(0.09,0.46,0.09),dark,false)
+ _box(Vector3(x-1.82,4.22,side*8.66),Vector3(0.72,0.48,0.065),Color(0.12,0.20,0.22),false)
+ _box(Vector3(x-1.82,4.23,side*8.615),Vector3(0.61,0.34,0.018),Color(0.19,0.48,0.52),false)
+ _box(Vector3(x-1.82,3.88,side*7.98),Vector3(0.78,0.12,0.78),Color(0.36,0.27,0.22),false)
+ _box(Vector3(x-1.82,4.28,side*8.34),Vector3(0.74,0.72,0.10),Color(0.31,0.25,0.21),false)
+ _box(Vector3(x-1.82,4.15,side*8.95),Vector3(0.10,0.46,0.12),brass,false)
+ _box(Vector3(x-1.82,4.40,side*8.95),Vector3(0.34,0.07,0.30),Color(0.96,0.80,0.54),false)
+ _box(Vector3(x,3.89,side*9.72),Vector3(1.52,0.46,0.66),Color(0.30,0.23,0.19),false)
+ _box(Vector3(x,4.14,side*9.72),Vector3(1.60,0.08,0.72),Color(0.62,0.48,0.34),false)
+ for dx: float in [-0.56,0.56]: _box(Vector3(x+dx,3.79,side*9.72),Vector3(0.08,0.26,0.08),dark,false)
+ _box(Vector3(x+2.40,4.76,side*8.55),Vector3(0.84,2.22,1.15),Color(0.29,0.23,0.19),false)
+ for y: float in [4.20,4.78,5.36]: _box(Vector3(x+1.95,y,side*8.55),Vector3(0.04,0.035,0.90),brass,false)
+ _box(Vector3(x+1.94,4.62,side*8.55),Vector3(0.045,0.28,0.24),Color(0.38,0.58,0.48),false)
+ var suite_number := Label3D.new()
+ suite_number.name = "MeridianSuiteInteriorNumber_%02d" % room_number
+ suite_number.text = "SUITE  /  %02d" % room_number
+ suite_number.position = Vector3(x,5.88,side*9.98)
+ suite_number.font_size = 17
+ suite_number.pixel_size = 0.004
+ suite_number.modulate = brass.lightened(0.12)
+ add_child(suite_number)
+ # Ensuite wet-room: tiled floor, real partitions and a 1.25 m clear doorway.
+ var bath_center_z := side*12.62
+ _box(Vector3(x,3.635,bath_center_z),Vector3(5.72,0.07,4.28),Color(0.57,0.59,0.54),false)
+ for tile_x: float in [-2.0,-1.0,0.0,1.0,2.0]: _box(Vector3(x+tile_x,3.676,bath_center_z),Vector3(0.018,0.008,4.10),Color(0.43,0.48,0.46),false)
+ for tile_z: float in [-1.4,-0.4,0.6,1.6]: _box(Vector3(x,3.677,bath_center_z+side*tile_z),Vector3(5.55,0.008,0.018),Color(0.43,0.48,0.46),false)
+ var partition_y := 5.02
+ _box(Vector3(x-1.0,partition_y,side*10.48),Vector3(4.0,2.80,0.18),walls,true)
+ _box(Vector3(x+2.64,partition_y,side*10.48),Vector3(0.72,2.80,0.18),walls,true)
+ _box(Vector3(x-2.92,partition_y,bath_center_z),Vector3(0.16,2.80,4.18),walls,true)
+ _box(Vector3(x+2.92,partition_y,bath_center_z),Vector3(0.16,2.80,4.18),walls,true)
+ _box(Vector3(x,partition_y,side*14.72),Vector3(5.85,2.80,0.18),walls,true)
+ CONSTRUCTION.door_portal(self,"MeridianEnsuitePortal_%02d" % room_number,Vector3(x+1.62,3.62,side*10.48),1.25,2.66,0.20,brass,Color(0.57,0.55,0.46))
+ # Walnut vanity, inset basin, mirror, sanitaryware and a glazed shower bay.
+ _box(Vector3(x-1.58,4.10,side*11.35),Vector3(1.84,0.92,0.76),dark,false)
+ _box(Vector3(x-1.58,4.59,side*11.35),Vector3(1.98,0.12,0.86),Color(0.70,0.72,0.67),false)
+ _box(Vector3(x-1.58,4.68,side*11.35),Vector3(0.76,0.07,0.42),Color(0.30,0.39,0.39),false)
+ _box(Vector3(x-1.58,4.78,side*11.26),Vector3(0.06,0.20,0.06),Color(0.69,0.73,0.68),false)
+ _box(Vector3(x-1.58,5.47,side*11.08),Vector3(1.70,1.18,0.055),Color(0.32,0.48,0.50),false)
+ _box(Vector3(x-1.58,6.10,side*11.08),Vector3(1.92,0.12,0.08),brass,false)
+ _box(Vector3(x+1.15,3.92,side*12.02),Vector3(1.08,0.20,0.74),Color(0.82,0.81,0.75),false)
+ _box(Vector3(x+1.15,4.34,side*12.03),Vector3(1.02,0.70,0.68),Color(0.82,0.81,0.75),false)
+ _box(Vector3(x+1.15,4.70,side*11.82),Vector3(0.13,0.13,0.18),Color(0.57,0.64,0.62),false)
+ _box(Vector3(x-1.10,3.78,side*13.55),Vector3(2.35,0.24,2.20),Color(0.70,0.72,0.67),false)
+ var shower_glass := CONSTRUCTION.box(self,"MeridianShowerScreen_%02d" % room_number,Vector3(x+0.15,5.02,side*13.55),Vector3(0.065,2.72,2.45),Color(0.43,0.63,0.65,0.24),0.16)
+ shower_glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ _box(Vector3(x-1.10,5.45,side*13.55),Vector3(0.10,0.10,0.10),Color(0.70,0.74,0.69),false)
+ _box(Vector3(x-1.10,5.05,side*13.55),Vector3(0.06,0.70,0.06),Color(0.70,0.74,0.69),false)
+ _box(Vector3(x-1.10,4.69,side*13.55),Vector3(0.34,0.06,0.34),Color(0.70,0.74,0.69),false)
+ _box(Vector3(x+0.05,6.32,side*13.55),Vector3(1.60,0.08,0.20),Color(0.70,0.74,0.69),false)
+ _box(Vector3(x+0.05,6.19,side*13.55),Vector3(1.05,0.07,0.68),Color(0.73,0.76,0.70),false)
+ for side_x: float in [-1.0,1.0]: _box(Vector3(x+side_x*2.40,5.02,side*12.62),Vector3(0.12,0.16,0.12),Color(0.69,0.55,0.34),false)
 
 func _build_player() -> void:
  player = HotelPlayer.new()

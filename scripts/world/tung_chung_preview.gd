@@ -193,9 +193,9 @@ func _station() -> void:
  var orange := Color(0.88, 0.49, 0.19)
  _box(Vector3(0,-0.2,0), Vector3(44,0.4,28), floor_color, true, "terrazzo")
  _box(Vector3(0,5.3,0), Vector3(44,0.25,28), Color(0.43,0.48,0.47), false, "concrete")
- _box(Vector3(0,2.6,-14), Vector3(44,5.2,0.3), wall, true, "tile")
  _box(Vector3(-22,2.6,0), Vector3(0.3,5.2,28), wall, true, "tile")
  _box(Vector3(22,2.6,0), Vector3(0.3,5.2,28), wall, true, "tile")
+ _station_retail_arcade(wall, dark, orange)
  if str(get_meta("operation_id", "")) == "tung_chung":
   # Fictional platform doorway aligns with the playable carriage aisle.
   _box(Vector3(-2.5,2.6,14), Vector3(39,5.2,0.3), wall, true, "tile")
@@ -215,14 +215,6 @@ func _station() -> void:
  for x: float in [-19.0,-17.5,-16.0,-14.5]:
   _box(Vector3(x,0.6,-8.5), Vector3(0.75,1.2,0.55), Color(0.24,0.35,0.37), true, "painted_metal")
   _box(Vector3(x,1.23,-8.5), Vector3(0.6,0.07,0.45), orange, false, "emissive")
- # Shops are scenic frontages, not claimed as usable interiors.
- for x: float in [-3.0,4.0,11.0]:
-  _box(Vector3(x,1.7,-12.6), Vector3(6,3.4,2.2), Color(0.23,0.30,0.31), false, "painted_metal")
-  _box(Vector3(x,1.5,-11.42), Vector3(5.3,2.1,0.06), Color(0.40,0.57,0.59,0.40), false, "glass")
-  _box(Vector3(x,3.0,-11.35), Vector3(5.5,0.45,0.08), dark, false, "painted_metal")
- _sign("PAPER & PRESS", Vector3(-3,3,-11.28), 30)
- _sign("TEA HOUSE", Vector3(4,3,-11.28), 30)
- _sign("MARKET", Vector3(11,3,-11.28), 30)
  # Fictional concourse stairway and upper landing; no railway access.
  _box(Vector3(17,3.125,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true, "painted_metal")
  _station_stair_collision()
@@ -294,6 +286,84 @@ func _station() -> void:
  _station_architecture()
  _station_lighting()
  _station_service_installations()
+
+func _station_retail_arcade(wall: Color, dark: Color, orange: Color) -> void:
+ # Extend the paid concourse into three real, accessible retail rooms rather
+ # than dressing the old north wall with shallow display boxes.
+ _box(Vector3(0,-0.2,-21.0),Vector3(44,0.4,14.4),Color(0.47,0.52,0.51),true,"terrazzo")
+ _box(Vector3(0,5.3,-21.0),Vector3(44,0.25,14.4),Color(0.31,0.37,0.37),false,"concrete")
+ for side: float in [-1.0,1.0]:
+  _box(Vector3(side*22.0,2.6,-21.0),Vector3(0.3,5.2,14.4),wall,true,"tile")
+ _box(Vector3(0,2.6,-28.15),Vector3(44,5.2,0.3),wall,true,"tile")
+ # Four masonry piers separate three 2.8 m portals; the short headers and
+ # deep reveals carry the existing tiled station wall into the arcade.
+ for span: Vector2 in [Vector2(-22.0,-4.4),Vector2(-1.6,2.4),Vector2(5.6,9.4),Vector2(12.6,22.0)]:
+  _box(Vector3((span.x+span.y)*0.5,2.6,-14.0),Vector3(span.y-span.x,5.2,0.3),wall,true,"tile")
+ for index: int in range(3):
+  var x := [-3.0,4.0,11.0][index]
+  var room_dark := Color(0.21,0.29,0.30)
+  var frame := Color(0.60,0.66,0.63)
+  for side: float in [-1.0,1.0]:
+   _box(Vector3(x+side*3.0,2.6,-21.0),Vector3(0.18,5.2,14.0),wall.darkened(0.08),true,"tile")
+   _box(Vector3(x+side*1.48,4.28,-14.0),Vector3(0.16,1.84,0.32),room_dark,false,"painted_metal")
+   var open_leaf := _box(Vector3(x+side*1.82,1.32,-14.28),Vector3(0.82,2.64,0.075),Color(0.31,0.40,0.41),false,"brushed_metal")
+   open_leaf.rotation.y = PI*0.5
+   _box(Vector3(x+side*1.90,1.30,-14.34),Vector3(0.04,0.16,0.035),orange,false,"brushed_metal")
+  # Glass transoms, an overhead wayfinding fascia and a flush threshold make
+  # each opening read as a maintained shopfront, not an unfinished wall hole.
+  var transom := CONSTRUCTION.box(self,"RetailArcadeTransom",Vector3(x,3.56,-13.80),Vector3(2.82,0.46,0.055),Color(0.22,0.39,0.42,0.45),0.2)
+  transom.name = "RetailArcadeTransom_%02d" % index
+  _box(Vector3(x,0.045,-14.1),Vector3(2.75,0.09,0.72),Color(0.66,0.56,0.39),false,"terrazzo")
+  _box(Vector3(x,4.16,-13.78),Vector3(3.05,0.16,0.16),Color(0.16,0.24,0.26),false,"painted_metal")
+  var shop_name := ["PAPER & PRESS","TEA HOUSE","MARKET PROVISIONS"][index]
+  _sign(shop_name,Vector3(x,4.16,-13.66),29)
+  _box(Vector3(x,0.04,-21.0),Vector3(5.55,0.035,12.7),Color(0.48,0.52,0.48),false,"terrazzo")
+  _box(Vector3(x,4.92,-21.0),Vector3(5.5,0.08,0.20),Color(0.18,0.26,0.27),false,"painted_metal")
+  if index == 0:
+   # Paper and press: archive-grade shelving, a returns counter and compact
+   # periodical racks with a central customer aisle.
+   for side: float in [-1.0,1.0]:
+    _box(Vector3(x+side*2.35,1.72,-21.5),Vector3(0.42,3.25,8.4),room_dark,false,"painted_metal")
+    for shelf_y: float in [0.72,1.38,2.04,2.70]: _box(Vector3(x+side*2.08,shelf_y,-21.5),Vector3(0.16,0.08,7.7),Color(0.62,0.51,0.36),false,"wood")
+    for dz: float in [-3.7,-2.5,-1.3,-0.1,1.1,2.3,3.5]: _box(Vector3(x+side*1.92,1.02,-21.5+dz),Vector3(0.20,0.46,0.64),Color(0.48,0.29,0.20) if int(absf(dz*10.0))%2==0 else Color(0.22,0.42,0.43),false,"fabric")
+   _box(Vector3(x,0.92,-18.2),Vector3(3.8,1.82,0.82),Color(0.29,0.23,0.18),true,"wood")
+   _box(Vector3(x,1.88,-18.2),Vector3(4.0,0.10,0.92),Color(0.58,0.48,0.35),false,"wood")
+   for dx: float in [-1.2,0.0,1.2]: _box(Vector3(x+dx,1.98,-18.2),Vector3(0.48,0.055,0.36),Color(0.71,0.58,0.39),false,"fabric")
+  elif index == 1:
+   # Tea house: service bar, brewing counter, back-bar shelving and a two-seat
+   # tasting ledge. The wide central aisle stays clear from portal to stockroom.
+   _box(Vector3(x+1.95,0.82,-20.6),Vector3(1.15,1.64,8.8),room_dark,true,"painted_metal")
+   _box(Vector3(x+1.90,1.68,-20.6),Vector3(1.35,0.14,9.0),Color(0.60,0.47,0.32),false,"wood")
+   _box(Vector3(x+1.30,1.74,-20.2),Vector3(0.12,0.38,0.34),Color(0.72,0.55,0.32),false,"brushed_metal")
+   for dz: float in [-3.3,-1.1,1.1,3.3]:
+    _box(Vector3(x-1.9,2.05,-21.0+dz),Vector3(1.55,2.65,0.16),Color(0.27,0.34,0.33),false,"wood")
+    for shelf_y: float in [1.15,1.95,2.75]: _box(Vector3(x-1.9,shelf_y,-20.86+dz),Vector3(1.45,0.08,0.10),Color(0.70,0.56,0.34),false,"wood")
+    _box(Vector3(x-1.9,1.40,-20.48+dz),Vector3(0.42,0.38,0.36),Color(0.64,0.47,0.26),false,"fabric")
+   _box(Vector3(x-0.4,0.82,-17.7),Vector3(2.8,0.12,0.72),Color(0.38,0.26,0.18),false,"wood")
+   for dx: float in [-1.0,1.0]: _box(Vector3(x-0.4+dx,0.44,-17.7),Vector3(0.10,0.76,0.10),room_dark,false,"brushed_metal")
+  else:
+   # Market provisions: chilled display cases, produce bins and a cleanable
+   # packing bench tied back to the rear stock wall.
+   for side: float in [-1.0,1.0]:
+    _box(Vector3(x+side*2.05,1.14,-20.6),Vector3(1.12,2.25,7.2),Color(0.23,0.33,0.34),true,"painted_metal")
+    for dz: float in [-2.4,-0.8,0.8,2.4]: _box(Vector3(x+side*2.02,2.33,-20.6+dz),Vector3(0.94,0.08,1.2),Color(0.65,0.58,0.42) if side < 0.0 else Color(0.44,0.57,0.35),false,"terrazzo")
+   for dz: float in [-2.8,-0.8,1.2,3.2]:
+    _box(Vector3(x,0.42,-21.0+dz),Vector3(1.55,0.78,1.35),Color(0.38,0.27,0.18),true,"wood")
+    _box(Vector3(x,0.84,-21.0+dz),Vector3(1.42,0.10,1.20),Color(0.55,0.40,0.24),false,"wood")
+  var practical := OmniLight3D.new()
+  practical.name = "RetailArcadePractical_%02d" % index
+  practical.position = Vector3(x,4.05,-21.0)
+  practical.light_color = Color(1.0,0.79,0.57) if index == 1 else Color(0.82,0.91,0.90)
+  practical.light_energy = 1.25
+  practical.omni_range = 11.0
+  practical.shadow_enabled = false
+  practical.add_to_group("quality_practicals")
+  practical.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
+  add_child(practical)
+ # Ceiling beam and pipe trunk show the extension's actual service route.
+ for z: float in [-17.0,-22.0,-27.0]:
+  _box(Vector3(0,4.88,z),Vector3(41.0,0.16,0.24),Color(0.17,0.25,0.27),false,"painted_metal")
+  for x: float in [-19.0,-9.0,1.0,11.0,19.0]: _box(Vector3(x,4.67,z),Vector3(0.10,0.42,0.10),Color(0.48,0.55,0.52),false,"brushed_metal")
 
 func _station_service_installations() -> void:
  # Back-of-house infrastructure is grouped on the fixed service wall, while

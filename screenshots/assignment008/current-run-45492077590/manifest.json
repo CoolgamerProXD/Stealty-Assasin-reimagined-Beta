@@ -1,0 +1,150 @@
+{
+  "run_id": 45492077590,
+  "commit": "67907d7ea332afbf1d9664b7b7a96449c24e379b",
+  "captures": [
+    {
+      "name": "01_bus_stop_callsign_recruitment",
+      "file": "01_bus_stop_callsign_recruitment_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 29841,
+      "source_check_run": 138797375500
+    },
+    {
+      "name": "02_initiation_assessment_hall",
+      "file": "02_initiation_assessment_hall_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 29845,
+      "source_check_run": 138797375431
+    },
+    {
+      "name": "03_meridian_main_environment",
+      "file": "03_meridian_main_environment_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 29460,
+      "source_check_run": 138797375337
+    },
+    {
+      "name": "04_meridian_interior_lighting",
+      "file": "04_meridian_interior_lighting_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28761,
+      "source_check_run": 138797375581
+    },
+    {
+      "name": "05_tung_chung_station",
+      "file": "05_tung_chung_station_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 27516,
+      "source_check_run": 138797375493
+    },
+    {
+      "name": "06_tung_chung_train_platform_and_interior",
+      "file": "06_tung_chung_train_platform_and_interior_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28212,
+      "source_check_run": 138797375421
+    },
+    {
+      "name": "07_hong_kong_streets",
+      "file": "07_hong_kong_streets_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 27159,
+      "source_check_run": 138797375666
+    },
+    {
+      "name": "08_hong_kong_commercial_district",
+      "file": "08_hong_kong_commercial_district_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 27897,
+      "source_check_run": 138797375465
+    },
+    {
+      "name": "09_hong_kong_harbour_skyline",
+      "file": "09_hong_kong_harbour_skyline_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28065,
+      "source_check_run": 138797375399
+    },
+    {
+      "name": "10_hong_kong_characters_disguise",
+      "file": "10_hong_kong_characters_disguise_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 27731,
+      "source_check_run": 138797375502
+    },
+    {
+      "name": "11_ngong_ping_exterior_statue",
+      "file": "11_ngong_ping_exterior_statue_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28650,
+      "source_check_run": 138797375593
+    },
+    {
+      "name": "12_discovered_facility_entrance",
+      "file": "12_discovered_facility_entrance_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 26194,
+      "source_check_run": 138797375424
+    },
+    {
+      "name": "13_facility_monumental_interior",
+      "file": "13_facility_monumental_interior_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28102,
+      "source_check_run": 138797375533
+    },
+    {
+      "name": "14_facility_central_operations",
+      "file": "14_facility_central_operations_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28253,
+      "source_check_run": 138797375355
+    },
+    {
+      "name": "15_facility_vertical_statue_core",
+      "file": "15_facility_vertical_statue_core_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 23477,
+      "source_check_run": 138797375434
+    },
+    {
+      "name": "16_house_separate_70_digit_safe",
+      "file": "16_house_separate_70_digit_safe_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 24002,
+      "source_check_run": 138797375495
+    },
+    {
+      "name": "17_post_usb_ruby_rescue",
+      "file": "17_post_usb_ruby_rescue_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 28869,
+      "source_check_run": 138797375521
+    },
+    {
+      "name": "18_campaign_hud_gameplay",
+      "file": "18_campaign_hud_gameplay_inspect.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 27883,
+      "source_check_run": 138797375414
+    }
+  ]
+}
