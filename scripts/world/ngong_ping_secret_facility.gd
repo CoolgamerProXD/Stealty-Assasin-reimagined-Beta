@@ -774,7 +774,7 @@ func _build_service_lift() -> void:
 			_box("LiftShaftCrossBrace",Vector3(center_x,segment_mid,center_z+side_x*2.08),Vector3(4.12,0.14,0.18),Color(0.24,0.34,0.36),true)
 	for floor_index: int in range(FLOORS_UNDER.size()):
 		var floor_y: float = FLOORS_UNDER[floor_index]
-		var deck_name := ["LEVEL 01  /  ACCESS HALL","LEVEL 02  /  RESEARCH & MEDICAL","LEVEL 03  /  TRANSIT & PLANT"][floor_index]
+		var deck_name: String = ["LEVEL 01  /  ACCESS HALL","LEVEL 02  /  RESEARCH & MEDICAL","LEVEL 03  /  TRANSIT & PLANT"][floor_index]
 		var sign := Label3D.new()
 		sign.name = "ServiceLiftLandingSign_%02d" % (floor_index+1)
 		sign.text = "SERVICE LIFT  /  %s" % deck_name
