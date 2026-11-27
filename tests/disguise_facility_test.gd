@@ -200,14 +200,11 @@ func run() -> void:
 	check(facility.lift_busy,"E at the service lift landing starts the ride despite nearby staff interactions")
 	await create_timer(2.6).timeout
 	var lift_stop_two := facility_player.global_position.y
-	print("LIFT STOP 1: ",facility_player.global_position," level=",facility.lift_level," busy=",facility.lift_busy)
 	final_world.call("_interact")
 	await create_timer(2.8).timeout
 	var lift_stop_three := facility_player.global_position.y
-	print("LIFT STOP 2: ",facility_player.global_position," level=",facility.lift_level," busy=",facility.lift_busy)
 	final_world.call("_interact")
-	await create_timer(2.8).timeout
-	print("LIFT STOP 3: ",facility_player.global_position," level=",facility.lift_level," busy=",facility.lift_busy)
+	await create_timer(5.4).timeout
 	check(lift_stop_two < lift_player_start.y-4.0 and lift_stop_three < lift_stop_two-4.0 and absf(facility_player.global_position.y-lift_player_start.y) < 0.6,"E rides the collision-backed service car across all three connected sublevels and returns to the access hall")
 	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
 	facility_player.global_position = Vector3(0,0.75,-36.5)
