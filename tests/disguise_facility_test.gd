@@ -140,6 +140,7 @@ func run() -> void:
 	check(mountain.find_child("FacilitySlab_Sublevel_1",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_2",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_3",true,false) != null and mountain.find_child("LOGISTICS_RECEIVING_&_CARGO_TRANSFER",true,false) != null and mountain.find_child("MEDICAL_RECOVERY_WARD",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_SERVICE_DEPOT",true,false) != null,"expanded three-floor facility includes connected logistics, medical, and internal transit departments")
 	check(mountain.find_child("BuddhaInteriorNavigation_1",true,false) != null and mountain.find_child("BuddhaInteriorNavigation_5",true,false) != null and mountain.find_child("CoreAtrium_2FloorSide",true,false) != null and mountain.find_child("CoreAtrium_3GuardRail",true,false) != null and mountain.find_child("CrownOculusFloorSide",true,false) != null and mountain.find_child("CrownOculusGuardRail",true,false) != null and mountain.find_child("CrownOculusRoofLight",true,false) != null and mountain.find_child("CrownOculusPractical",true,false) != null and mountain.find_child("StatueCoreConnectingRamp",true,false) != null,"five chamber floors connect through a protected, illuminated multi-storey core atrium to the buried installation")
 	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
+	check(mountain.find_child("PlayableServiceLiftCar",true,false) != null and mountain.find_child("ServiceLiftLandingSign_01",true,false) != null and mountain.find_child("LiftShaftGuideRail",true,false) != null,"a guarded, physically rideable lift connects the three underground floors through cut floor plates")
 	check(mountain.find_child("AccessHallDirectoryTitle",true,false) != null and mountain.find_child("AccessHallDirectoryScreen",true,false) != null and mountain.find_child("AccessHallRouteMarker",true,false) != null,"monumental arrival hall has a framed route directory as its visible focal feature")
 	check(mountain.find_child("FloorPanelJoint",true,false) != null and mountain.find_child("RecessedWallPanel",true,false) != null and mountain.find_child("RoomStructuralPilaster",true,false) != null and mountain.find_child("CeilingServiceSpine",true,false) != null,"PROMETHEUS rooms use panelized floor inlays, wall modules, structural piers and ceiling service spines")
 	check(mountain.find_child("CeilingLightDiffuser",true,false) != null and mountain.find_child("DoorwayWayfindingStrip",true,false) != null,"facility interiors include practical ceiling fixtures and egress wayfinding")
@@ -186,11 +187,26 @@ func run() -> void:
 	facility_player.global_position = facility.entry_point + Vector3(0,-0.45,1.2)
 	final_world.call("_interact")
 	check(bool(final_world.get("facility_discovered")) and facility.entry_open and concealed_entry_guide != null and concealed_entry_guide.visible and concealed_floor_guide.visible,"interacting with the real rear pedestal panel reveals the entrance and both portal and ramp-edge guide strips")
+	var lift_player_start := Vector3(5.8,-3.04,-55.0)
+	facility_player.global_position = lift_player_start
+	facility_player.velocity = Vector3.ZERO
+	facility_player.set_physics_process(false)
+	facility_player.set_process_unhandled_input(false)
+	final_world.call("_interact")
+	await create_timer(2.8).timeout
+	var lift_stop_two := facility_player.global_position.y
+	final_world.call("_interact")
+	await create_timer(2.8).timeout
+	var lift_stop_three := facility_player.global_position.y
+	final_world.call("_interact")
+	await create_timer(2.8).timeout
+	check(lift_stop_two < lift_player_start.y-4.0 and lift_stop_three < lift_stop_two-4.0 and absf(facility_player.global_position.y-lift_player_start.y) < 0.6,"E rides the collision-backed service car across all three connected sublevels and returns to the access hall")
 	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
 	facility_player.global_position = Vector3(0,0.75,-36.5)
 	facility_player.rotation.y = 0.0
 	facility_player.velocity = Vector3.ZERO
 	facility_player.set_physics_process(true)
+	facility_player.set_process_unhandled_input(true)
 	for _frame: int in range(6): await physics_frame
 	Input.action_press("move_forward")
 	await create_timer(3.8).timeout

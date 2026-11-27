@@ -768,6 +768,7 @@ func _interact() -> void:
    message = "Ruby: That relief panel is a concealed door. The passage descends beneath the monument, and the inner shaft continues up into the statue. Keep the public structure intact."
   else: message = "The sealed panel resists."
   return
+ if operation_id == "ngong_ping" and ngong_facility and ngong_facility.try_ride_service_lift(): return
  if operation_id == "hong_kong_sandbox":
   _interact_sandbox()
   return

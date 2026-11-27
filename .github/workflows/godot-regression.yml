@@ -185,7 +185,7 @@ jobs:
           test_status=${PIPESTATUS[0]}
           set -e
           if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^A008 FAIL:' "$RUNNER_TEMP/assignment008-visual.log"; then exit 1; fi
-          grep -E '^A008 RESULT: [0-9]+ checks, 0 failures; 18 current-build views staged$' "$RUNNER_TEMP/assignment008-visual.log"
+          grep -E '^A008 RESULT: [0-9]+ checks, 0 failures; 20 current-build views staged$' "$RUNNER_TEMP/assignment008-visual.log"
       - name: CC0 eight-model rig poses and native-resolution captures
         if: always()
         shell: bash
@@ -217,9 +217,9 @@ jobs:
           if not manifest_path.is_file(): raise SystemExit("Assignment 008 manifest missing")
           manifest = json.loads(manifest_path.read_text())
           captures = manifest.get("captures", [])
-          if manifest.get("capture_count") != 18 or len(captures) != 18: raise SystemExit(f"expected 18 images, got {len(captures)}")
+          if manifest.get("capture_count") != 20 or len(captures) != 20: raise SystemExit(f"expected 20 images, got {len(captures)}")
           names = {entry.get("name") for entry in captures}
-          if not {"01_bus_stop_callsign_recruitment","02_initiation_assessment_hall","05_tung_chung_station","07_hong_kong_streets","08_hong_kong_commercial_district","09_hong_kong_harbour_skyline","11_ngong_ping_exterior_statue","13_facility_monumental_interior","14_facility_central_operations","15_facility_vertical_statue_core","16_house_separate_70_digit_safe","17_post_usb_ruby_rescue"}.issubset(names):
+          if not {"01_bus_stop_callsign_recruitment","02_initiation_assessment_hall","04_meridian_guest_suite_and_ensuite","05_tung_chung_station_retail_arcade","07_hong_kong_streets","08_hong_kong_commercial_district","09_hong_kong_harbour_skyline","11_ngong_ping_exterior_statue","13_facility_monumental_interior","14_facility_central_operations","15_facility_vertical_statue_core","16_house_separate_70_digit_safe","17_post_usb_ruby_rescue","19_prometheus_medical_recovery","20_prometheus_transit_depot"}.issubset(names):
               raise SystemExit("a required campaign location/story view is missing")
           for entry in captures:
               if entry.get("width") != 1280 or entry.get("height") != 720: raise SystemExit(f"{entry['name']}: expected 1280x720")
@@ -227,7 +227,7 @@ jobs:
                   path = root / entry[key]
                   expected = entry["png_bytes"] if key == "png" else entry["inspect_jpeg_bytes"]
                   if not path.is_file() or path.stat().st_size != expected or expected <= 0: raise SystemExit(f"{entry['name']}: {key} missing or truncated")
-          print("Verified 18 current-build 1280x720 images covering opening, campaign, Hong Kong, PROMETHEUS, House and Ruby rescue.")
+          print("Verified 20 current-build 1280x720 images covering the campaign, two new suite/arcade views, Hong Kong, PROMETHEUS departments, House and Ruby rescue.")
           PYCODE
       - name: Upload Assignment 008 full-resolution visual evidence
         if: always()
@@ -348,8 +348,8 @@ jobs:
           - 01_bus_stop_callsign_recruitment
           - 02_initiation_assessment_hall
           - 03_meridian_main_environment
-          - 04_meridian_interior_lighting
-          - 05_tung_chung_station
+          - 04_meridian_guest_suite_and_ensuite
+          - 05_tung_chung_station_retail_arcade
           - 06_tung_chung_train_platform_and_interior
           - 07_hong_kong_streets
           - 08_hong_kong_commercial_district
@@ -363,6 +363,8 @@ jobs:
           - 16_house_separate_70_digit_safe
           - 17_post_usb_ruby_rescue
           - 18_campaign_hud_gameplay
+          - 19_prometheus_medical_recovery
+          - 20_prometheus_transit_depot
     steps:
       - name: Download genuine native-resolution capture artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

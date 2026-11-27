@@ -293,15 +293,19 @@ func run() -> void:
 	await _capture("03_meridian_main_environment")
 	# Frame the real restaurant through its built opening at x=-36 rather than
 	# shooting across the solid glazed service partition from the wrong room.
-	_camera(Vector3(-36.0, 1.55, -3.5), Vector3(-35.0, 1.25, -10.5), 58.0)
-	await _capture("04_meridian_interior_lighting")
+	# Inspect a complete upper guest suite from its clear gallery threshold;
+	# frame the bed and open ensuite together rather than repeating the restaurant view.
+	_camera(Vector3(-3.2,5.1,4.65),Vector3(-4.45,4.65,10.8),58.0)
+	await _capture("04_meridian_guest_suite_and_ensuite")
 	await _close_world()
 
 	# 05–06: actual campaign station and boardable connected train.
 	world = await _open_world("res://scenes/mission_tung_chung.tscn", "tung_chung")
 	_freeze_npcs()
-	_camera(Vector3(-16.0, 3.2, 8.5), Vector3(-6.0, 1.4, -4.0), 66.0)
-	await _capture("05_tung_chung_station")
+	# Enter the new paid-concourse arcade so the view exposes the shop interiors,
+	# not just the central station hall.
+	_camera(Vector3(4.0,2.15,-15.5),Vector3(4.0,1.35,-24.0),62.0)
+	await _capture("05_tung_chung_station_retail_arcade")
 	world.call("_board_train")
 	for frame: int in range(3):
 		await process_frame
@@ -409,6 +413,14 @@ func run() -> void:
 		player.global_position = Vector3(0, -7.95, -61)
 		_camera(Vector3(0, -5.8, -58.0), Vector3(0, -6.8, -68.0), 70.0)
 		await _capture("14_facility_central_operations")
+		player.global_position = Vector3(0,-7.8,-37.0)
+		_camera(Vector3(-8.0,-5.4,-30.6),Vector3(0.0,-7.0,-36.4),64.0)
+		await _capture("19_prometheus_medical_recovery")
+		check(facility.find_child("MedicalBedFrame",true,false) != null and facility.find_child("MedicalPrivacyCurtain",true,false) != null and facility.find_child("ClinicalWashBasin",true,false) != null,"medical review view reaches the staffed recovery department")
+		player.global_position = Vector3(0,-13.0,-81.0)
+		_camera(Vector3(0.0,-10.5,-76.2),Vector3(0.0,-11.4,-82.5),64.0)
+		await _capture("20_prometheus_transit_depot")
+		check(facility.find_child("DepotGuideRail",true,false) != null and facility.find_child("ServiceTrolleyDeck",true,false) != null and facility.find_child("PlayableServiceLiftCar",true,false) != null,"transit inspection reaches the freight platform, depot and lift access")
 		player.global_position = Vector3(0, 1.85, -29.0)
 		_camera(Vector3(-2.4, 2.6, -28.0), Vector3(-2.4, 20.8, -30.0), 64.0)
 		await _capture("15_facility_vertical_statue_core")
@@ -475,7 +487,7 @@ func run() -> void:
 	await _capture("17_post_usb_ruby_rescue",true)
 	await _close_world()
 
-	check(captures == 18, "all 18 distinct requested in-game views were captured")
+	check(captures == 20, "all 20 distinct in-game campaign and department views were captured")
 	var manifest_path := output.path_join("manifest.json")
 	var manifest_file := FileAccess.open(manifest_path, FileAccess.WRITE)
 	if manifest_file:
@@ -491,7 +503,7 @@ func run() -> void:
 		parsed_manifest = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
 	var manifest_valid := manifest_file != null and parsed_manifest is Dictionary
 	if manifest_valid:
-		manifest_valid = parsed_manifest.get("captures", []).size() == 18
+		manifest_valid = parsed_manifest.get("captures", []).size() == 20
 	check(
 		manifest_valid,
 		"machine-readable manifest records all full-resolution image paths, dimensions, and byte sizes"
@@ -512,5 +524,5 @@ func run() -> void:
 	var scratch_path := ProjectSettings.globalize_path(scratch_campaign_path)
 	if FileAccess.file_exists(scratch_path):
 		DirAccess.remove_absolute(scratch_path)
-	print("A008 RESULT: %d checks, %d failures; 18 current-build views staged" % [checks, failures])
+	print("A008 RESULT: %d checks, %d failures; 20 current-build views staged" % [checks, failures])
 	quit(0 if failures == 0 else 1)

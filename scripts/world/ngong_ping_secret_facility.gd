@@ -26,6 +26,10 @@ var material_cache: Dictionary = {}
 var statue_interior_nodes: Array[Node3D] = []
 var facility_environment: Environment
 var exterior_ambient_energy: float = 1.25
+var lift_car: AnimatableBody3D
+var lift_busy: bool = false
+var lift_level: int = 0
+const LIFT_CENTER := Vector3(5.8,0.0,-55.0)
 const INTERIOR_AMBIENT_ENERGY := 4.0
 
 func build(parent_world: Node3D) -> void:
@@ -65,6 +69,46 @@ func set_discovered(value: bool) -> void:
 		if door_collision: door_collision.disabled = true
 		for lamp: OmniLight3D in elevator_lights: lamp.visible = true
 		for guide: Node3D in entry_guide_meshes: guide.visible = true
+
+func try_ride_service_lift() -> bool:
+	# The lift is a real rideable moving platform, not a shaft prop. The player
+	# must stand within its deck footprint and use E; each stop changes level.
+	if not entry_open or lift_busy or lift_car == null or player == null:
+		return false
+	var local_player := to_local(player.global_position)
+	if absf(local_player.x-LIFT_CENTER.x) > 1.28 or absf(local_player.z-LIFT_CENTER.z) > 1.28:
+		return false
+	var current_index := -1
+	for index: int in range(FLOORS_UNDER.size()):
+		if absf(local_player.y-(FLOORS_UNDER[index]+0.16)) < 1.15:
+			current_index = index
+			break
+	if current_index < 0:
+		return false
+	lift_level = current_index
+	var destination_index := (current_index+1)%FLOORS_UNDER.size()
+	var ride_duration := absf(FLOORS_UNDER[destination_index]-FLOORS_UNDER[current_index])/2.0
+	var destination_y: float = FLOORS_UNDER[destination_index]
+	lift_busy = true
+	player.velocity = Vector3.ZERO
+	player.set_physics_process(false)
+	player.set_process_unhandled_input(false)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(lift_car,"position",Vector3(LIFT_CENTER.x,destination_y+0.04,LIFT_CENTER.z),ride_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(player,"global_position",to_global(Vector3(LIFT_CENTER.x,destination_y+0.16,LIFT_CENTER.z)),ride_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.finished.connect(_finish_service_lift_ride.bind(destination_index))
+	return true
+
+func _finish_service_lift_ride(destination_index: int) -> void:
+	lift_level = destination_index
+	lift_busy = false
+	if player and is_instance_valid(player):
+		player.velocity = Vector3.ZERO
+		player.set_physics_process(true)
+		player.set_process_unhandled_input(true)
+	if world:
+		world.set("message","SERVICE LIFT  /  %s" % ["SUBLEVEL 01","SUBLEVEL 02","SUBLEVEL 03"][destination_index])
 
 func is_inside_statue(point: Vector3) -> bool:
 	return point.y > 1.0 and point.y < 22.5 and absf(point.x) < 8.5 and point.z > -36.0 and point.z < -22.0
@@ -173,7 +217,10 @@ func _build_underground_levels() -> void:
 		var palette: Color = [Color(0.30,0.34,0.34),Color(0.23,0.31,0.34),Color(0.27,0.30,0.32)][floor_index]
 		# A 72-by-60 m continuous substructure gives the department wings real
 		# circulation and transfer space around the central ramps and lift shafts.
-		_box("FacilitySlab_Sublevel_%d" % (floor_index+1),Vector3(0,y-0.18,-57),Vector3(72,0.36,60),palette,true)
+		if floor_index < FLOORS_UNDER.size()-1:
+			_build_slab_around_lift("FacilitySlab_Sublevel_%d" % (floor_index+1),y-0.18,Vector2(0,-57),Vector2(72,60),Vector2(3.8,3.8),palette)
+		else:
+			_box("FacilitySlab_Sublevel_%d" % (floor_index+1),Vector3(0,y-0.18,-57),Vector3(72,0.36,60),palette,true)
 		_build_level_shell(y,-57,72,60,5.0,palette)
 		_add_navigation("SublevelNavigation_%d" % (floor_index+1),y+0.04,-86.0,-28.0,-34.0,34.0)
 		_add_facility_zone(Rect2(-34.0,-86.0,68.0,58.0),y-0.3,y+1.0,["facility_staff","facility_research","facility_ops"][floor_index])
@@ -209,6 +256,31 @@ func _build_underground_levels() -> void:
 	_add_facility_zone(Rect2(-14.0,-86.0,28.0,10.0),-13.3,-12.0,"facility_maintenance")
 	_build_sublevel_connectors()
 
+func _build_slab_around_lift(label: String, slab_y: float, center: Vector2, span: Vector2, opening: Vector2, tint: Color, slab_thickness: float = 0.36) -> void:
+	# Keep the service lift's 3.8 m well continuous through both intermediate
+	# floor plates; surrounding slab edges remain collision-backed.
+	_build_slab_with_opening(label,center,slab_y,span,center,opening,slab_thickness,tint,true)
+
+func _build_slab_with_opening(label: String, center: Vector2, slab_y: float, span: Vector2, opening_center: Vector2, opening: Vector2, thickness: float, tint: Color, solid: bool) -> void:
+	# Four true plate sections leave a collision-free, full-height opening for
+	# the service lift while retaining a complete surrounding walking deck.
+	var x_min := center.x-span.x*0.5
+	var x_max := center.x+span.x*0.5
+	var z_min := center.y-span.y*0.5
+	var z_max := center.y+span.y*0.5
+	var hole_x_min := opening_center.x-opening.x*0.5
+	var hole_x_max := opening_center.x+opening.x*0.5
+	var hole_z_min := opening_center.y-opening.y*0.5
+	var hole_z_max := opening_center.y+opening.y*0.5
+	var left_width := hole_x_min-x_min
+	var right_width := x_max-hole_x_max
+	var north_depth := hole_z_min-z_min
+	var south_depth := z_max-hole_z_max
+	if left_width > 0.01: _box(label,Vector3(x_min+left_width*0.5,slab_y,center.y),Vector3(left_width,thickness,span.y),tint,solid)
+	if right_width > 0.01: _box(label+"Right",Vector3(hole_x_max+right_width*0.5,slab_y,center.y),Vector3(right_width,thickness,span.y),tint,solid)
+	if north_depth > 0.01: _box(label+"North",Vector3(opening_center.x,slab_y,z_min+north_depth*0.5),Vector3(opening.x,thickness,north_depth),tint,solid)
+	if south_depth > 0.01: _box(label+"South",Vector3(opening_center.x,slab_y,hole_z_max+south_depth*0.5),Vector3(opening.x,thickness,south_depth),tint,solid)
+
 func _build_level_shell(floor_y: float, center_z: float, width: float, depth: float, height: float, tint: Color) -> void:
 	var wall_color := tint.darkened(0.23)
 	_box("SublevelNorthRetainingWall",Vector3(0,floor_y+height*0.5,center_z-depth*0.5),Vector3(width,height,0.36),wall_color,true)
@@ -231,6 +303,8 @@ func _build_level_shell(floor_y: float, center_z: float, width: float, depth: fl
 		_box("SublevelCeiling",Vector3(16.25,floor_y+height,center_z),Vector3(27.5,0.22,depth),tint.darkened(0.12),true)
 		_box("SublevelCeiling",Vector3(0,floor_y+height,-67.0),Vector3(width,0.22,30.0),tint.darkened(0.12),true)
 		_box("SublevelCeiling",Vector3(0,floor_y+height,-30.5),Vector3(width,0.22,1.0),tint.darkened(0.12),true)
+	elif is_equal_approx(floor_y+height,FLOORS_UNDER[0]) or is_equal_approx(floor_y+height,FLOORS_UNDER[1]):
+		_build_slab_around_lift("SublevelCeiling",floor_y+height,Vector2(0,-57),Vector2(width,depth),Vector2(3.8,3.8),tint.darkened(0.12),0.22)
 	else:
 		_box("SublevelCeiling",Vector3(0,floor_y+height,center_z),Vector3(width,0.22,depth),tint.darkened(0.12),true)
 	for x: float in [-width*0.5+0.5,width*0.5-0.5]:
@@ -312,14 +386,21 @@ func _build_room(label: String, center: Vector3, span: Vector2, tint: Color, sub
 	_box("DoorReaderStatus",Vector3(x+1.82,y+1.52,entry_z+0.08),Vector3(0.045,0.055,0.025),Color(0.28,0.82,0.70))
 	# A distinctive sill and service access panel identify each room without
 	# turning its modest, playable footprint into empty decorative volume.
-	_box("RoomFloorInset",Vector3(x,y+0.025,z),Vector3(width-0.9,0.045,depth-0.9),tint.lightened(0.12))
+	if label.contains("MONUMENTAL ACCESS HALL"):
+		_build_slab_with_opening("RoomFloorInset",Vector2(x,z),y+0.025,Vector2(width-0.9,depth-0.9),Vector2(LIFT_CENTER.x,LIFT_CENTER.z),Vector2(3.8,3.8),0.045,tint.lightened(0.12),false)
+	else:
+		_box("RoomFloorInset",Vector3(x,y+0.025,z),Vector3(width-0.9,0.045,depth-0.9),tint.lightened(0.12))
 	# Large-format stone/composite floor panels, a dark perimeter reveal, and
 	# readable egress bands give the room an authored architectural floor rather
 	# than a single colour plane. The flush inlay does not alter collision.
 	for grid_x: float in range(-int(width*0.5)+2,int(width*0.5),2):
-		_box("FloorPanelJoint",Vector3(x+grid_x,y+0.049,z),Vector3(0.018,0.006,depth-1.2),tint.darkened(0.15))
+		var joint_x := x+grid_x
+		if not label.contains("MONUMENTAL ACCESS HALL") or absf(joint_x-LIFT_CENTER.x) >= 2.0:
+			_box("FloorPanelJoint",Vector3(joint_x,y+0.049,z),Vector3(0.018,0.006,depth-1.2),tint.darkened(0.15))
 	for grid_z: float in range(-int(depth*0.5)+2,int(depth*0.5),2):
-		_box("FloorPanelJoint",Vector3(x,y+0.049,z+grid_z),Vector3(width-1.2,0.006,0.018),tint.darkened(0.15))
+		var joint_z := z+grid_z
+		if not label.contains("MONUMENTAL ACCESS HALL") or absf(joint_z-LIFT_CENTER.z) >= 2.0:
+			_box("FloorPanelJoint",Vector3(x,y+0.049,joint_z),Vector3(width-1.2,0.006,0.018),tint.darkened(0.15))
 	_box("FloorPerimeterReveal",Vector3(x,y+0.05,z-depth*0.5+0.65),Vector3(width-1.0,0.018,0.055),Color(0.12,0.20,0.22))
 	_box("FloorPerimeterReveal",Vector3(x,y+0.05,z+depth*0.5-0.65),Vector3(width-1.0,0.018,0.055),Color(0.12,0.20,0.22))
 	# Repeated wall bays, corner pilasters and a continuous service ceiling
@@ -669,16 +750,95 @@ func _build_sublevel_connectors() -> void:
 		for side: float in [-1.0,1.0]:
 			var rail := _box("SublevelRampRail",Vector3(side*1.62,center_y+0.72,center_z),Vector3(0.12,1.45,8.0),Color(0.19,0.27,0.29),true)
 			rail.rotation.x = stair.rotation.x
-		for floor_y: float in [upper_y,lower_y]:
-			_box("LiftShaftFrame",Vector3(5.8,floor_y+2.35,-55),Vector3(3.1,0.15,3.1),Color(0.37,0.46,0.45),true)
-			_box("LiftCallPanel",Vector3(7.2,floor_y+1.2,-55),Vector3(0.10,1.5,0.42),Color(0.12,0.24,0.27))
-		var lamp := OmniLight3D.new()
-		lamp.position = Vector3(5.8,center_y,-55)
-		lamp.light_color = Color(0.29,0.75,0.82)
-		lamp.light_energy = 0.6
-		lamp.omni_range = 7.5
-		lamp.shadow_enabled = false
-		add_child(lamp)
+	_build_service_lift()
+
+func _build_service_lift() -> void:
+	# A guarded steel-and-glass service shaft occupies a carved opening through
+	# the monumental hall and lower circulation deck. The car has real collision
+	# and moves the player between all three connected underground storeys.
+	var center_x := LIFT_CENTER.x
+	var center_z := LIFT_CENTER.z
+	var top_y: float = FLOORS_UNDER[0]
+	var bottom_y: float = FLOORS_UNDER[FLOORS_UNDER.size()-1]
+	var shaft_mid_y := (top_y+bottom_y)*0.5
+	var shaft_height := top_y-bottom_y+1.4
+	for side_x: float in [-1.0,1.0]:
+		for side_z: float in [-1.0,1.0]:
+			_box("LiftShaftGuideRail",Vector3(center_x+side_x*2.08,shaft_mid_y,center_z+side_z*2.08),Vector3(0.22,shaft_height,0.22),Color(0.42,0.52,0.51),true)
+	for floor_index: int in range(FLOORS_UNDER.size()-1):
+		var upper_y: float = FLOORS_UNDER[floor_index]
+		var lower_y: float = FLOORS_UNDER[floor_index+1]
+		var segment_mid := (upper_y+lower_y)*0.5
+		for side_x: float in [-1.0,1.0]:
+			_box("LiftShaftCrossBrace",Vector3(center_x+side_x*2.08,segment_mid,center_z),Vector3(0.18,0.14,4.12),Color(0.24,0.34,0.36),true)
+			_box("LiftShaftCrossBrace",Vector3(center_x,segment_mid,center_z+side_x*2.08),Vector3(4.12,0.14,0.18),Color(0.24,0.34,0.36),true)
+	for floor_index: int in range(FLOORS_UNDER.size()):
+		var floor_y: float = FLOORS_UNDER[floor_index]
+		var deck_name := ["LEVEL 01  /  ACCESS HALL","LEVEL 02  /  RESEARCH & MEDICAL","LEVEL 03  /  TRANSIT & PLANT"][floor_index]
+		var sign := Label3D.new()
+		sign.name = "ServiceLiftLandingSign_%02d" % (floor_index+1)
+		sign.text = "SERVICE LIFT  /  %s" % deck_name
+		sign.position = Vector3(center_x+2.65,floor_y+2.45,center_z-1.6)
+		sign.rotation.y = -PI*0.5
+		sign.font_size = 15
+		sign.pixel_size = 0.004
+		sign.modulate = Color(0.84,0.82,0.72)
+		add_child(sign)
+		for side: float in [-1.0,1.0]:
+			_box("LiftLandingJamb",Vector3(center_x+side*2.0,floor_y+1.75,center_z-1.95),Vector3(0.12,3.5,0.15),Color(0.58,0.64,0.59))
+		_box("LiftLandingHeader",Vector3(center_x,floor_y+3.48,center_z-1.95),Vector3(4.12,0.14,0.15),Color(0.58,0.64,0.59))
+		for side: float in [-1.0,1.0]:
+			_box("LiftThresholdWear",Vector3(center_x+side*1.72,floor_y+0.045,center_z-1.83),Vector3(0.24,0.035,0.36),Color(0.91,0.61,0.29))
+	var shaft_light := OmniLight3D.new()
+	shaft_light.name = "ServiceLiftShaftPractical"
+	shaft_light.position = Vector3(center_x,shaft_mid_y,center_z)
+	shaft_light.light_color = Color(0.43,0.79,0.78)
+	shaft_light.light_energy = 2.4
+	shaft_light.omni_range = 14.0
+	shaft_light.shadow_enabled = false
+	shaft_light.add_to_group("quality_practicals")
+	add_child(shaft_light)
+	lift_car = AnimatableBody3D.new()
+	lift_car.name = "PlayableServiceLiftCar"
+	lift_car.sync_to_physics = true
+	lift_car.position = Vector3(center_x,top_y+0.07,center_z)
+	add_child(lift_car)
+	var car_deck := MeshInstance3D.new()
+	car_deck.name = "ServiceLiftDiamondPlateDeck"
+	var deck_mesh := BoxMesh.new()
+	deck_mesh.size = Vector3(3.35,0.14,3.35)
+	car_deck.mesh = deck_mesh
+	car_deck.material_override = StationMaterials.material(Color(0.31,0.40,0.40),"brushed_metal")
+	lift_car.add_child(car_deck)
+	var car_collision := CollisionShape3D.new()
+	var car_shape := BoxShape3D.new()
+	car_shape.size = deck_mesh.size
+	car_collision.shape = car_shape
+	lift_car.add_child(car_collision)
+	for side: float in [-1.0,1.0]:
+		var guard := MeshInstance3D.new()
+		guard.name = "ServiceLiftCabinGuard"
+		var guard_mesh := BoxMesh.new()
+		guard_mesh.size = Vector3(3.15,0.92,0.08)
+		guard.mesh = guard_mesh
+		guard.position = Vector3(0,0.50,side*1.60)
+		guard.material_override = StationMaterials.material(Color(0.46,0.59,0.57),"painted_metal")
+		lift_car.add_child(guard)
+		var guard_collision := CollisionShape3D.new()
+		var guard_shape := BoxShape3D.new()
+		guard_shape.size = guard_mesh.size
+		guard_collision.shape = guard_shape
+		guard_collision.position = guard.position
+		lift_car.add_child(guard_collision)
+	var lift_status := Label3D.new()
+	lift_status.name = "ServiceLiftControlLabel"
+	lift_status.text = "PRESS  E  /  NEXT LEVEL"
+	lift_status.position = Vector3(0,1.75,-1.35)
+	lift_status.font_size = 14
+	lift_status.pixel_size = 0.004
+	lift_status.modulate = Color(0.95,0.77,0.46)
+	lift_car.add_child(lift_status)
+
 func _build_buddha_interior() -> void:
 	var first_interior_child := get_child_count()
 	# A continuous hidden switchback corridor climbs from Sublevel 01 through
