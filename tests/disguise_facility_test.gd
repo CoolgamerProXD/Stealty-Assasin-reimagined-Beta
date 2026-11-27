@@ -192,8 +192,13 @@ func run() -> void:
 	facility_player.velocity = Vector3.ZERO
 	facility_player.set_physics_process(false)
 	facility_player.set_process_unhandled_input(false)
+	final_world.set("intro_active",false)
+	final_world.set("extraction_active",false)
+	final_world.set("story_phase","")
 	final_world.call("_interact")
-	await create_timer(2.8).timeout
+	await create_timer(0.2).timeout
+	check(facility.lift_busy,"E at the service lift landing starts the ride despite nearby staff interactions")
+	await create_timer(2.6).timeout
 	var lift_stop_two := facility_player.global_position.y
 	final_world.call("_interact")
 	await create_timer(2.8).timeout

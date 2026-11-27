@@ -758,6 +758,9 @@ func _try_acquire_outfit() -> bool:
 
 func _interact() -> void:
  if intro_active or extraction_active or not story_phase.is_empty(): return
+ # Prioritize the lift control at its actual landing so a nearby staff outfit
+ # pickup cannot consume the same E press before the car starts moving.
+ if operation_id == "ngong_ping" and ngong_facility and ngong_facility.try_ride_service_lift(): return
  if _try_acquire_outfit(): return
  if operation_id == "house":
   _interact_house()
@@ -768,7 +771,6 @@ func _interact() -> void:
    message = "Ruby: That relief panel is a concealed door. The passage descends beneath the monument, and the inner shaft continues up into the statue. Keep the public structure intact."
   else: message = "The sealed panel resists."
   return
- if operation_id == "ngong_ping" and ngong_facility and ngong_facility.try_ride_service_lift(): return
  if operation_id == "hong_kong_sandbox":
   _interact_sandbox()
   return
