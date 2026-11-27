@@ -300,7 +300,7 @@ func _station_retail_arcade(wall: Color, dark: Color, orange: Color) -> void:
  for span: Vector2 in [Vector2(-22.0,-4.4),Vector2(-1.6,2.4),Vector2(5.6,9.4),Vector2(12.6,22.0)]:
   _box(Vector3((span.x+span.y)*0.5,2.6,-14.0),Vector3(span.y-span.x,5.2,0.3),wall,true,"tile")
  for index: int in range(3):
-  var x := [-3.0,4.0,11.0][index]
+  var x: float = [-3.0,4.0,11.0][index]
   var room_dark := Color(0.21,0.29,0.30)
   var frame := Color(0.60,0.66,0.63)
   for side: float in [-1.0,1.0]:
@@ -315,7 +315,7 @@ func _station_retail_arcade(wall: Color, dark: Color, orange: Color) -> void:
   transom.name = "RetailArcadeTransom_%02d" % index
   _box(Vector3(x,0.045,-14.1),Vector3(2.75,0.09,0.72),Color(0.66,0.56,0.39),false,"terrazzo")
   _box(Vector3(x,4.16,-13.78),Vector3(3.05,0.16,0.16),Color(0.16,0.24,0.26),false,"painted_metal")
-  var shop_name := ["PAPER & PRESS","TEA HOUSE","MARKET PROVISIONS"][index]
+  var shop_name: String = ["PAPER & PRESS","TEA HOUSE","MARKET PROVISIONS"][index]
   _sign(shop_name,Vector3(x,4.16,-13.66),29)
   _box(Vector3(x,0.04,-21.0),Vector3(5.55,0.035,12.7),Color(0.48,0.52,0.48),false,"terrazzo")
   _box(Vector3(x,4.92,-21.0),Vector3(5.5,0.08,0.20),Color(0.18,0.26,0.27),false,"painted_metal")
